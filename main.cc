@@ -58,7 +58,7 @@ void
 inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack, unsigned include_len,
                   CXClientData edges_ptr);
 
-std::string to_absolute_path(std::string_view relative_path);
+std::optional<std::string> to_absolute_path(std::string_view relative_path);
 
 void print_include_topological_order(graph_t &include_graph, const vertices_names_t &vertices_names);
 
@@ -88,25 +88,41 @@ int main(int argc, char **argv) {
     if (vm.count("verbose") == 1)
         verbose = true;
 
-    std::string compilation_database_directory{to_absolute_path(".")};
+    auto compilation_database_directory{to_absolute_path(".")};
 
     if (vm.count("compilation-database-dir") == 1) {
         compilation_database_directory = to_absolute_path(vm["compilation-database-dir"].as<std::string>());
     }
 
+    if (!compilation_database_directory) {
+        std::cerr << "ERROR: Cannot find compilation database - aborting...";
+        exit(-1);
+    }
+
     if (verbose)
-        cout << "=== Loading compilation database from " << compilation_database_directory << std::endl;
+        cout << "=== Loading compilation database from " << compilation_database_directory.value() << std::endl;
 
     CXIndex index = clang_createIndex(0, 0);
 
     auto error = CXCompilationDatabase_NoError;
-    auto database = clang_CompilationDatabase_fromDirectory(compilation_database_directory.c_str(), &error);
+    auto database = clang_CompilationDatabase_fromDirectory(compilation_database_directory.value().c_str(), &error);
 
     CXCompileCommands compile_commands;
     if (vm.count("translation-unit") == 1) {
         auto tu_path = to_absolute_path(vm["translation-unit"].as<std::string>());
-        translation_units.emplace(tu_path);
-        compile_commands = clang_CompilationDatabase_getCompileCommands(database, tu_path.c_str());
+        if (!tu_path) {
+            std::cerr << "ERROR: Cannot find translation unit source at " << vm["translation-unit"].as<std::string>()
+                      << " - aborting...";
+            exit(-1);
+        }
+
+        translation_units.emplace(tu_path.value());
+        compile_commands = clang_CompilationDatabase_getCompileCommands(database, tu_path.value().c_str());
+
+        if (compile_commands == nullptr) {
+            std::cerr << "ERROR: Cannot find " << tu_path.value() << " in compilation database - aborting...";
+            exit(-1);
+        }
     } else {
         // Parse entire compilation database
         compile_commands = clang_CompilationDatabase_getAllCompileCommands(database);
@@ -115,7 +131,7 @@ int main(int argc, char **argv) {
     auto compile_commands_size = clang_CompileCommands_getSize(compile_commands);
 
     if (compile_commands_size == 0) {
-        cerr << "Cannot find compilation commands in compilation database" << std::endl;
+        std::cerr << "Cannot find compilation commands in compilation database" << std::endl;
         exit(-1);
     }
 
@@ -183,10 +199,9 @@ int main(int argc, char **argv) {
     }
 
 
-    if(vm.count("tree")) {
+    if (vm.count("tree")) {
         print_include_tree(translation_units, include_graph, vertices_names, vertices_ids);
-    }
-    else {
+    } else {
         print_include_topological_order(include_graph, vertices_names);
     }
 
@@ -222,7 +237,7 @@ void print_tu_subtree(const long tu_id, const int level, graph_t &include_graph,
     boost::tie(it, it_end) = boost::adjacent_vertices(tu_id, include_graph);
     for (; it != it_end; ++it) {
         auto continuation_line_tmp = continuation_line;
-        if(level > 0)
+        if (level > 0)
             for (auto i = 0; i < level; i++) {
                 if (i % 4 == 0 && continuation_line[i / 4])
                     std::cout << "│";
@@ -338,6 +353,11 @@ inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack, unsigned in
     }
 }
 
-std::string to_absolute_path(std::string_view relative_path) {
-    return std::filesystem::canonical(std::filesystem::path(relative_path)).string();
+std::optional<std::string> to_absolute_path(std::string_view relative_path) {
+    try {
+        return std::filesystem::canonical(std::filesystem::path(relative_path)).string();
+    }
+    catch (const std::filesystem::filesystem_error &e) {
+        return {};
+    }
 }
