@@ -1,7 +1,7 @@
 /**
  * main.cc
  *
- * Copyright (c) 2022 Bartek Kryza <bkryza@gmail.com>
+ * Copyright (c) 2022-present Bartek Kryza <bkryza@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,6 +60,15 @@ inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack, unsigned in
 
 std::string to_absolute_path(std::string_view relative_path);
 
+void print_include_topological_order(graph_t &include_graph, const vertices_names_t &vertices_names);
+
+void print_include_tree(const std::set<std::string> &translation_units, graph_t &include_graph,
+                        const vertices_names_t &vertices_names, const vertices_ids_t &vertices_ids);
+
+void print_tu_subtree(const long tu_id, const int level, graph_t &include_graph,
+                      const vertices_names_t &vertices_names, const vertices_ids_t &vertices_ids,
+                      std::vector<bool> continuation_line);
+
 std::string current_file;
 
 
@@ -69,6 +78,7 @@ int main(int argc, char **argv) {
     vertices_t vertices;
     vertices_ids_t vertices_ids;
     vertices_names_t vertices_names;
+    std::set<std::string> translation_units;
 
 
     po::variables_map vm;
@@ -95,6 +105,7 @@ int main(int argc, char **argv) {
     CXCompileCommands compile_commands;
     if (vm.count("translation-unit") == 1) {
         auto tu_path = to_absolute_path(vm["translation-unit"].as<std::string>());
+        translation_units.emplace(tu_path);
         compile_commands = clang_CompilationDatabase_getCompileCommands(database, tu_path.c_str());
     } else {
         // Parse entire compilation database
@@ -114,6 +125,7 @@ int main(int argc, char **argv) {
         current_file = clang_getCString(clang_CompileCommand_getFilename(command));
         auto include_path = std::filesystem::canonical(std::filesystem::path(current_file));
         auto include_path_str = include_path.string();
+        translation_units.emplace(include_path_str);
 
         if (verbose)
             cout << "=== Processing translation unit: " << include_path_str << std::endl;
@@ -153,7 +165,7 @@ int main(int argc, char **argv) {
         clang_disposeTranslationUnit(unit);
     }
 
-    // Build mapping from vertices to
+    // Build mapping from vertices to paths
     for (const auto &[to, from]: edges) {
         vertices.insert(to);
         vertices.insert(from);
@@ -167,17 +179,69 @@ int main(int argc, char **argv) {
     }
 
     for (const auto &[to, from]: edges) {
-        boost::add_edge(vertices_ids[to], vertices_ids[from], include_graph);
+        boost::add_edge(vertices_ids[from], vertices_ids[to], include_graph);
     }
 
-    std::deque<unsigned int> include_order;
-    boost::topological_sort(include_graph, std::front_inserter(include_order));
 
-    for (const auto id: include_order) {
-        cout << vertices_names[id] << endl;
+    if(vm.count("tree")) {
+        print_include_tree(translation_units, include_graph, vertices_names, vertices_ids);
+    }
+    else {
+        print_include_topological_order(include_graph, vertices_names);
     }
 
     clang_disposeIndex(index);
+}
+
+void print_include_topological_order(graph_t &include_graph, const vertices_names_t &vertices_names) {
+    std::vector<unsigned int> include_order;
+    boost::topological_sort(include_graph, std::back_inserter(include_order));
+
+    for (const auto id: include_order) {
+        cout << vertices_names.at(id) << endl;
+    }
+}
+
+void print_include_tree(const std::set<std::string> &translation_units, graph_t &include_graph,
+                        const vertices_names_t &vertices_names, const vertices_ids_t &vertices_ids) {
+    boost::graph_traits<graph_t>::adjacency_iterator it, it_end;
+
+    for (const auto &tu: translation_units) {
+        std::cout << tu << '\n';
+        const auto tu_id = vertices_ids.at(tu);
+
+        print_tu_subtree(tu_id, 0, include_graph, vertices_names, vertices_ids, {});
+    }
+}
+
+void print_tu_subtree(const long tu_id, const int level, graph_t &include_graph,
+                      const vertices_names_t &vertices_names, const vertices_ids_t &vertices_ids,
+                      std::vector<bool> continuation_line) {
+    boost::graph_traits<graph_t>::adjacency_iterator it, it_end;
+
+    boost::tie(it, it_end) = boost::adjacent_vertices(tu_id, include_graph);
+    for (; it != it_end; ++it) {
+        auto continuation_line_tmp = continuation_line;
+        if(level > 0)
+            for (auto i = 0; i < level; i++) {
+                if (i % 4 == 0 && continuation_line[i / 4])
+                    std::cout << "│";
+                else
+                    std::cout << " ";
+            }
+
+        if (std::next(it) == it_end) {
+            std::cout << "└── ";
+            continuation_line_tmp.push_back(false);
+        } else {
+            std::cout << "├── ";
+            continuation_line_tmp.push_back(true);
+        }
+
+        std::cout << vertices_names.at(*it) << '\n';
+
+        print_tu_subtree(*it, level + 4, include_graph, vertices_names, vertices_ids, continuation_line_tmp);
+    }
 }
 
 void process_command_line_options(int argc, char **argv, po::variables_map &vm) {
@@ -209,12 +273,11 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm) 
 
 void print_version() {
     std::cout << "clang-include-graph 0.1.0" << std::endl;
-    std::cout << "Copyright (C) 2022 Bartek Kryza <bkryza@gmail.com>"
+    std::cout << "Copyright (C) 2022-present Bartek Kryza <bkryza@gmail.com>"
               << '\n';
     std::cout << "Built with libclang: "
               << LIBCLANG_VERSION_STRING << std::endl;
 }
-
 
 void print_diagnostics(const CXTranslationUnit &tu) {
     auto no = clang_getNumDiagnostics(tu);
