@@ -28,8 +28,10 @@ namespace clang_include_graph {
 template <typename T>
 class include_graph_tree_printer_t : public include_graph_printer_t {
 public:
-    include_graph_tree_printer_t(const T &translation_units)
-        : translation_units_{translation_units}
+    include_graph_tree_printer_t(
+        const path_printer_t &pp, const T &translation_units)
+        : include_graph_printer_t{pp}
+        , translation_units_{translation_units}
     {
     }
 

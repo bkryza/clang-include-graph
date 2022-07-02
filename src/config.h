@@ -16,16 +16,14 @@
 
 namespace clang_include_graph {
 
-enum class printer_t {
-    topological_sort,
-    tree,
-    unknown
-};
+enum class printer_t { topological_sort, tree, unknown };
 
 struct config_t {
     bool verbose{false};
     boost::optional<std::string> compilation_database_directory;
     boost::optional<std::string> translation_unit;
+    boost::optional<std::string> relative_to;
+    bool filenames_only;
     printer_t printer{printer_t::topological_sort};
 
     void init(boost::program_options::variables_map &vm)
@@ -43,6 +41,22 @@ struct config_t {
         if (!compilation_database_directory) {
             std::cerr
                 << "ERROR: Cannot find compilation database - aborting...";
+            exit(-1);
+        }
+
+        if (vm.count("relative-to") == 1) {
+            relative_to =
+                util::to_absolute_path(vm["relative-to"].as<std::string>());
+        }
+
+        if (vm.count("names-only") == 1) {
+            filenames_only = true;
+        }
+
+        if (relative_to.has_value() && filenames_only) {
+            std::cerr << "ERROR: --relative-to and --names-only cannot be enabled "
+                         "at the same time"
+                      << " - aborting...";
             exit(-1);
         }
 

@@ -28,13 +28,16 @@ namespace clang_include_graph {
 class include_graph_topological_sort_printer_t
     : public include_graph_printer_t {
 public:
+    using include_graph_printer_t::include_graph_printer_t;
+
     void print(const include_graph_t &graph) const override
     {
         std::vector<unsigned int> include_order;
         boost::topological_sort(graph.graph, std::back_inserter(include_order));
 
         for (const auto id : include_order) {
-            std::cout << graph.vertices_names.at(id) << std::endl;
+            std::cout << path_printer().print(graph.vertices_names.at(id))
+                      << std::endl;
         }
     }
 };

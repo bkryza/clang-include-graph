@@ -21,11 +21,23 @@
 
 #include "include_graph.h"
 
+#include "path_printer.h"
+
 namespace clang_include_graph {
 
 class include_graph_printer_t {
 public:
+    include_graph_printer_t(const path_printer_t &pp)
+        : path_printer_{pp}
+    {
+    }
+
     virtual void print(const include_graph_t &) const = 0;
+
+    const path_printer_t &path_printer() const { return path_printer_; };
+
+private:
+    const path_printer_t &path_printer_;
 };
 
 } // namespace clang_include_graph

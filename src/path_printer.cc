@@ -1,5 +1,5 @@
 /**
- * src/include_graph_tree_printer.h
+ * src/path_printer.h
  *
  * Copyright (c) 2022-present Bartek Kryza <bkryza@gmail.com>
  *
@@ -16,24 +16,21 @@
  * limitations under the License.
  */
 
-#ifndef CLANG_INCLUDE_GRAPH_UTIL_H
-#define CLANG_INCLUDE_GRAPH_UTIL_H
-
-#include <optional>
-#include <string>
-
-#include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
+#include "path_printer.h"
+#include "config.h"
 
 namespace clang_include_graph {
-namespace util {
 
-boost::optional<std::string> to_absolute_path(std::string relative_path);
+path_printer_t path_printer_t::from_config(config_t config)
+{
+    if (config.relative_to.has_value()) {
+        return path_relative_printer_t{config.relative_to.value()};
+    }
+    else if (config.filenames_only) {
+        return path_name_printer_t{};
+    }
 
-std::string relative_to(
-    std::string path, boost::optional<std::string> directory);
+    return path_printer_t{};
+}
 
-} // namespace util
 } // namespace clang_include_graph
-
-#endif // CLANG_INCLUDE_GRAPH_UTIL_H

@@ -45,6 +45,7 @@ int main(int argc, char **argv)
     include_graph_t include_graph;
     config_t config;
     po::variables_map vm;
+
     process_command_line_options(argc, argv, vm, config);
 
     if (config.verbose)
@@ -55,13 +56,17 @@ int main(int argc, char **argv)
     include_graph_parser.parse(include_graph);
     include_graph.build();
 
+    // Select path printer based on config
+    const path_printer_t &path_printer = path_printer_t::from_config(config);
+
+    // Generate output using selected printer
     if (config.printer == printer_t::tree) {
         if (config.verbose)
             std::cout << "=== Printing include graph tree" << '\n';
 
         include_graph_tree_printer_t<std::decay<
             decltype(include_graph_parser.translation_units())>::type>
-            printer{include_graph_parser.translation_units()};
+            printer{path_printer, include_graph_parser.translation_units()};
         printer.print(include_graph);
     }
     else if (config.printer == printer_t::topological_sort) {
@@ -70,7 +75,7 @@ int main(int argc, char **argv)
                 << "=== Printing include graph sorted in topological order"
                 << '\n';
 
-        include_graph_topological_sort_printer_t printer{};
+        include_graph_topological_sort_printer_t printer{path_printer};
         printer.print(include_graph);
     }
     else {
@@ -91,6 +96,7 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         "Process a single source file from compilation database")(
         "relative-to,r", po::value<std::string>(),
         "Generate paths relative to path (except for system headers)")(
+        "names-only,n", "Print only file names")(
         "tree,t", "Print output graph in tree form");
 
     po::store(po::parse_command_line(argc, argv, options), vm);

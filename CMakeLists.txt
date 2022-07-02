@@ -32,6 +32,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -std=c++11 -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" ${LIBCLANG_CXXFLAGS}")
 
-add_executable(clang-include-graph src/main.cc)
+add_executable(clang-include-graph src/main.cc src/path_printer.cc src/util.cc)
 
 target_link_libraries(clang-include-graph ${LIBCLANG_LIBRARIES} ${Boost_LIBRARIES})
