@@ -21,10 +21,13 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/topological_sort.hpp>
+
 #include <map>
 #include <optional>
 #include <set>
 #include <string>
+
+namespace clang_include_graph {
 
 class include_graph_t {
 public:
@@ -68,5 +71,7 @@ public:
         }
     }
 };
+
+} // namespace clang_include_graph
 
 #endif // CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_H

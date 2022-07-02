@@ -23,6 +23,8 @@
 
 #include <iostream>
 
+namespace clang_include_graph {
+
 class include_graph_topological_sort_printer_t
     : public include_graph_printer_t {
 public:
@@ -36,5 +38,7 @@ public:
         }
     }
 };
+
+} // namespace clang_include_graph
 
 #endif // CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_TOPOLOGICAL_SORT_PRINTER_H

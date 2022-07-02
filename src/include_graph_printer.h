@@ -21,9 +21,13 @@
 
 #include "include_graph.h"
 
+namespace clang_include_graph {
+
 class include_graph_printer_t {
 public:
     virtual void print(const include_graph_t &) const = 0;
 };
+
+} // namespace clang_include_graph
 
 #endif // CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_PRINTER_H

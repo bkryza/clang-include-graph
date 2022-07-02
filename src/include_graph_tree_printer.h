@@ -23,6 +23,8 @@
 
 #include <iostream>
 
+namespace clang_include_graph {
+
 template <typename T>
 class include_graph_tree_printer_t : public include_graph_printer_t {
 public:
@@ -33,9 +35,6 @@ public:
 
     void print(const include_graph_t &graph) const override
     {
-        boost::graph_traits<include_graph_t::graph_t>::adjacency_iterator it,
-            it_end;
-
         for (const auto &tu : translation_units_) {
             std::cout << tu << '\n';
             const auto tu_id = graph.vertices_ids.at(tu);
@@ -49,6 +48,8 @@ private:
         const include_graph_t &include_graph,
         std::vector<bool> continuation_line) const
     {
+        const auto kIndentWidth = 4U;
+
         boost::graph_traits<include_graph_t::graph_t>::adjacency_iterator it,
             it_end;
 
@@ -58,7 +59,8 @@ private:
             auto continuation_line_tmp = continuation_line;
             if (level > 0)
                 for (auto i = 0; i < level; i++) {
-                    if (i % 4 == 0 && continuation_line[i / 4])
+                    if (i % kIndentWidth == 0 &&
+                        continuation_line[i / kIndentWidth])
                         std::cout << "│";
                     else
                         std::cout << " ";
@@ -75,13 +77,15 @@ private:
 
             std::cout << include_graph.vertices_names.at(*it) << '\n';
 
-            print_tu_subtree(
-                *it, level + 4, include_graph, continuation_line_tmp);
+            print_tu_subtree(*it, level + kIndentWidth, include_graph,
+                continuation_line_tmp);
         }
     }
 
 private:
     const T &translation_units_;
 };
+
+} // namespace clang_include_graph
 
 #endif // CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_TREE_PRINTER_H
