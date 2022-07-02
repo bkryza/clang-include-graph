@@ -19,32 +19,36 @@
 #ifndef CLANG_INCLUDE_GRAPH_UTIL_H
 #define CLANG_INCLUDE_GRAPH_UTIL_H
 
-#include <filesystem>
 #include <optional>
 #include <string>
+
+#include <boost/filesystem.hpp>
+#include <boost/optional.hpp>
 
 namespace clang_include_graph {
 namespace util {
 
-std::optional<std::string> to_absolute_path(std::string_view relative_path)
+boost::optional<std::string> to_absolute_path(std::string relative_path)
 {
     try {
-        return std::filesystem::canonical(std::filesystem::path(relative_path))
+        return boost::filesystem::canonical(
+            boost::filesystem::path(relative_path))
             .string();
     }
-    catch (const std::filesystem::filesystem_error &e) {
+    catch (const boost::filesystem::filesystem_error &e) {
         return {};
     }
 }
 
 std::string relative_to(
-    std::string_view path, std::optional<std::string> directory)
+    std::string path, boost::optional<std::string> directory)
 {
     if (!directory)
-        return std::string(path);
+        return path;
 
-    return relative(
-        std::filesystem::path(path), std::filesystem::path(directory.value()));
+    return boost::filesystem::relative(boost::filesystem::path(path),
+        boost::filesystem::path(directory.value()))
+        .string();
 }
 
 } // namespace util

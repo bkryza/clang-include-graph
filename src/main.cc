@@ -35,22 +35,17 @@ namespace po = boost::program_options;
 
 void print_version();
 
-void process_command_line_options(int argc, char **argv, po::variables_map &vm);
-
-std::optional<std::string> to_absolute_path(std::string_view relative_path);
+void process_command_line_options(int argc, char **argv, po::variables_map &vm,
+    clang_include_graph::config_t &config);
 
 int main(int argc, char **argv)
 {
     using namespace clang_include_graph;
 
     include_graph_t include_graph;
-
-    po::variables_map vm;
-    process_command_line_options(argc, argv, vm);
-
     config_t config;
-
-    config.init(vm);
+    po::variables_map vm;
+    process_command_line_options(argc, argv, vm, config);
 
     if (config.verbose)
         std::cout << "=== Loading compilation database from "
@@ -60,7 +55,7 @@ int main(int argc, char **argv)
     include_graph_parser.parse(include_graph);
     include_graph.build();
 
-    if (vm.count("tree")) {
+    if (config.printer == printer_t::tree) {
         if (config.verbose)
             std::cout << "=== Printing include graph tree" << '\n';
 
@@ -69,7 +64,7 @@ int main(int argc, char **argv)
             printer{include_graph_parser.translation_units()};
         printer.print(include_graph);
     }
-    else {
+    else if (config.printer == printer_t::topological_sort) {
         if (config.verbose)
             std::cout
                 << "=== Printing include graph sorted in topological order"
@@ -78,9 +73,13 @@ int main(int argc, char **argv)
         include_graph_topological_sort_printer_t printer{};
         printer.print(include_graph);
     }
+    else {
+        std::cout << "ERROR: Invalid output printer - aborting..." << std::endl;
+    }
 }
 
-void process_command_line_options(int argc, char **argv, po::variables_map &vm)
+void process_command_line_options(int argc, char **argv, po::variables_map &vm,
+    clang_include_graph::config_t &config)
 {
     po::options_description options("clang-include-graph options");
     options.add_options()("help,h", "Print help message and exit")(
@@ -106,6 +105,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm)
         print_version();
         exit(0);
     }
+
+    config.init(vm);
 }
 
 void print_version()

@@ -7,19 +7,26 @@
 
 #include "util.h"
 
+#include <boost/filesystem.hpp>
+#include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 
-#include <filesystem>
 #include <iostream>
-#include <optional>
 #include <string>
 
 namespace clang_include_graph {
 
+enum class printer_t {
+    topological_sort,
+    tree,
+    unknown
+};
+
 struct config_t {
     bool verbose{false};
-    std::optional<std::string> compilation_database_directory;
-    std::optional<std::string> translation_unit;
+    boost::optional<std::string> compilation_database_directory;
+    boost::optional<std::string> translation_unit;
+    printer_t printer{printer_t::topological_sort};
 
     void init(boost::program_options::variables_map &vm)
     {
@@ -48,6 +55,10 @@ struct config_t {
                           << " - aborting...";
                 exit(-1);
             }
+        }
+
+        if (vm.count("tree")) {
+            printer = printer_t::tree;
         }
     }
 };

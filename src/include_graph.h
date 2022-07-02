@@ -21,9 +21,9 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/topological_sort.hpp>
+#include <boost/optional.hpp>
 
 #include <map>
-#include <optional>
 #include <set>
 #include <string>
 
@@ -45,7 +45,7 @@ public:
     vertices_t vertices;
     vertices_ids_t vertices_ids;
     vertices_names_t vertices_names;
-    std::optional<std::string> relative_to;
+    boost::optional<std::string> relative_to;
 
     void add_edge(id_t from, id_t to) { boost::add_edge(from, to, graph); }
 

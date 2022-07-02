@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.10)
 project(clang_include_graph)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
@@ -26,11 +26,11 @@ include_directories()
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost REQUIRED COMPONENTS graph program_options)
+find_package(Boost REQUIRED COMPONENTS graph program_options filesystem)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -std=c++17 -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" ${LIBCLANG_CXXFLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -std=c++11 -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" ${LIBCLANG_CXXFLAGS}")
 
 add_executable(clang-include-graph src/main.cc)
 

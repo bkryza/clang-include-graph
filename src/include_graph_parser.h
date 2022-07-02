@@ -22,12 +22,12 @@
 #include "config.h"
 #include "include_graph.h"
 
+#include <boost/filesystem.hpp>
+#include <boost/optional.hpp>
 #include <clang-c/CXCompilationDatabase.h>
 #include <clang-c/Index.h>
 
-#include <filesystem>
 #include <iostream>
-#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -92,8 +92,8 @@ public:
 
             std::string current_file{
                 clang_getCString(clang_CompileCommand_getFilename(command))};
-            auto include_path =
-                std::filesystem::canonical(std::filesystem::path(current_file));
+            auto include_path = boost::filesystem::canonical(
+                boost::filesystem::path(current_file));
             auto include_path_str = include_path.string();
             translation_units_.emplace(include_path_str);
 
@@ -176,7 +176,7 @@ void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
     auto cx_file_name = clang_getFileName(cx_file);
     std::string file_name = clang_getCString(cx_file_name);
     auto include_path =
-        std::filesystem::canonical(std::filesystem::path(file_name));
+        boost::filesystem::canonical(boost::filesystem::path(file_name));
 
     std::vector<std::string> includes;
     includes.push_back(include_path.string());
@@ -189,8 +189,8 @@ void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
                     nullptr, nullptr, nullptr);
                 cx_file_name = clang_getFileName(cx_file);
                 file_name = clang_getCString(cx_file_name);
-                include_path = std::filesystem::canonical(
-                    std::filesystem::path(file_name));
+                include_path = boost::filesystem::canonical(
+                    boost::filesystem::path(file_name));
             }
 
             CXFile cx_included_from;
@@ -203,12 +203,12 @@ void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
                 std::string f = clang_getCString(cx_from_file_name);
 
                 auto from_path =
-                    std::filesystem::canonical(std::filesystem::path(f));
+                    boost::filesystem::canonical(boost::filesystem::path(f));
 
                 includes.push_back(from_path.string());
 
-                edge_set->insert(
-                    std::pair(include_path.string(), from_path.string()));
+                edge_set->insert(std::pair<std::string, std::string>(
+                    include_path.string(), from_path.string()));
             }
         }
     }
