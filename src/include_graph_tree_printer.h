@@ -37,6 +37,8 @@ public:
 
     void print(const include_graph_t &graph) const override
     {
+        assert(graph.dag.has_value());
+
         for (const auto &tu : translation_units_) {
             std::cout << path_printer().print(tu) << '\n';
             const auto tu_id = graph.vertices_ids.at(tu);
@@ -56,7 +58,7 @@ private:
             it_end;
 
         boost::tie(it, it_end) =
-            boost::adjacent_vertices(tu_id, include_graph.graph);
+            boost::adjacent_vertices(tu_id, include_graph.dag.value());
         for (; it != it_end; ++it) {
             auto continuation_line_tmp = continuation_line;
             if (level > 0)

@@ -19,7 +19,6 @@
 #ifndef CLANG_INCLUDE_GRAPH_UTIL_H
 #define CLANG_INCLUDE_GRAPH_UTIL_H
 
-#include <optional>
 #include <string>
 
 #include <boost/filesystem.hpp>

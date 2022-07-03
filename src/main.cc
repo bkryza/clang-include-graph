@@ -68,6 +68,8 @@ int main(int argc, char **argv)
         if (config.verbose)
             std::cout << "=== Printing include graph tree" << '\n';
 
+        include_graph.build_dag();
+
         include_graph_tree_printer_t<std::decay<
             decltype(include_graph_parser.translation_units())>::type>
             printer{*path_printer, include_graph_parser.translation_units()};

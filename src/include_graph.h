@@ -41,6 +41,7 @@ public:
         boost::adjacency_list<boost::setS, boost::vecS, boost::directedS>;
 
     graph_t graph;
+    boost::optional<graph_t> dag;
     edges_t edges;
     vertices_t vertices;
     vertices_ids_t vertices_ids;
@@ -48,30 +49,48 @@ public:
     boost::optional<std::string> relative_to;
     bool relative_only{false};
 
-    void add_edge(id_t from, id_t to) { boost::add_edge(from, to, graph); }
+    void add_edge(id_t from, id_t to);
 
-    void build()
-    {
-        // Build mapping from vertices to paths
-        auto it = edges.begin();
-        for (; it != edges.end(); it++) {
-            vertices.insert(it->first);
-            vertices.insert(it->second);
-        }
+    void build();
 
-        unsigned vertex_id = 0;
-        for (const auto &v : vertices) {
-            vertices_ids[v] = vertex_id;
-            vertices_names[vertex_id] = v;
-            vertex_id++;
-        }
-
-        it = edges.begin();
-        for (; it != edges.end(); it++) {
-            add_edge(vertices_ids[it->second], vertices_ids[it->first]);
-        }
-    }
+    void build_dag();
 };
+
+namespace detail {
+class dag_include_graph_visitor_t : public boost::default_dfs_visitor {
+public:
+    dag_include_graph_visitor_t(
+        const include_graph_t &graph, include_graph_t::graph_t &dag)
+        : graph_{graph}
+        , dag_{dag}
+    {
+    }
+
+    template <typename E, typename G>
+    void tree_edge(E edge, const G &graph) const
+    {
+        boost::add_edge(
+            boost::source(edge, graph), boost::target(edge, graph), dag_);
+    }
+
+    template <typename E, typename G>
+    void forward_or_cross_edge(E edge, const G &graph) const
+    {
+        boost::add_edge(
+            boost::source(edge, graph), boost::target(edge, graph), dag_);
+    }
+
+    template <typename E, typename G>
+    void back_edge(E /*edge*/, const G & /*graph*/) const
+    {
+        // skip
+    }
+
+private:
+    const include_graph_t &graph_;
+    include_graph_t::graph_t &dag_;
+};
+}
 
 } // namespace clang_include_graph
 
