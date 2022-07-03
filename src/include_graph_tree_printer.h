@@ -38,7 +38,7 @@ public:
     void print(const include_graph_t &graph) const override
     {
         for (const auto &tu : translation_units_) {
-            std::cout << tu << '\n';
+            std::cout << path_printer().print(tu) << '\n';
             const auto tu_id = graph.vertices_ids.at(tu);
 
             print_tu_subtree(tu_id, 0, graph, {});
@@ -77,7 +77,9 @@ private:
                 continuation_line_tmp.push_back(true);
             }
 
-            std::cout << include_graph.vertices_names.at(*it) << '\n';
+            std::cout << path_printer().print(
+                             include_graph.vertices_names.at(*it))
+                      << '\n';
 
             print_tu_subtree(*it, level + kIndentWidth, include_graph,
                 continuation_line_tmp);

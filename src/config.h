@@ -39,8 +39,8 @@ struct config_t {
         }
 
         if (!compilation_database_directory) {
-            std::cerr
-                << "ERROR: Cannot find compilation database - aborting...";
+            std::cerr << "ERROR: Cannot find compilation database - aborting..."
+                      << std::endl;
             exit(-1);
         }
 
@@ -54,9 +54,10 @@ struct config_t {
         }
 
         if (relative_to.has_value() && filenames_only) {
-            std::cerr << "ERROR: --relative-to and --names-only cannot be enabled "
-                         "at the same time"
-                      << " - aborting...";
+            std::cerr
+                << "ERROR: --relative-to and --names-only cannot be enabled "
+                   "at the same time"
+                << " - aborting..." << std::endl;
             exit(-1);
         }
 
@@ -66,13 +67,23 @@ struct config_t {
             if (!translation_unit) {
                 std::cerr << "ERROR: Cannot find translation unit source at "
                           << vm["translation-unit"].as<std::string>()
-                          << " - aborting...";
+                          << " - aborting..." << std::endl;
                 exit(-1);
             }
         }
 
+        if (vm.count("tree") + vm.count("topological-sort") > 1) {
+            std::cerr
+                << "ERROR: Only one output method can be selected at a time"
+                << " - aborting..." << std::endl;
+            exit(-1);
+        }
+
         if (vm.count("tree")) {
             printer = printer_t::tree;
+        }
+        else if (vm.count("topological-sort")) {
+            printer = printer_t::topological_sort;
         }
     }
 };

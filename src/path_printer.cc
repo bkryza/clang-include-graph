@@ -19,18 +19,29 @@
 #include "path_printer.h"
 #include "config.h"
 
+#include <memory>
+
 namespace clang_include_graph {
 
-path_printer_t path_printer_t::from_config(config_t config)
+namespace detail {
+template <typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args &&...args)
+{
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+} // detail
+
+std::unique_ptr<path_printer_t> path_printer_t::from_config(config_t config)
 {
     if (config.relative_to.has_value()) {
-        return path_relative_printer_t{config.relative_to.value()};
+        return detail::make_unique<path_relative_printer_t>(
+            config.relative_to.value());
     }
     else if (config.filenames_only) {
-        return path_name_printer_t{};
+        return detail::make_unique<path_name_printer_t>();
     }
 
-    return path_printer_t{};
+    return detail::make_unique<path_printer_t>();
 }
 
 } // namespace clang_include_graph

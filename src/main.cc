@@ -26,6 +26,7 @@
 
 #include <iostream>
 #include <set>
+#include <memory>
 
 #ifndef LIBCLANG_VERSION_STRING
 #define LIBCLANG_VERSION_STRING "0.0.0"
@@ -52,12 +53,13 @@ int main(int argc, char **argv)
         std::cout << "=== Loading compilation database from "
                   << config.compilation_database_directory.value() << std::endl;
 
+    // Parse translation units and build the include graph
     include_graph_parser_t include_graph_parser{config};
     include_graph_parser.parse(include_graph);
     include_graph.build();
 
     // Select path printer based on config
-    const path_printer_t &path_printer = path_printer_t::from_config(config);
+    std::unique_ptr<path_printer_t> path_printer = path_printer_t::from_config(config);
 
     // Generate output using selected printer
     if (config.printer == printer_t::tree) {
@@ -66,7 +68,7 @@ int main(int argc, char **argv)
 
         include_graph_tree_printer_t<std::decay<
             decltype(include_graph_parser.translation_units())>::type>
-            printer{path_printer, include_graph_parser.translation_units()};
+            printer{*path_printer, include_graph_parser.translation_units()};
         printer.print(include_graph);
     }
     else if (config.printer == printer_t::topological_sort) {
@@ -75,11 +77,12 @@ int main(int argc, char **argv)
                 << "=== Printing include graph sorted in topological order"
                 << '\n';
 
-        include_graph_topological_sort_printer_t printer{path_printer};
+        include_graph_topological_sort_printer_t printer{*path_printer};
         printer.print(include_graph);
     }
     else {
         std::cout << "ERROR: Invalid output printer - aborting..." << std::endl;
+        exit(-1);
     }
 }
 
@@ -87,20 +90,33 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
     clang_include_graph::config_t &config)
 {
     po::options_description options("clang-include-graph options");
-    options.add_options()("help,h", "Print help message and exit")(
-        "version,V", "Print program version and exit")(
-        "verbose,v", "Print verbose information during processing")(
-        "compilation-database-dir,d", po::value<std::string>(),
-        "Path to compilation database directory (default $PWD)")(
-        "translation-unit,u", po::value<std::string>(),
-        "Process a single source file from compilation database")(
-        "relative-to,r", po::value<std::string>(),
-        "Generate paths relative to path (except for system headers)")(
-        "names-only,n", "Print only file names")(
-        "tree,t", "Print output graph in tree form");
 
-    po::store(po::parse_command_line(argc, argv, options), vm);
-    po::notify(vm);
+    // clang-format off
+    options.add_options()
+        ("help,h", "Print help message and exit")
+        ("version,V", "Print program version and exit")
+        ("verbose,v", "Print verbose information during processing")
+        ("compilation-database-dir,d", po::value<std::string>(),
+            "Path to compilation database directory (default $PWD)")
+        ("translation-unit,u", po::value<std::string>(),
+            "Process a single source file from compilation database")
+        ("relative-to,r", po::value<std::string>(),
+            "Generate paths relative to path (except for system headers)")
+        ("names-only,n", "Print only file names")
+        ("topological-sort,s",
+            "Print output includes and translation units in topological"
+            "sort order")
+        ("tree,t", "Print output graph in tree form");
+    // clang-format on
+
+    try {
+        po::store(po::parse_command_line(argc, argv, options), vm);
+        po::notify(vm);
+    }
+    catch (const po::error &e) {
+        std::cerr << "ERROR: Invalid options - " << e.what() << std::endl;
+        exit(-1);
+    }
 
     if (vm.count("help")) {
         std::cout << options << "\n";

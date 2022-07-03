@@ -21,21 +21,25 @@
 
 #include "config.h"
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 
 namespace clang_include_graph {
 
 class path_printer_t {
 public:
+    path_printer_t() = default;
+    virtual ~path_printer_t() = default;
+
     virtual std::string print(const boost::filesystem::path &p) const
     {
         return p.string();
     }
 
-    static path_printer_t from_config(config_t config);
+    static std::unique_ptr<path_printer_t> from_config(config_t config);
 };
 
-class path_relative_printer_t : public path_printer_t {
+class path_relative_printer_t final : public path_printer_t {
 public:
     path_relative_printer_t(const std::string &relative_to)
         : relative_to_{relative_to}
@@ -44,21 +48,24 @@ public:
 
     virtual std::string print(const boost::filesystem::path &p) const override
     {
-        return boost::filesystem::relative(p, relative_to_).string();
+        // Only return relative path, if path is in relative_to_ directory
+        if (boost::starts_with(p.string(), relative_to_.string()))
+            return boost::filesystem::relative(p, relative_to_).string();
+
+        return p.string();
     }
 
 private:
     boost::filesystem::path relative_to_;
 };
 
-class path_name_printer_t : public path_printer_t {
+class path_name_printer_t final : public path_printer_t {
 public:
     std::string print(const boost::filesystem::path &p) const override
     {
         return p.filename().string();
     }
 };
-
 
 } // namespace clang_include_graph
 
