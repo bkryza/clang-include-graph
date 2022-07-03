@@ -58,7 +58,7 @@ struct config_t {
             relative_only = true;
         }
 
-        if(relative_only && !relative_to) {
+        if (relative_only && !relative_to) {
             relative_to = util::to_absolute_path(".");
         }
 
