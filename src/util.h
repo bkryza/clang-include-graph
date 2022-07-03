@@ -19,10 +19,10 @@
 #ifndef CLANG_INCLUDE_GRAPH_UTIL_H
 #define CLANG_INCLUDE_GRAPH_UTIL_H
 
-#include <string>
-
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
+
+#include <string>
 
 namespace clang_include_graph {
 namespace util {

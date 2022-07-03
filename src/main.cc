@@ -81,6 +81,8 @@ int main(int argc, char **argv)
                 << "=== Printing include graph sorted in topological order"
                 << '\n';
 
+        include_graph.build_dag();
+
         include_graph_topological_sort_printer_t printer{*path_printer};
         printer.print(include_graph);
     }

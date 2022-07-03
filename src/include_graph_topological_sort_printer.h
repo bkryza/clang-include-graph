@@ -25,29 +25,6 @@
 
 namespace clang_include_graph {
 
-namespace detail {
-class include_graph_topological_sort_visitor_t
-    : public boost::default_dfs_visitor {
-public:
-    include_graph_topological_sort_visitor_t(
-        std::vector<unsigned int> &vertices)
-        : vertices_{vertices}
-    {
-    }
-
-    template <typename V, typename G>
-    void discover_vertex(V v, const G & /*g*/) const
-    {
-        vertices_.push_back(v);
-    }
-
-    std::vector<unsigned int> &vertices() const { return vertices_; }
-
-private:
-    std::vector<unsigned int> &vertices_;
-};
-}
-
 class include_graph_topological_sort_printer_t
     : public include_graph_printer_t {
 public:
@@ -55,17 +32,16 @@ public:
 
     void print(const include_graph_t &graph) const override
     {
+        assert(graph.dag.has_value());
+
         std::vector<unsigned int> include_order;
-        include_order.reserve(graph.vertices.size());
-        detail::include_graph_topological_sort_visitor_t visitor{include_order};
+        boost::topological_sort(
+            graph.dag.value(), std::back_inserter(include_order));
 
-        boost::depth_first_search(graph.graph, boost::visitor(visitor));
-
-        std::for_each(include_order.rbegin(), include_order.rend(),
-            [&](const unsigned int id) {
-                std::cout << path_printer().print(graph.vertices_names.at(id))
-                          << std::endl;
-            });
+        for (const auto id : include_order) {
+            std::cout << path_printer().print(graph.vertices_names.at(id))
+                      << std::endl;
+        }
     }
 };
 
