@@ -3,15 +3,17 @@ project(clang_include_graph)
 
 set(CMAKE_CXX_STANDARD 11)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 option(LLVM_CONFIG_PATH "Path to custom llvm-config executable")
 
-if(LLVM_CONFIG_PATH)
+if (LLVM_CONFIG_PATH)
     message(STATUS "Using llvm-config from ${LLVM_CONFIG_PATH}")
     set(LIBCLANG_LLVM_CONFIG_EXECUTABLE ${LLVM_CONFIG_PATH})
     set(LLVM_CONFIG_BINARY ${LLVM_CONFIG_PATH})
-endif(LLVM_CONFIG_PATH)
+endif (LLVM_CONFIG_PATH)
 
 
 message(STATUS "Checking for libclang...")
@@ -32,6 +34,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -std=c++11 -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" ${LIBCLANG_CXXFLAGS}")
 
-add_executable(clang-include-graph src/main.cc src/path_printer.cc src/util.cc)
+add_executable(clang-include-graph src/main.cc src/path_printer.cc src/util.cc src/include_graph.cc)
 
 target_link_libraries(clang-include-graph ${LIBCLANG_LIBRARIES} ${Boost_LIBRARIES})
