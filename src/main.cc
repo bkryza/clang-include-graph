@@ -21,6 +21,7 @@
 #include "include_graph_parser.h"
 #include "include_graph_topological_sort_printer.h"
 #include "include_graph_tree_printer.h"
+#include "include_graph_graphviz_printer.h"
 
 #include <boost/program_options.hpp>
 
@@ -80,6 +81,15 @@ int main(int argc, char **argv)
         include_graph_topological_sort_printer_t printer{*path_printer};
         printer.print(include_graph);
     }
+    else if (config.printer == printer_t::graphviz) {
+        if (config.verbose)
+            std::cout
+                << "=== Printing include graph sorted in topological order"
+                << '\n';
+
+        include_graph_graphviz_printer_t printer{*path_printer};
+        printer.print(include_graph);
+    }
     else {
         std::cout << "ERROR: Invalid output printer - aborting..." << std::endl;
         exit(-1);
@@ -106,7 +116,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         ("topological-sort,s",
             "Print output includes and translation units in topological"
             "sort order")
-        ("tree,t", "Print output graph in tree form");
+        ("tree,t", "Print output graph in tree form")
+        ("graphviz,g", "Print output graph in GraphViz format");
     // clang-format on
 
     try {

@@ -16,7 +16,7 @@
 
 namespace clang_include_graph {
 
-enum class printer_t { topological_sort, tree, unknown };
+enum class printer_t { topological_sort, tree, graphviz, unknown };
 
 struct config_t {
     bool verbose{false};
@@ -72,7 +72,9 @@ struct config_t {
             }
         }
 
-        if (vm.count("tree") + vm.count("topological-sort") > 1) {
+        if (vm.count("tree") + vm.count("graphviz") +
+                vm.count("topological-sort") >
+            1) {
             std::cerr
                 << "ERROR: Only one output method can be selected at a time"
                 << " - aborting..." << std::endl;
@@ -81,6 +83,9 @@ struct config_t {
 
         if (vm.count("tree")) {
             printer = printer_t::tree;
+        }
+        else if (vm.count("graphviz")) {
+            printer = printer_t::graphviz;
         }
         else if (vm.count("topological-sort")) {
             printer = printer_t::topological_sort;
