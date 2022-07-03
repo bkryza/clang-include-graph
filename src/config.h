@@ -24,6 +24,7 @@ struct config_t {
     boost::optional<std::string> translation_unit;
     boost::optional<std::string> relative_to;
     bool filenames_only;
+    bool relative_only;
     printer_t printer{printer_t::topological_sort};
 
     void init(boost::program_options::variables_map &vm)
@@ -51,6 +52,14 @@ struct config_t {
 
         if (vm.count("names-only") == 1) {
             filenames_only = true;
+        }
+
+        if (vm.count("relative-only") == 1) {
+            relative_only = true;
+        }
+
+        if(relative_only && !relative_to) {
+            relative_to = util::to_absolute_path(".");
         }
 
         if (relative_to.has_value() && filenames_only) {

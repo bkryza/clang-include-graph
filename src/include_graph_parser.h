@@ -51,6 +51,9 @@ public:
 
     void parse(include_graph_t &include_graph)
     {
+        include_graph.relative_to = config_.relative_to;
+        include_graph.relative_only = config_.relative_only;
+
         auto error = CXCompilationDatabase_NoError;
         auto database = clang_CompilationDatabase_fromDirectory(
             config_.compilation_database_directory.value().c_str(), &error);
@@ -166,6 +169,11 @@ void print_diagnostics(const CXTranslationUnit &tu)
     }
 }
 
+bool is_relative(const std::string &filepath, const std::string &directory)
+{
+    return boost::starts_with(filepath, directory);
+}
+
 void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
     unsigned include_len, CXClientData include_graph_ptr)
 {
@@ -173,13 +181,29 @@ void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
     auto *edge_set =
         static_cast<include_graph_t::edges_t *>(&include_graph->edges);
 
+    auto relative_only = include_graph->relative_only;
+    auto relative_to = include_graph->relative_to;
+
     auto cx_file_name = clang_getFileName(cx_file);
     std::string file_name = clang_getCString(cx_file_name);
     auto include_path =
         boost::filesystem::canonical(boost::filesystem::path(file_name));
 
     std::vector<std::string> includes;
-    includes.push_back(include_path.string());
+
+    auto add_to_includes = [&](const std::string &path) {
+        if (!relative_only || is_relative(path, relative_to.value()))
+            includes.push_back(path);
+    };
+
+    auto add_to_edges = [&](const std::string &from, const std::string &to) {
+        if (!relative_only ||
+            (is_relative(from, relative_to.value()) &&
+                is_relative(to, relative_to.value())))
+            edge_set->insert(std::pair<std::string, std::string>(to, from));
+    };
+
+    add_to_includes(include_path.string());
 
     if (inclusion_stack != nullptr) {
         for (auto i = 0U; i < include_len; i++) {
@@ -205,10 +229,8 @@ void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
                 auto from_path =
                     boost::filesystem::canonical(boost::filesystem::path(f));
 
-                includes.push_back(from_path.string());
-
-                edge_set->insert(std::pair<std::string, std::string>(
-                    include_path.string(), from_path.string()));
+                add_to_includes(from_path.string());
+                add_to_edges(from_path.string(), include_path.string());
             }
         }
     }

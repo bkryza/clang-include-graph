@@ -18,16 +18,16 @@
 
 #include "config.h"
 #include "include_graph.h"
+#include "include_graph_graphviz_printer.h"
 #include "include_graph_parser.h"
 #include "include_graph_topological_sort_printer.h"
 #include "include_graph_tree_printer.h"
-#include "include_graph_graphviz_printer.h"
 
 #include <boost/program_options.hpp>
 
 #include <iostream>
-#include <set>
 #include <memory>
+#include <set>
 
 #ifndef LIBCLANG_VERSION_STRING
 #define LIBCLANG_VERSION_STRING "0.0.0"
@@ -60,7 +60,8 @@ int main(int argc, char **argv)
     include_graph.build();
 
     // Select path printer based on config
-    std::unique_ptr<path_printer_t> path_printer = path_printer_t::from_config(config);
+    std::unique_ptr<path_printer_t> path_printer =
+        path_printer_t::from_config(config);
 
     // Generate output using selected printer
     if (config.printer == printer_t::tree) {
@@ -113,6 +114,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         ("relative-to,r", po::value<std::string>(),
             "Generate paths relative to path (except for system headers)")
         ("names-only,n", "Print only file names")
+        ("relative-only,l",
+            "Include only files relative to 'relative-to' directory")
         ("topological-sort,s",
             "Print output includes and translation units in topological"
             "sort order")

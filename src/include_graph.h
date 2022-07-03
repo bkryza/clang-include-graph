@@ -46,6 +46,7 @@ public:
     vertices_ids_t vertices_ids;
     vertices_names_t vertices_names;
     boost::optional<std::string> relative_to;
+    bool relative_only{false};
 
     void add_edge(id_t from, id_t to) { boost::add_edge(from, to, graph); }
 
