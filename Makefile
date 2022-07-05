@@ -53,6 +53,12 @@ release: release/CMakeLists.txt
 	echo "Using ${NUMPROC} cores"
 	make -C release -j$(NUMPROC)
 
+test: debug
+	CTEST_OUTPUT_ON_FAILURE=1 make -C debug test
+
+test_release: release
+	CTEST_OUTPUT_ON_FAILURE=1 make -C release test
+
 .PHONY: format
 format:
 	docker run --rm -v $(CURDIR):/root/sources bkryza/clang-format-check:1.3
