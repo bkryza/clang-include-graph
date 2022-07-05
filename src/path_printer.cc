@@ -29,9 +29,10 @@ std::unique_ptr<T> make_unique(Args &&...args)
 {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
-} // detail
+} // namespace detail
 
-std::unique_ptr<path_printer_t> path_printer_t::from_config(config_t config)
+std::unique_ptr<path_printer_t> path_printer_t::from_config(
+    const config_t &config)
 {
     if (config.relative_to.has_value()) {
         return detail::make_unique<path_relative_printer_t>(

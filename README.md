@@ -8,6 +8,7 @@ Main features include:
   * Topologically ordered include list
   * Tree format
   * Graphviz
+  * Include cycles
 * Handles cyclic include graphs
 
 ## Installation
@@ -60,6 +61,8 @@ clang-include-graph options:
                                         units in topologicalsort order
   -t [ --tree ]                         Print output graph in tree form
   -g [ --graphviz ]                     Print output graph in GraphViz format
+  -c [ --cycles ]                       Print include graph cycles, if any
+
 ```
 
 ### Example output
@@ -70,7 +73,7 @@ make release
 ```
 
 #### Topologically sorted includes for project including only project files with full paths
-```bash
+```
 ❯ release/clang-include-graph --compilation-database-dir release
 /usr/include/boost/config/compiler/clang.hpp
 /usr/include/boost/config/detail/select_compiler_config.hpp
@@ -100,7 +103,7 @@ make release
 ```
 
 #### Include tree for project including only project files with relative paths
-```bash
+```
 ❯ release/clang-include-graph --compilation-database-dir release --relative-to . --relative-only --tree
 src/include_graph.cc
 └── src/include_graph.h
@@ -128,6 +131,32 @@ src/util.cc
 ```bash
 ❯ release/clang-include-graph --compilation-database-dir release --relative-to src --relative-only --graphviz > /tmp/include.dot
 ❯ dot -Tpng -o/tmp/include.png /tmp/include.dot
+```
+
+#### Print all include cycles in the include graph
+```
+❯ release/clang-include-graph --compilation-database-dir release -u src/util.cc --cycles
+[
+  /usr/include/boost/preprocessor/control/while.hpp
+  /usr/include/boost/preprocessor/list/fold_left.hpp
+]
+[
+  /usr/include/boost/preprocessor/control/while.hpp
+  /usr/include/boost/preprocessor/list/fold_right.hpp
+  /usr/include/boost/preprocessor/list/detail/fold_right.hpp
+  /usr/include/boost/preprocessor/list/fold_left.hpp
+]
+[
+  /usr/include/boost/preprocessor/control/while.hpp
+  /usr/include/boost/preprocessor/list/fold_right.hpp
+  /usr/include/boost/preprocessor/list/detail/fold_right.hpp
+  /usr/include/boost/preprocessor/list/reverse.hpp
+  /usr/include/boost/preprocessor/list/fold_left.hpp
+]
+[
+  /usr/include/boost/preprocessor/control/while.hpp
+  /usr/include/boost/preprocessor/list/fold_right.hpp
+]
 ```
 
 #### Count all files that need to be parsed when processing a translation unit

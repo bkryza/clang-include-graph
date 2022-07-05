@@ -55,7 +55,7 @@ public:
 
     void operator()(std::ostream &os) const override
     {
-        detail::label_writer writer(include_graph().graph(), path_printer());
+        detail::label_writer writer{include_graph().graph(), path_printer()};
 
         boost::write_graphviz(os, include_graph().graph(), writer);
     }

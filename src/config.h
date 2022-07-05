@@ -30,7 +30,7 @@
 
 namespace clang_include_graph {
 
-enum class printer_t { topological_sort, tree, graphviz, unknown };
+enum class printer_t { topological_sort, tree, graphviz, cycles, unknown };
 
 struct config_t {
     bool verbose{false};
@@ -112,6 +112,9 @@ struct config_t {
         }
         else if (vm.count("topological-sort")) {
             printer = printer_t::topological_sort;
+        }
+        else if (vm.count("cycles")) {
+            printer = printer_t::cycles;
         }
     }
 };

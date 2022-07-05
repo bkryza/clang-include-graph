@@ -18,6 +18,7 @@
 
 #include "config.h"
 #include "include_graph.h"
+#include "include_graph_cycles_printer.h"
 #include "include_graph_graphviz_printer.h"
 #include "include_graph_parser.h"
 #include "include_graph_topological_sort_printer.h"
@@ -99,6 +100,14 @@ int main(int argc, char **argv)
 
         std::cout << printer;
     }
+    else if (config.printer == printer_t::cycles) {
+        if (config.verbose)
+            std::cout << "=== Printing include graph cycles" << '\n';
+
+        include_graph_cycles_printer_t printer{include_graph, *path_printer};
+
+        std::cout << printer;
+    }
     else {
         std::cout << "ERROR: Invalid output printer - aborting..." << std::endl;
         exit(-1);
@@ -128,7 +137,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "Print output includes and translation units in topological"
             "sort order")
         ("tree,t", "Print output graph in tree form")
-        ("graphviz,g", "Print output graph in GraphViz format");
+        ("graphviz,g", "Print output graph in GraphViz format")
+        ("cycles,c", "Print include graph cycles, if any");
     // clang-format on
 
     try {

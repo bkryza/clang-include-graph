@@ -36,7 +36,7 @@ public:
         return p.string();
     }
 
-    static std::unique_ptr<path_printer_t> from_config(config_t config);
+    static std::unique_ptr<path_printer_t> from_config(const config_t &config);
 };
 
 class path_relative_printer_t final : public path_printer_t {
