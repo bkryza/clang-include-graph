@@ -45,7 +45,7 @@ void include_graph_t::init(const config_t &config)
 
 void include_graph_t::build_dag()
 {
-    if(dag_.has_value())
+    if (dag_.has_value())
         return;
 
     dag_ = include_graph_t::graph_t{};
