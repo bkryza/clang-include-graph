@@ -19,7 +19,10 @@
 #ifndef CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_H
 #define CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_H
 
+#include "config.h"
+
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/labeled_graph.hpp>
 #include <boost/graph/topological_sort.hpp>
 #include <boost/optional.hpp>
 
@@ -31,29 +34,39 @@ namespace clang_include_graph {
 
 class include_graph_t {
 public:
-    using id_t = unsigned int;
-    using edges_t = std::set<std::pair<std::string, std::string>>;
-    using vertices_t = std::set<std::string>;
-    using vertices_ids_t = std::map<std::string, id_t>;
-    using vertices_names_t = std::map<id_t, std::string>;
+    struct vertex_t {
+        std::string file;
+        bool is_translation_unit{false};
+    };
 
+    using graph_adjlist_t = boost::adjacency_list<boost::setS, boost::vecS,
+        boost::directedS, vertex_t>;
     using graph_t =
-        boost::adjacency_list<boost::setS, boost::vecS, boost::directedS>;
+        boost::labeled_graph<graph_adjlist_t, std::string, boost::hash_mapS>;
 
-    graph_t graph;
-    boost::optional<graph_t> dag;
-    edges_t edges;
-    vertices_t vertices;
-    vertices_ids_t vertices_ids;
-    vertices_names_t vertices_names;
-    boost::optional<std::string> relative_to;
-    bool relative_only{false};
+    void add_edge(const std::string &to, const std::string &from,
+        bool from_translation_unit = false);
 
-    void add_edge(id_t from, id_t to);
-
-    void build();
+    void init(const config_t &config);
 
     void build_dag();
+
+    const boost::optional<graph_t> &dag() const noexcept { return dag_; }
+
+    const graph_t &graph() const noexcept { return graph_; }
+
+    bool relative_only() const noexcept { return relative_only_; }
+
+    const boost::optional<std::string> &relative_to() const noexcept
+    {
+        return relative_to_;
+    }
+
+protected:
+    graph_t graph_;
+    boost::optional<graph_t> dag_;
+    boost::optional<std::string> relative_to_;
+    bool relative_only_{false};
 };
 
 namespace detail {

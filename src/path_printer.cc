@@ -1,5 +1,5 @@
 /**
- * src/path_printer.h
+ * src/path_printer.cc
  *
  * Copyright (c) 2022-present Bartek Kryza <bkryza@gmail.com>
  *

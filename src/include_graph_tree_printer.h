@@ -28,27 +28,34 @@ namespace clang_include_graph {
 template <typename T>
 class include_graph_tree_printer_t : public include_graph_printer_t {
 public:
-    include_graph_tree_printer_t(
+    include_graph_tree_printer_t(const include_graph_t &graph,
         const path_printer_t &pp, const T &translation_units)
-        : include_graph_printer_t{pp}
+        : include_graph_printer_t{graph, pp}
         , translation_units_{translation_units}
     {
     }
 
-    void print(const include_graph_t &graph) const override
+    void operator()(std::ostream &os) const override
     {
-        assert(graph.dag.has_value());
+        assert(include_graph().dag().has_value());
 
-        for (const auto &tu : translation_units_) {
-            std::cout << path_printer().print(tu) << '\n';
-            const auto tu_id = graph.vertices_ids.at(tu);
+        auto begin =
+            boost::vertices(include_graph().dag().value().graph()).first;
+        auto end =
+            boost::vertices(include_graph().dag().value().graph()).second;
 
-            print_tu_subtree(tu_id, 0, graph, {});
-        }
+        std::for_each(begin, end,
+            [&](const include_graph_t::graph_t::vertex_descriptor &v) {
+                const auto &vertex = include_graph().graph().graph()[v];
+                if (vertex.is_translation_unit) {
+                    os << path_printer().print(vertex.file) << '\n';
+                    print_tu_subtree(os, v, 0, include_graph(), {});
+                }
+            });
     }
 
 private:
-    void print_tu_subtree(const long tu_id, const int level,
+    void print_tu_subtree(std::ostream &os, const long tu_id, const int level,
         const include_graph_t &include_graph,
         std::vector<bool> continuation_line) const
     {
@@ -57,33 +64,31 @@ private:
         boost::graph_traits<include_graph_t::graph_t>::adjacency_iterator it,
             it_end;
 
-        boost::tie(it, it_end) =
-            boost::adjacent_vertices(tu_id, include_graph.dag.value());
+        boost::tie(it, it_end) = boost::adjacent_vertices(
+            tu_id, include_graph.dag().value().graph());
         for (; it != it_end; ++it) {
             auto continuation_line_tmp = continuation_line;
             if (level > 0)
                 for (auto i = 0; i < level; i++) {
                     if (i % kIndentWidth == 0 &&
                         continuation_line[i / kIndentWidth])
-                        std::cout << "│";
+                        os << "│";
                     else
-                        std::cout << " ";
+                        os << " ";
                 }
 
             if (std::next(it) == it_end) {
-                std::cout << "└── ";
+                os << "└── ";
                 continuation_line_tmp.push_back(false);
             }
             else {
-                std::cout << "├── ";
+                os << "├── ";
                 continuation_line_tmp.push_back(true);
             }
 
-            std::cout << path_printer().print(
-                             include_graph.vertices_names.at(*it))
-                      << '\n';
-
-            print_tu_subtree(*it, level + kIndentWidth, include_graph,
+            os << path_printer().print(include_graph.graph().graph()[*it].file)
+               << '\n';
+            print_tu_subtree(os, *it, level + kIndentWidth, include_graph,
                 continuation_line_tmp);
         }
     }

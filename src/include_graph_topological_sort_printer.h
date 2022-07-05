@@ -30,17 +30,17 @@ class include_graph_topological_sort_printer_t
 public:
     using include_graph_printer_t::include_graph_printer_t;
 
-    void print(const include_graph_t &graph) const override
+    void operator()(std::ostream &os) const override
     {
-        assert(graph.dag.has_value());
+        assert(include_graph().dag().has_value());
 
-        std::vector<unsigned int> include_order;
+        std::vector<include_graph_t::graph_t::vertex_descriptor> include_order;
         boost::topological_sort(
-            graph.dag.value(), std::back_inserter(include_order));
+            include_graph().dag().value(), std::back_inserter(include_order));
 
         for (const auto id : include_order) {
-            std::cout << path_printer().print(graph.vertices_names.at(id))
-                      << std::endl;
+            os << path_printer().print(include_graph().graph().graph()[id].file)
+               << std::endl;
         }
     }
 };

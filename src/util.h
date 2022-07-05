@@ -1,5 +1,5 @@
 /**
- * src/include_graph_tree_printer.h
+ * src/util.h
  *
  * Copyright (c) 2022-present Bartek Kryza <bkryza@gmail.com>
  *

@@ -30,20 +30,21 @@ namespace clang_include_graph {
 namespace detail {
 class label_writer {
 public:
-    label_writer(const include_graph_t::vertices_names_t &names,
-        const path_printer_t &pp)
-        : names_(names)
+    label_writer(
+        const include_graph_t::graph_t &graph, const path_printer_t &pp)
+        : graph_{graph}
         , path_printer_{pp}
     {
     }
     template <typename Vertex>
     void operator()(std::ostream &out, const Vertex &v) const
     {
-        out << "[label=\"" << path_printer_.print(names_.at(v)) << "\"]";
+        out << "[label=\"" << path_printer_.print(graph_.graph()[v].file)
+            << "\"]";
     }
 
 private:
-    const include_graph_t::vertices_names_t &names_;
+    const include_graph_t::graph_t &graph_;
     const path_printer_t &path_printer_;
 };
 }
@@ -52,11 +53,11 @@ class include_graph_graphviz_printer_t : public include_graph_printer_t {
 public:
     using include_graph_printer_t::include_graph_printer_t;
 
-    void print(const include_graph_t &graph) const override
+    void operator()(std::ostream &os) const override
     {
-        detail::label_writer writer(graph.vertices_names, path_printer());
+        detail::label_writer writer(include_graph().graph(), path_printer());
 
-        boost::write_graphviz(std::cout, graph.graph, writer);
+        boost::write_graphviz(os, include_graph().graph(), writer);
     }
 };
 

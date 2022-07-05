@@ -57,7 +57,6 @@ int main(int argc, char **argv)
     // Parse translation units and build the include graph
     include_graph_parser_t include_graph_parser{config};
     include_graph_parser.parse(include_graph);
-    include_graph.build();
 
     // Select path printer based on config
     std::unique_ptr<path_printer_t> path_printer =
@@ -72,8 +71,10 @@ int main(int argc, char **argv)
 
         include_graph_tree_printer_t<std::decay<
             decltype(include_graph_parser.translation_units())>::type>
-            printer{*path_printer, include_graph_parser.translation_units()};
-        printer.print(include_graph);
+            printer{include_graph, *path_printer,
+                include_graph_parser.translation_units()};
+
+        std::cout << printer;
     }
     else if (config.printer == printer_t::topological_sort) {
         if (config.verbose)
@@ -83,8 +84,10 @@ int main(int argc, char **argv)
 
         include_graph.build_dag();
 
-        include_graph_topological_sort_printer_t printer{*path_printer};
-        printer.print(include_graph);
+        include_graph_topological_sort_printer_t printer{
+            include_graph, *path_printer};
+
+        std::cout << printer;
     }
     else if (config.printer == printer_t::graphviz) {
         if (config.verbose)
@@ -92,8 +95,9 @@ int main(int argc, char **argv)
                 << "=== Printing include graph sorted in topological order"
                 << '\n';
 
-        include_graph_graphviz_printer_t printer{*path_printer};
-        printer.print(include_graph);
+        include_graph_graphviz_printer_t printer{include_graph, *path_printer};
+
+        std::cout << printer;
     }
     else {
         std::cout << "ERROR: Invalid output printer - aborting..." << std::endl;

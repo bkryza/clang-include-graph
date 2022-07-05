@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_VISITOR_H
-#define CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_VISITOR_H
+#ifndef CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_PARSER_H
+#define CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_PARSER_H
 
 #include "config.h"
 #include "include_graph.h"
@@ -51,8 +51,7 @@ public:
 
     void parse(include_graph_t &include_graph)
     {
-        include_graph.relative_to = config_.relative_to;
-        include_graph.relative_only = config_.relative_only;
+        include_graph.init(config_);
 
         auto error = CXCompilationDatabase_NoError;
         auto database = clang_CompilationDatabase_fromDirectory(
@@ -178,11 +177,9 @@ void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
     unsigned include_len, CXClientData include_graph_ptr)
 {
     auto *include_graph = static_cast<include_graph_t *>(include_graph_ptr);
-    auto *edge_set =
-        static_cast<include_graph_t::edges_t *>(&include_graph->edges);
 
-    auto relative_only = include_graph->relative_only;
-    auto relative_to = include_graph->relative_to;
+    auto relative_only = include_graph->relative_only();
+    auto relative_to = include_graph->relative_to();
 
     auto cx_file_name = clang_getFileName(cx_file);
     std::string file_name = clang_getCString(cx_file_name);
@@ -191,19 +188,13 @@ void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
 
     std::vector<std::string> includes;
 
-    auto add_to_includes = [&](const std::string &path) {
-        if (!relative_only || is_relative(path, relative_to.value()))
-            includes.push_back(path);
-    };
-
-    auto add_to_edges = [&](const std::string &from, const std::string &to) {
+    auto add_to_edges = [&](const std::string &from, const std::string &to,
+                            bool is_translation_unit) {
         if (!relative_only ||
             (is_relative(from, relative_to.value()) &&
                 is_relative(to, relative_to.value())))
-            edge_set->insert(std::pair<std::string, std::string>(to, from));
+            include_graph->add_edge(to, from, is_translation_unit);
     };
-
-    add_to_includes(include_path.string());
 
     if (inclusion_stack != nullptr) {
         for (auto i = 0U; i < include_len; i++) {
@@ -229,8 +220,9 @@ void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
                 auto from_path =
                     boost::filesystem::canonical(boost::filesystem::path(f));
 
-                add_to_includes(from_path.string());
-                add_to_edges(from_path.string(), include_path.string());
+                bool is_translation_unit{i == 0};
+                add_to_edges(from_path.string(), include_path.string(),
+                    is_translation_unit);
             }
         }
     }
@@ -238,4 +230,4 @@ void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
 
 } // namespace clang_include_graph
 
-#endif // CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_VISITOR_H
+#endif // CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_PARSER_H

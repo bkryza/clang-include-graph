@@ -1,5 +1,5 @@
 /**
- * src/include_graph_printers.h
+ * src/include_graph_printer.h
  *
  * Copyright (c) 2022-present Bartek Kryza <bkryza@gmail.com>
  *
@@ -20,25 +20,35 @@
 #define CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_PRINTER_H
 
 #include "include_graph.h"
-
 #include "path_printer.h"
 
 namespace clang_include_graph {
 
 class include_graph_printer_t {
 public:
-    include_graph_printer_t(const path_printer_t &pp)
-        : path_printer_{pp}
+    include_graph_printer_t(
+        const include_graph_t &graph, const path_printer_t &pp)
+        : graph_{graph}
+        , path_printer_{pp}
     {
     }
 
-    virtual void print(const include_graph_t &) const = 0;
+    virtual void operator()(std::ostream &) const = 0;
 
     const path_printer_t &path_printer() const { return path_printer_; };
 
+    const include_graph_t &include_graph() const { return graph_; };
+
 private:
+    const include_graph_t &graph_;
     const path_printer_t &path_printer_;
 };
+
+std::ostream &operator<<(std::ostream &os, include_graph_printer_t &a)
+{
+    a(os);
+    return os;
+}
 
 } // namespace clang_include_graph
 
