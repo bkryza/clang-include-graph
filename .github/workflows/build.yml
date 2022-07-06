@@ -1,0 +1,19 @@
+name: build
+
+on: [push, pull_request]
+
+jobs:
+  build-ubuntu:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Update package database
+        run: sudo apt -y update
+      - name: Install deps
+        run: sudo apt -y install git make gcc g++ cmake clang-12 libclang-12-dev libclang-cpp12-dev libboost-graph1.71-dev libboost-filesystem1.71-dev libboost-test1.71-dev libboost-program-options1.71-dev
+      - name: Build and unit test
+        run: |
+          NUMPROC=2 make test

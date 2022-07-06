@@ -1,5 +1,7 @@
 # clang-include-graph - simple tool for analyzing C++ include graphs
 
+[![Build status](https://github.com/bkryza/clang-include-graph/actions/workflows/build.yml/badge.svg)](https://github.com/bkryza/clang-include-graph/actions)
+
 `clang-include-graph` provides several simple commands for analyzing and visualizing C++ project include graphs.
 
 Main features include:
