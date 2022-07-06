@@ -16,7 +16,7 @@
 * limitations under the License.
 */
 
-#define BOOST_TEST_MODULE Unit test of include_graph_topological_sort_t
+#define BOOST_TEST_MODULE Unit test of include_graph_topological_sort_printer_t
 
 #include <boost/test/unit_test.hpp>
 

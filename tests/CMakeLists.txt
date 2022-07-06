@@ -1,11 +1,18 @@
-add_executable(
+
+list(APPEND TESTCASES
         test_topological_sort_printer
-        $<TARGET_OBJECTS:lib-clang-include-graph>
-        test_topological_sort_printer.cc)
+        test_cycles_printer)
 
-target_include_directories(test_topological_sort_printer PUBLIC ${Boost_INCLUDE_DIRS})
+foreach(TESTCASE IN LISTS TESTCASES)
+    add_executable(
+            ${TESTCASE}
+            $<TARGET_OBJECTS:lib-clang-include-graph>
+            ${TESTCASE}.cc)
 
-target_link_libraries(test_topological_sort_printer
-        Boost::filesystem Boost::graph Boost::program_options Boost::unit_test_framework)
+    target_include_directories(${TESTCASE} PUBLIC ${Boost_INCLUDE_DIRS})
 
-add_test(test_topological_sort_printer test_topological_sort_printer)
+    target_link_libraries(${TESTCASE}
+            Boost::filesystem Boost::graph Boost::program_options Boost::unit_test_framework)
+
+    add_test(${TESTCASE} ${TESTCASE})
+endforeach()
