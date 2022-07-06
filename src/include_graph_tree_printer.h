@@ -25,13 +25,11 @@
 
 namespace clang_include_graph {
 
-template <typename T>
 class include_graph_tree_printer_t : public include_graph_printer_t {
 public:
-    include_graph_tree_printer_t(const include_graph_t &graph,
-        const path_printer_t &pp, const T &translation_units)
+    include_graph_tree_printer_t(
+        const include_graph_t &graph, const path_printer_t &pp)
         : include_graph_printer_t{graph, pp}
-        , translation_units_{translation_units}
     {
     }
 
@@ -92,9 +90,6 @@ private:
                 continuation_line_tmp);
         }
     }
-
-private:
-    const T &translation_units_;
 };
 
 } // namespace clang_include_graph

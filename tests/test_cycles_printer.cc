@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(test_dag_prints_no_cycles)
 
     path_printer_t pp;
 
-    include_graph_cycles_printer_t p(graph, pp);
+    include_graph_cycles_printer_t p{graph, pp};
 
     std::stringstream ss;
     ss << p;
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(test_dag_prints_simple_cycles)
 
     path_printer_t pp;
 
-    include_graph_cycles_printer_t p(graph, pp);
+    include_graph_cycles_printer_t p{graph, pp};
 
     std::stringstream ss;
     ss << p;
@@ -88,11 +88,9 @@ BOOST_AUTO_TEST_CASE(test_dag_prints_long_nested_cycles)
     graph.add_edge("include5.h", "include4.h");
     graph.add_edge("include1.h", "include5.h");
 
-    graph.build_dag();
-
     path_printer_t pp;
 
-    include_graph_cycles_printer_t p(graph, pp);
+    include_graph_cycles_printer_t p{graph, pp};
 
     std::stringstream ss;
     ss << p;

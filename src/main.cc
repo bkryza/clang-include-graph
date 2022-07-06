@@ -70,10 +70,7 @@ int main(int argc, char **argv)
 
         include_graph.build_dag();
 
-        include_graph_tree_printer_t<std::decay<
-            decltype(include_graph_parser.translation_units())>::type>
-            printer{include_graph, *path_printer,
-                include_graph_parser.translation_units()};
+        include_graph_tree_printer_t printer{include_graph, *path_printer};
 
         std::cout << printer;
     }
