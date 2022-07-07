@@ -77,56 +77,78 @@ make release
 #### Topologically sorted includes for project including only project files with full paths
 ```
 ❯ release/clang-include-graph --compilation-database-dir release
-/usr/include/boost/config/compiler/clang.hpp
+/usr/include/boost/config/user.hpp
 /usr/include/boost/config/detail/select_compiler_config.hpp
-/usr/include/boost/config/detail/select_platform_config.hpp
-/usr/include/x86_64-linux-gnu/c++/11/bits/cpu_defines.h
-/usr/include/x86_64-linux-gnu/bits/timesize.h
+/usr/include/boost/config/compiler/clang.hpp
 /usr/include/x86_64-linux-gnu/bits/wordsize.h
+/usr/include/x86_64-linux-gnu/bits/timesize.h
 /usr/include/features-time64.h
-
+/usr/include/stdc-predef.h
+/usr/include/x86_64-linux-gnu/bits/long-double.h
+/usr/include/x86_64-linux-gnu/sys/cdefs.h
+/usr/include/x86_64-linux-gnu/gnu/stubs-64.h
+/usr/include/x86_64-linux-gnu/gnu/stubs.h
 ...
-
-/usr/include/boost/graph/graphviz.hpp
-/home/bartek/devel/clang-include-graph/src/include_graph_graphviz_printer.h
-/usr/lib/llvm-12/include/clang-c/ExternC.h
-/usr/lib/llvm-12/include/clang-c/Platform.h
-/usr/lib/llvm-12/include/clang-c/CXString.h
-/usr/lib/llvm-12/include/clang-c/CXCompilationDatabase.h
-/usr/lib/llvm-12/include/clang-c/CXErrorCode.h
-/usr/lib/llvm-12/include/clang-c/BuildSystem.h
-/usr/lib/llvm-12/include/clang-c/Index.h
-/home/bartek/devel/clang-include-graph/src/include_graph_parser.h
-/home/bartek/devel/clang-include-graph/src/include_graph_topological_sort_printer.h
-/home/bartek/devel/clang-include-graph/src/include_graph_tree_printer.h
-/home/bartek/devel/clang-include-graph/src/main.cc
-/home/bartek/devel/clang-include-graph/src/path_printer.cc
-/home/bartek/devel/clang-include-graph/src/util.cc
+/usr/include/boost/mpl/aux_/unwrap.hpp
+/usr/include/boost/utility/value_init.hpp
+/usr/include/boost/mpl/for_each.hpp
+/usr/include/boost/test/tree/test_case_template.hpp
+/usr/include/boost/test/tree/global_fixture.hpp
+/usr/include/boost/test/unit_test_suite.hpp
+/usr/include/boost/test/unit_test.hpp
+/home/bartek/devel/clang-include-graph/tests/test_utils.h
+/home/bartek/devel/clang-include-graph/tests/test_tree_printer.cc
+/home/bartek/devel/clang-include-graph/tests/test_cycles_printer.cc
+/home/bartek/devel/clang-include-graph/tests/test_topological_sort_printer.cc
 ```
 
 #### Include tree for project including only project files with relative paths
 ```
-❯ release/clang-include-graph --compilation-database-dir release --relative-to . --relative-only --tree
-src/include_graph.cc
-└── src/include_graph.h
+❯ release/clang-include-graph -d release -u src/main.cc -r . -l --tree
 src/main.cc
 ├── src/config.h
 │   └── src/util.h
 ├── src/include_graph.h
+│   └── src/config.h
+│       └── src/util.h
+├── src/include_graph_cycles_printer.h
+│   └── src/include_graph_printer.h
+│       ├── src/include_graph.h
+│       │   └── src/config.h
+│       │       └── src/util.h
+│       └── src/path_printer.h
+│           └── src/config.h
+│               └── src/util.h
 ├── src/include_graph_graphviz_printer.h
 │   └── src/include_graph_printer.h
+│       ├── src/include_graph.h
+│       │   └── src/config.h
+│       │       └── src/util.h
 │       └── src/path_printer.h
 │           └── src/config.h
 │               └── src/util.h
 ├── src/include_graph_parser.h
+│   ├── src/config.h
+│   │   └── src/util.h
+│   └── src/include_graph.h
+│       └── src/config.h
+│           └── src/util.h
 ├── src/include_graph_topological_sort_printer.h
+│   └── src/include_graph_printer.h
+│       ├── src/include_graph.h
+│       │   └── src/config.h
+│       │       └── src/util.h
+│       └── src/path_printer.h
+│           └── src/config.h
+│               └── src/util.h
 └── src/include_graph_tree_printer.h
-src/path_printer.cc
-└── src/path_printer.h
-    └── src/config.h
-        └── src/util.h
-src/util.cc
-└── src/util.h
+    └── src/include_graph_printer.h
+        ├── src/include_graph.h
+        │   └── src/config.h
+        │       └── src/util.h
+        └── src/path_printer.h
+            └── src/config.h
+                └── src/util.h
 ```
 
 #### Generate GraphViz include graph of project files

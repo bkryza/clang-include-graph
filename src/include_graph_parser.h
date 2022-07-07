@@ -34,7 +34,14 @@
 
 namespace clang_include_graph {
 
+namespace {
+using visitor_context_t = std::pair<include_graph_t &, std::string>;
+}
+
 void print_diagnostics(const CXTranslationUnit &tu);
+
+enum CXChildVisitResult inclusion_cursor_visitor(
+    CXCursor cursor, CXCursor parent, CXClientData include_graph_ptr);
 
 void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
     unsigned include_len, CXClientData include_graph_ptr);
@@ -94,9 +101,11 @@ public:
 
             std::string current_file{
                 clang_getCString(clang_CompileCommand_getFilename(command))};
-            auto include_path = boost::filesystem::canonical(
+
+            auto tu_path = boost::filesystem::canonical(
                 boost::filesystem::path(current_file));
-            auto include_path_str = include_path.string();
+
+            auto include_path_str = tu_path.string();
             translation_units_.emplace(include_path_str);
 
             if (config_.verbose)
@@ -126,6 +135,9 @@ public:
                         CXTranslationUnit_KeepGoing);
 
             if (unit == nullptr) {
+                if (config_.verbose)
+                    print_diagnostics(unit);
+
                 std::cerr
                     << "ERROR: Unable to parse translation unit - aborting..."
                     << std::endl;
@@ -135,7 +147,11 @@ public:
             if (config_.verbose)
                 print_diagnostics(unit);
 
-            clang_getInclusions(unit, inclusion_visitor, &include_graph);
+            visitor_context_t visitor_context{include_graph, tu_path.string()};
+
+            CXCursor start_cursor = clang_getTranslationUnitCursor(unit);
+            clang_visitChildren(
+                start_cursor, inclusion_cursor_visitor, &visitor_context);
 
             clang_disposeTranslationUnit(unit);
         }
@@ -163,8 +179,8 @@ void print_diagnostics(const CXTranslationUnit &tu)
         clang_getPresumedLocation(diag_loc, &diag_file, &line, nullptr);
         std::string text = clang_getCString(clang_getDiagnosticSpelling(diag));
 
-        std::cout << "[" << clang_getCString(diag_file) << ":" << line << "] "
-                  << text << std::endl;
+        std::cout << "=== [" << clang_getCString(diag_file) << ":" << line
+                  << "] " << text << std::endl;
     }
 }
 
@@ -173,59 +189,45 @@ bool is_relative(const std::string &filepath, const std::string &directory)
     return boost::starts_with(filepath, directory);
 }
 
-void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
-    unsigned include_len, CXClientData include_graph_ptr)
+enum CXChildVisitResult inclusion_cursor_visitor(
+    CXCursor cursor, CXCursor /*parent*/, CXClientData include_graph_ptr)
 {
-    auto *include_graph = static_cast<include_graph_t *>(include_graph_ptr);
+    auto &include_graph =
+        std::get<0>(*static_cast<visitor_context_t *>(include_graph_ptr));
 
-    auto relative_only = include_graph->relative_only();
-    auto relative_to = include_graph->relative_to();
+    auto tu_path =
+        std::get<1>(*static_cast<visitor_context_t *>(include_graph_ptr));
 
-    auto cx_file_name = clang_getFileName(cx_file);
-    std::string file_name = clang_getCString(cx_file_name);
-    auto include_path =
-        boost::filesystem::canonical(boost::filesystem::path(file_name));
+    auto relative_only = include_graph.relative_only();
+    auto relative_to = include_graph.relative_to();
 
-    std::vector<std::string> includes;
+    if (clang_getCursorKind(cursor) == CXCursor_InclusionDirective) {
+        CXFile source_file;
+        clang_getFileLocation(clang_getCursorLocation(cursor), &source_file,
+            nullptr, nullptr, nullptr);
 
-    auto add_to_edges = [&](const std::string &from, const std::string &to,
-                            bool is_translation_unit) {
+        std::string source_file_str{
+            clang_getCString(clang_getFileName(source_file))};
+
+        CXFile included_file = clang_getIncludedFile(cursor);
+
+        std::string included_file_str{
+            clang_getCString(clang_getFileName(included_file))};
+
+        auto included_path = boost::filesystem::canonical(
+            boost::filesystem::path(included_file_str));
+
+        auto from_path = boost::filesystem::canonical(
+            boost::filesystem::path(source_file_str));
+
         if (!relative_only ||
-            (is_relative(from, relative_to.value()) &&
-                is_relative(to, relative_to.value())))
-            include_graph->add_edge(to, from, is_translation_unit);
-    };
-
-    if (inclusion_stack != nullptr) {
-        for (auto i = 0U; i < include_len; i++) {
-
-            if (i > 0) {
-                clang_getSpellingLocation(inclusion_stack[i - 1], &cx_file,
-                    nullptr, nullptr, nullptr);
-                cx_file_name = clang_getFileName(cx_file);
-                file_name = clang_getCString(cx_file_name);
-                include_path = boost::filesystem::canonical(
-                    boost::filesystem::path(file_name));
-            }
-
-            CXFile cx_included_from;
-
-            clang_getSpellingLocation(inclusion_stack[i], &cx_included_from,
-                nullptr, nullptr, nullptr);
-
-            if (cx_included_from != nullptr) {
-                auto cx_from_file_name = clang_getFileName(cx_included_from);
-                std::string f = clang_getCString(cx_from_file_name);
-
-                auto from_path =
-                    boost::filesystem::canonical(boost::filesystem::path(f));
-
-                bool is_translation_unit{i == 0};
-                add_to_edges(from_path.string(), include_path.string(),
-                    is_translation_unit);
-            }
+            (is_relative(from_path.string(), relative_to.value()) &&
+                is_relative(included_path.string(), relative_to.value()))) {
+            include_graph.add_edge(included_path.string(), from_path.string(),
+                tu_path == from_path);
         }
     }
+    return CXChildVisit_Continue;
 }
 
 } // namespace clang_include_graph
