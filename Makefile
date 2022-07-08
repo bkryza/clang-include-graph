@@ -65,4 +65,4 @@ format:
 
 .PHONY: tidy
 tidy:
-	clang-tidy-12 -p debug src/*.cc
+	cmake --build debug --target clang-tidy

@@ -45,6 +45,28 @@ add_executable(clang-include-graph $<TARGET_OBJECTS:lib-clang-include-graph> src
 
 target_link_libraries(clang-include-graph ${LIBCLANG_LIBRARIES} Boost::filesystem Boost::graph Boost::program_options)
 
+find_program(
+        CLANG_TIDY
+        NAMES "run-clang-tidy-12"
+        DOC "Path to run-clang-tidy script")
+
+if(CLANG_TIDY)
+    include(ProcessorCount)
+    ProcessorCount(CLANG_TIDY_PARALLEL_JOBS)
+    message(STATUS
+            "run-clang-tidy script found: ${CLANG_TIDY} - adding target clang-tidy")
+    set(CLANG_TIDY_SOURCE_FILTER "src/*.cc")
+    file(GLOB_RECURSE CLANG_TIDY_SOURCES
+            "${CMAKE_CURRENT_SOURCE_DIR}/${CLANG_TIDY_SOURCE_FILTER}")
+    add_custom_target(clang-tidy COMMAND ${CLANG_TIDY}
+            -export-fixes clang-tidy-suggested-fixes.yaml
+            -j ${CLANG_TIDY_PARALLEL_JOBS}
+            ${CLANG_TIDY_SOURCES})
+else(CLANG_TIDY)
+    message(STATUS "run-clang-tidy script not found - target clang-tidy not available")
+endif(CLANG_TIDY)
+
+
 # Enable testing via CTest
 enable_testing()
 add_subdirectory(tests)

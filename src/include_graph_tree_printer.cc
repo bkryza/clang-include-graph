@@ -44,26 +44,30 @@ void include_graph_tree_printer_t::operator()(std::ostream &os) const
 }
 
 void include_graph_tree_printer_t::print_tu_subtree(std::ostream &os,
-    const long tu_id, const int level, const include_graph_t &include_graph,
+    const include_graph_t::graph_t::vertex_descriptor tu_id,
+    const unsigned int level, const include_graph_t &include_graph,
     std::vector<bool> continuation_line) const
 {
     const auto kIndentWidth = 4U;
 
-    boost::graph_traits<include_graph_t::graph_t>::adjacency_iterator it,
-        it_end;
+    boost::graph_traits<include_graph_t::graph_t>::adjacency_iterator it;
+    boost::graph_traits<include_graph_t::graph_t>::adjacency_iterator it_end;
 
     boost::tie(it, it_end) =
         boost::adjacent_vertices(tu_id, include_graph.dag().value().graph());
     for (; it != it_end; ++it) {
         auto continuation_line_tmp = continuation_line;
-        if (level > 0)
-            for (auto i = 0; i < level; i++) {
+        if (level > 0) {
+            for (auto i = 0U; i < level; i++) {
                 if (i % kIndentWidth == 0 &&
-                    continuation_line[i / kIndentWidth])
+                    continuation_line[i / kIndentWidth]) {
                     os << "│";
-                else
+                }
+                else {
                     os << " ";
+                }
             }
+        }
 
         if (std::next(it) == it_end) {
             os << "└── ";

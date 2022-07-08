@@ -33,9 +33,13 @@ namespace clang_include_graph {
 
 class include_graph_parser_t {
 public:
-    include_graph_parser_t(const config_t &config);
+    explicit include_graph_parser_t(const config_t &config);
 
     ~include_graph_parser_t();
+    include_graph_parser_t(const include_graph_parser_t &) = delete;
+    include_graph_parser_t(include_graph_parser_t &&) = delete;
+    include_graph_parser_t &operator=(const include_graph_parser_t &) = delete;
+    include_graph_parser_t &operator=(include_graph_parser_t &&) = delete;
 
     void parse(include_graph_t &include_graph);
 

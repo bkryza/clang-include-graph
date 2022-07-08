@@ -53,10 +53,10 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
     include_graph.init(config_);
 
     auto error = CXCompilationDatabase_NoError;
-    auto database = clang_CompilationDatabase_fromDirectory(
+    auto *database = clang_CompilationDatabase_fromDirectory(
         config_.compilation_database_directory().value().c_str(), &error);
 
-    CXCompileCommands compile_commands;
+    CXCompileCommands compile_commands{nullptr};
     if (config_.translation_unit().has_value()) {
         auto tu_path = config_.translation_unit().value();
 
@@ -99,42 +99,48 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         auto include_path_str = tu_path.string();
         translation_units_.emplace(include_path_str);
 
-        if (config_.verbose())
+        if (config_.verbose()) {
             std::cout << "=== Parsing translation unit: " << include_path_str
                       << std::endl;
+        }
 
         std::vector<std::string> args;
         std::vector<const char *> args_cstr;
         args.reserve(clang_CompileCommand_getNumArgs(command));
 
         for (auto i = 0U; i < clang_CompileCommand_getNumArgs(command); i++) {
-            args.push_back(
+            args.emplace_back(
                 clang_getCString(clang_CompileCommand_getArg(command, i)));
-            args_cstr.push_back(args[i].c_str());
+            args_cstr.emplace_back(args[i].c_str());
         }
 
         // Remove the file name from the arguments list
         args.pop_back();
         args_cstr.pop_back();
 
-        CXTranslationUnit unit =
-            clang_parseTranslationUnit(index_, include_path_str.c_str(),
-                args_cstr.data(), args_cstr.size(), nullptr, 0,
-                CXTranslationUnit_DetailedPreprocessingRecord |
-                    CXTranslationUnit_IgnoreNonErrorsFromIncludedFiles |
-                    CXTranslationUnit_KeepGoing);
+        auto flags = static_cast<unsigned int>(
+                         CXTranslationUnit_DetailedPreprocessingRecord) |
+            static_cast<unsigned int>(
+                CXTranslationUnit_IgnoreNonErrorsFromIncludedFiles) |
+            static_cast<unsigned int>(CXTranslationUnit_KeepGoing);
+
+        CXTranslationUnit unit = clang_parseTranslationUnit(index_,
+            include_path_str.c_str(), args_cstr.data(),
+            static_cast<int>(args_cstr.size()), nullptr, 0, flags);
 
         if (unit == nullptr) {
-            if (config_.verbose())
+            if (config_.verbose()) {
                 print_diagnostics(unit);
+            }
 
             std::cerr << "ERROR: Unable to parse translation unit - aborting..."
                       << std::endl;
             exit(-1);
         }
 
-        if (config_.verbose())
+        if (config_.verbose()) {
             print_diagnostics(unit);
+        }
 
         visitor_context_t visitor_context{include_graph, tu_path.string()};
 
@@ -154,11 +160,11 @@ const std::set<std::string> &include_graph_parser_t::translation_units() const
 void print_diagnostics(const CXTranslationUnit &tu)
 {
     auto no = clang_getNumDiagnostics(tu);
-    for (auto i = 0u; i != no; ++i) {
-        auto diag = clang_getDiagnostic(tu, i);
+    for (auto i = 0U; i != no; ++i) {
+        auto *diag = clang_getDiagnostic(tu, i);
         auto diag_loc = clang_getDiagnosticLocation(diag);
         CXString diagnostic_file;
-        unsigned line;
+        unsigned line{0U};
         clang_getPresumedLocation(diag_loc, &diagnostic_file, &line, nullptr);
         std::string text = clang_getCString(clang_getDiagnosticSpelling(diag));
 
@@ -185,7 +191,7 @@ enum CXChildVisitResult inclusion_cursor_visitor(
     auto relative_to = include_graph.relative_to();
 
     if (clang_getCursorKind(cursor) == CXCursor_InclusionDirective) {
-        CXFile source_file;
+        CXFile source_file{nullptr};
         clang_getFileLocation(clang_getCursorLocation(cursor), &source_file,
             nullptr, nullptr, nullptr);
 

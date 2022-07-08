@@ -33,7 +33,8 @@ public:
     void operator()(std::ostream &os) const override;
 
 private:
-    void print_tu_subtree(std::ostream &os, const long tu_id, const int level,
+    void print_tu_subtree(std::ostream &os,
+        include_graph_t::graph_t::vertex_descriptor tu_id, unsigned int level,
         const include_graph_t &include_graph,
         std::vector<bool> continuation_line) const;
 };

@@ -43,7 +43,15 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
 
 int main(int argc, char **argv)
 {
-    using namespace clang_include_graph;
+    using clang_include_graph::config_t;
+    using clang_include_graph::include_graph_cycles_printer_t;
+    using clang_include_graph::include_graph_graphviz_printer_t;
+    using clang_include_graph::include_graph_parser_t;
+    using clang_include_graph::include_graph_t;
+    using clang_include_graph::include_graph_topological_sort_printer_t;
+    using clang_include_graph::include_graph_tree_printer_t;
+    using clang_include_graph::path_printer_t;
+    using clang_include_graph::printer_t;
 
     include_graph_t include_graph;
     config_t config;
@@ -51,10 +59,11 @@ int main(int argc, char **argv)
 
     process_command_line_options(argc, argv, vm, config);
 
-    if (config.verbose())
+    if (config.verbose()) {
         std::cout << "=== Loading compilation database from "
                   << config.compilation_database_directory().value()
                   << std::endl;
+    }
 
     // Parse translation units and build the include graph
     include_graph_parser_t include_graph_parser{config};
@@ -66,8 +75,9 @@ int main(int argc, char **argv)
 
     // Generate output using selected printer
     if (config.printer() == printer_t::tree) {
-        if (config.verbose())
+        if (config.verbose()) {
             std::cout << "=== Printing include graph tree" << '\n';
+        }
 
         include_graph.build_dag();
 
@@ -76,10 +86,11 @@ int main(int argc, char **argv)
         std::cout << printer;
     }
     else if (config.printer() == printer_t::topological_sort) {
-        if (config.verbose())
+        if (config.verbose()) {
             std::cout
                 << "=== Printing include graph sorted in topological order"
                 << '\n';
+        }
 
         include_graph.build_dag();
 
@@ -89,18 +100,20 @@ int main(int argc, char **argv)
         std::cout << printer;
     }
     else if (config.printer() == printer_t::graphviz) {
-        if (config.verbose())
+        if (config.verbose()) {
             std::cout
                 << "=== Printing include graph sorted in topological order"
                 << '\n';
+        }
 
         include_graph_graphviz_printer_t printer{include_graph, *path_printer};
 
         std::cout << printer;
     }
     else if (config.printer() == printer_t::cycles) {
-        if (config.verbose())
+        if (config.verbose()) {
             std::cout << "=== Printing include graph cycles" << '\n';
+        }
 
         include_graph_cycles_printer_t printer{include_graph, *path_printer};
 
