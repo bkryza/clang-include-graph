@@ -1,5 +1,5 @@
 /**
- * src/util.cc
+ * src/include_graph_graphviz_printer.cc
  *
  * Copyright (c) 2022-present Bartek Kryza <bkryza@gmail.com>
  *
@@ -16,34 +16,31 @@
  * limitations under the License.
  */
 
-#include "util.h"
+#include "include_graph_graphviz_printer.h"
 
 namespace clang_include_graph {
-namespace util {
 
-boost::optional<std::string> to_absolute_path(std::string relative_path)
+namespace detail {
+
+label_writer::label_writer(
+    const include_graph_t::graph_t &graph, const path_printer_t &pp)
+    : graph_{graph}
+    , path_printer_{pp}
 {
-    try {
-        return boost::filesystem::canonical(
-            boost::filesystem::path(relative_path))
-            .string();
-    }
-    catch (const boost::filesystem::filesystem_error &e) {
-        return {};
-    }
+}
+template <typename Vertex>
+void label_writer::operator()(std::ostream &out, const Vertex &v) const
+{
+    out << "[label=\"" << path_printer_.print(graph_.graph()[v].file) << "\"]";
 }
 
-std::string relative_to(
-    std::string path, boost::optional<std::string> directory)
-{
-    if (!directory) {
-        return path;
-    }
+} // namespace detail
 
-    return boost::filesystem::relative(boost::filesystem::path(path),
-        boost::filesystem::path(directory.value()))
-        .string();
+void include_graph_graphviz_printer_t::operator()(std::ostream &os) const
+{
+    detail::label_writer writer{include_graph().graph(), path_printer()};
+
+    boost::write_graphviz(os, include_graph().graph(), writer);
 }
 
-} // namespace util
 } // namespace clang_include_graph

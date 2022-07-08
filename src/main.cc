@@ -51,9 +51,10 @@ int main(int argc, char **argv)
 
     process_command_line_options(argc, argv, vm, config);
 
-    if (config.verbose)
+    if (config.verbose())
         std::cout << "=== Loading compilation database from "
-                  << config.compilation_database_directory.value() << std::endl;
+                  << config.compilation_database_directory().value()
+                  << std::endl;
 
     // Parse translation units and build the include graph
     include_graph_parser_t include_graph_parser{config};
@@ -64,8 +65,8 @@ int main(int argc, char **argv)
         path_printer_t::from_config(config);
 
     // Generate output using selected printer
-    if (config.printer == printer_t::tree) {
-        if (config.verbose)
+    if (config.printer() == printer_t::tree) {
+        if (config.verbose())
             std::cout << "=== Printing include graph tree" << '\n';
 
         include_graph.build_dag();
@@ -74,8 +75,8 @@ int main(int argc, char **argv)
 
         std::cout << printer;
     }
-    else if (config.printer == printer_t::topological_sort) {
-        if (config.verbose)
+    else if (config.printer() == printer_t::topological_sort) {
+        if (config.verbose())
             std::cout
                 << "=== Printing include graph sorted in topological order"
                 << '\n';
@@ -87,8 +88,8 @@ int main(int argc, char **argv)
 
         std::cout << printer;
     }
-    else if (config.printer == printer_t::graphviz) {
-        if (config.verbose)
+    else if (config.printer() == printer_t::graphviz) {
+        if (config.verbose())
             std::cout
                 << "=== Printing include graph sorted in topological order"
                 << '\n';
@@ -97,8 +98,8 @@ int main(int argc, char **argv)
 
         std::cout << printer;
     }
-    else if (config.printer == printer_t::cycles) {
-        if (config.verbose)
+    else if (config.printer() == printer_t::cycles) {
+        if (config.verbose())
             std::cout << "=== Printing include graph cycles" << '\n';
 
         include_graph_cycles_printer_t printer{include_graph, *path_printer};
@@ -147,12 +148,12 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         exit(-1);
     }
 
-    if (vm.count("help")) {
+    if (vm.count("help") > 0U) {
         std::cout << options << "\n";
         exit(0);
     }
 
-    if (vm.count("version")) {
+    if (vm.count("version") > 0U) {
         print_version();
         exit(0);
     }

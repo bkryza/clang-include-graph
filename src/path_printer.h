@@ -30,6 +30,10 @@ class path_printer_t {
 public:
     path_printer_t() = default;
     virtual ~path_printer_t() = default;
+    path_printer_t(const path_printer_t &) = default;
+    path_printer_t(path_printer_t &&) = default;
+    path_printer_t &operator=(const path_printer_t &) = default;
+    path_printer_t &operator=(path_printer_t &&) = default;
 
     virtual std::string print(const boost::filesystem::path &p) const
     {
@@ -41,16 +45,17 @@ public:
 
 class path_relative_printer_t final : public path_printer_t {
 public:
-    path_relative_printer_t(const std::string &relative_to)
+    explicit path_relative_printer_t(const std::string &relative_to)
         : relative_to_{relative_to}
     {
     }
 
-    virtual std::string print(const boost::filesystem::path &p) const override
+    std::string print(const boost::filesystem::path &p) const override
     {
         // Only return relative path, if path is in relative_to_ directory
-        if (boost::starts_with(p.string(), relative_to_.string()))
+        if (boost::starts_with(p.string(), relative_to_.string())) {
             return boost::filesystem::relative(p, relative_to_).string();
+        }
 
         return p.string();
     }

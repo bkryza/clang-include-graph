@@ -51,18 +51,17 @@ public:
 
     void build_dag();
 
-    const boost::optional<graph_t> &dag() const noexcept { return dag_; }
+    const boost::optional<graph_t> &dag() const noexcept;
 
-    const graph_t &graph() const noexcept { return graph_; }
+    boost::optional<graph_t> &dag() noexcept;
 
-    bool relative_only() const noexcept { return relative_only_; }
+    const graph_t &graph() const noexcept;
 
-    const boost::optional<std::string> &relative_to() const noexcept
-    {
-        return relative_to_;
-    }
+    bool relative_only() const noexcept;
 
-protected:
+    const boost::optional<std::string> &relative_to() const noexcept;
+
+private:
     graph_t graph_;
     boost::optional<graph_t> dag_;
     boost::optional<std::string> relative_to_;
@@ -72,10 +71,9 @@ protected:
 namespace detail {
 class dag_include_graph_visitor_t : public boost::default_dfs_visitor {
 public:
-    dag_include_graph_visitor_t(
-        const include_graph_t &graph, include_graph_t::graph_t &dag)
+    explicit dag_include_graph_visitor_t(include_graph_t &graph)
         : graph_{graph}
-        , dag_{dag}
+        , dag_{graph_.dag().value()}
     {
     }
 
@@ -100,10 +98,10 @@ public:
     }
 
 private:
-    const include_graph_t &graph_;
+    include_graph_t &graph_;
     include_graph_t::graph_t &dag_;
 };
-}
+} // namespace detail
 
 } // namespace clang_include_graph
 

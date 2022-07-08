@@ -62,3 +62,7 @@ test_release: release
 .PHONY: format
 format:
 	docker run --rm -v $(CURDIR):/root/sources bkryza/clang-format-check:1.3
+
+.PHONY: tidy
+tidy:
+	clang-tidy-12 -p debug src/*.cc

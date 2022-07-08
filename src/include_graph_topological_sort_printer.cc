@@ -1,5 +1,5 @@
 /**
- * src/include_graph_topological_sort_printer.h
+ * src/include_graph_topological_sort_printer.cc
  *
  * Copyright (c) 2022-present Bartek Kryza <bkryza@gmail.com>
  *
@@ -16,23 +16,25 @@
  * limitations under the License.
  */
 
-#ifndef CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_TOPOLOGICAL_SORT_PRINTER_H
-#define CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_TOPOLOGICAL_SORT_PRINTER_H
-
-#include "include_graph_printer.h"
+#include "include_graph_topological_sort_printer.h"
 
 #include <iostream>
 
 namespace clang_include_graph {
 
-class include_graph_topological_sort_printer_t
-    : public include_graph_printer_t {
-public:
-    using include_graph_printer_t::include_graph_printer_t;
+void include_graph_topological_sort_printer_t::operator()(
+    std::ostream &os) const
+{
+    assert(include_graph().dag().has_value());
 
-    void operator()(std::ostream &os) const override;
-};
+    std::vector<include_graph_t::graph_t::vertex_descriptor> include_order;
+    boost::topological_sort(
+        include_graph().dag().value(), std::back_inserter(include_order));
+
+    for (const auto id : include_order) {
+        os << path_printer().print(include_graph().graph().graph()[id].file)
+           << std::endl;
+    }
+}
 
 } // namespace clang_include_graph
-
-#endif // CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_TOPOLOGICAL_SORT_PRINTER_H

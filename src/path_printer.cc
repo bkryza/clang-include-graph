@@ -34,11 +34,12 @@ std::unique_ptr<T> make_unique(Args &&...args)
 std::unique_ptr<path_printer_t> path_printer_t::from_config(
     const config_t &config)
 {
-    if (config.relative_to.has_value()) {
+    if (config.relative_to().has_value()) {
         return detail::make_unique<path_relative_printer_t>(
-            config.relative_to.value());
+            config.relative_to().value());
     }
-    else if (config.filenames_only) {
+
+    if (config.filenames_only()) {
         return detail::make_unique<path_name_printer_t>();
     }
 

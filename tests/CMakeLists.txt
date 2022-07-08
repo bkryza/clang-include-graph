@@ -13,7 +13,11 @@ foreach(TESTCASE IN LISTS TESTCASES)
     target_include_directories(${TESTCASE} PUBLIC ${Boost_INCLUDE_DIRS})
 
     target_link_libraries(${TESTCASE}
-            Boost::filesystem Boost::graph Boost::program_options Boost::unit_test_framework)
+            ${LIBCLANG_LIBRARIES}
+            Boost::filesystem
+            Boost::graph
+            Boost::program_options
+            Boost::unit_test_framework)
 
     add_test(${TESTCASE} ${TESTCASE})
 endforeach()

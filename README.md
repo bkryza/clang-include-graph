@@ -19,7 +19,7 @@ First make sure that you have the following dependencies installed:
 
 ```bash
 # Ubuntu (clang version will vary depending on Ubuntu version)
-apt install cmake libboost-graph-dev libboost-filesystem-dev clang-12 libclang-12-dev libclang-cpp12-dev
+apt install git make gcc g++ cmake clang-12 libclang-12-dev libclang-cpp12-dev libboost-graph1.71-dev libboost-filesystem1.71-dev libboost-test1.71-dev libboost-program-options1.71-dev
 ```
 
 Then proceed with building the sources:

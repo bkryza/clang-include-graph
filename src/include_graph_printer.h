@@ -27,28 +27,20 @@ namespace clang_include_graph {
 class include_graph_printer_t {
 public:
     include_graph_printer_t(
-        const include_graph_t &graph, const path_printer_t &pp)
-        : graph_{graph}
-        , path_printer_{pp}
-    {
-    }
+        const include_graph_t &graph, const path_printer_t &pp);
 
     virtual void operator()(std::ostream &) const = 0;
 
-    const path_printer_t &path_printer() const { return path_printer_; };
+    const path_printer_t &path_printer() const;
 
-    const include_graph_t &include_graph() const { return graph_; };
+    const include_graph_t &include_graph() const;
 
 private:
     const include_graph_t &graph_;
     const path_printer_t &path_printer_;
 };
 
-std::ostream &operator<<(std::ostream &os, include_graph_printer_t &a)
-{
-    a(os);
-    return os;
-}
+std::ostream &operator<<(std::ostream &os, include_graph_printer_t &a);
 
 } // namespace clang_include_graph
 

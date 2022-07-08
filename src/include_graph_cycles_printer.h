@@ -25,54 +25,30 @@
 
 #include <iostream>
 
-namespace boost {
-void renumber_vertex_indices(
-    clang_include_graph::include_graph_t::graph_adjlist_t const &)
-{
-}
-} // namespace boost
-
 namespace clang_include_graph {
 
 namespace detail {
+
 struct cycle_printer_t {
     cycle_printer_t(const include_graph_t::graph_t &graph,
-        const path_printer_t &pp, std::ostream &stream)
-        : graph_{graph}
-        , path_printer_{pp}
-        , os{stream}
-    {
-    }
+        const path_printer_t &pp, std::ostream &stream);
 
     template <typename Path, typename Graph>
-    void cycle(const Path &p, const Graph & /*g*/)
-    {
-        os << "[\n";
-        for (auto it = p.begin(); it != p.end(); ++it) {
-            os << "  " << path_printer_.print(graph_.graph()[*it].file) << "\n";
-        }
-        os << "]\n";
-    }
+    void cycle(const Path &p, const Graph & /*g*/);
 
 private:
     const include_graph_t::graph_t &graph_;
     const path_printer_t &path_printer_;
     std::ostream &os;
 };
-}
+
+} // namespace detail
 
 class include_graph_cycles_printer_t : public include_graph_printer_t {
 public:
     using include_graph_printer_t::include_graph_printer_t;
 
-    void operator()(std::ostream &os) const override
-    {
-        detail::cycle_printer_t cycle_printer_visitor{
-            include_graph().graph(), path_printer(), os};
-
-        boost::tiernan_all_cycles(
-            include_graph().graph().graph(), cycle_printer_visitor);
-    }
+    void operator()(std::ostream &os) const override;
 };
 
 } // namespace clang_include_graph

@@ -28,37 +28,27 @@
 namespace clang_include_graph {
 
 namespace detail {
+
 class label_writer {
 public:
     label_writer(
-        const include_graph_t::graph_t &graph, const path_printer_t &pp)
-        : graph_{graph}
-        , path_printer_{pp}
-    {
-    }
+        const include_graph_t::graph_t &graph, const path_printer_t &pp);
+
     template <typename Vertex>
-    void operator()(std::ostream &out, const Vertex &v) const
-    {
-        out << "[label=\"" << path_printer_.print(graph_.graph()[v].file)
-            << "\"]";
-    }
+    void operator()(std::ostream &out, const Vertex &v) const;
 
 private:
     const include_graph_t::graph_t &graph_;
     const path_printer_t &path_printer_;
 };
-}
+
+} // namespace detail
 
 class include_graph_graphviz_printer_t : public include_graph_printer_t {
 public:
     using include_graph_printer_t::include_graph_printer_t;
 
-    void operator()(std::ostream &os) const override
-    {
-        detail::label_writer writer{include_graph().graph(), path_printer()};
-
-        boost::write_graphviz(os, include_graph().graph(), writer);
-    }
+    void operator()(std::ostream &os) const override;
 };
 
 } // namespace clang_include_graph

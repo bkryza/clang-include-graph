@@ -1,0 +1,21 @@
+Checks: >-
+  *,
+  -altera-*,
+  -android-*,
+  -clang-analyzer-cplusplus.NewDelete,
+  -concurrency-mt-unsafe,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -hicpp-no-array-decay,
+  -fuchsia-*,
+  -llvm-*,
+  -llvmlibc-*,
+  -modernize-use-trailing-return-type,
+  -mpi-*,
+  -objc-*,
+  -openmp-*,
+  -zircon-*
+WarningsAsErrors: '*'
+HeaderFilterRegex: 'src'
+CheckOptions:
+  - key:             readability-identifier-naming.ClassMemberSuffix
+    value:           '_'
