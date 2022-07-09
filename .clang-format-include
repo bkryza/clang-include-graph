@@ -4,3 +4,5 @@
 #
 + src/**/*.cc
 + src/**/*.h
++ tests/**/*.cc
++ tests/**/*.h
