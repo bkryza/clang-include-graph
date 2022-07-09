@@ -21,6 +21,7 @@
 #include "include_graph_cycles_printer.h"
 #include "include_graph_graphviz_printer.h"
 #include "include_graph_parser.h"
+#include "include_graph_plantuml_printer.h"
 #include "include_graph_topological_sort_printer.h"
 #include "include_graph_tree_printer.h"
 
@@ -28,7 +29,6 @@
 
 #include <iostream>
 #include <memory>
-#include <set>
 
 #ifndef LIBCLANG_VERSION_STRING
 #define LIBCLANG_VERSION_STRING "0.0.0"
@@ -47,6 +47,7 @@ int main(int argc, char **argv)
     using clang_include_graph::include_graph_cycles_printer_t;
     using clang_include_graph::include_graph_graphviz_printer_t;
     using clang_include_graph::include_graph_parser_t;
+    using clang_include_graph::include_graph_plantuml_printer_t;
     using clang_include_graph::include_graph_t;
     using clang_include_graph::include_graph_topological_sort_printer_t;
     using clang_include_graph::include_graph_tree_printer_t;
@@ -76,7 +77,7 @@ int main(int argc, char **argv)
     // Generate output using selected printer
     if (config.printer() == printer_t::tree) {
         if (config.verbose()) {
-            std::cout << "=== Printing include graph tree" << '\n';
+            std::cout << "=== Printing include graph tree\n";
         }
 
         include_graph.build_dag();
@@ -88,8 +89,7 @@ int main(int argc, char **argv)
     else if (config.printer() == printer_t::topological_sort) {
         if (config.verbose()) {
             std::cout
-                << "=== Printing include graph sorted in topological order"
-                << '\n';
+                << "=== Printing include graph sorted in topological order\n";
         }
 
         include_graph.build_dag();
@@ -99,23 +99,30 @@ int main(int argc, char **argv)
 
         std::cout << printer;
     }
+    else if (config.printer() == printer_t::cycles) {
+        if (config.verbose()) {
+            std::cout << "=== Printing include graph cycles\n";
+        }
+
+        include_graph_cycles_printer_t printer{include_graph, *path_printer};
+
+        std::cout << printer;
+    }
     else if (config.printer() == printer_t::graphviz) {
         if (config.verbose()) {
-            std::cout
-                << "=== Printing include graph sorted in topological order"
-                << '\n';
+            std::cout << "=== Printing include graph in GraphViz format\n";
         }
 
         include_graph_graphviz_printer_t printer{include_graph, *path_printer};
 
         std::cout << printer;
     }
-    else if (config.printer() == printer_t::cycles) {
+    else if (config.printer() == printer_t::plantuml) {
         if (config.verbose()) {
-            std::cout << "=== Printing include graph cycles" << '\n';
+            std::cout << "=== Printing include graph in PlantUML format\n";
         }
 
-        include_graph_cycles_printer_t printer{include_graph, *path_printer};
+        include_graph_plantuml_printer_t printer{include_graph, *path_printer};
 
         std::cout << printer;
     }
@@ -147,9 +154,10 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         ("topological-sort,s",
             "Print output includes and translation units in topological"
             "sort order")
-        ("tree,t", "Print output graph in tree form")
-        ("graphviz,g", "Print output graph in GraphViz format")
-        ("cycles,c", "Print include graph cycles, if any");
+        ("tree,t", "Print include graph in tree form")
+        ("cycles,c", "Print include graph cycles, if any")
+        ("graphviz,g", "Print include graph in GraphViz format")
+        ("plantuml,p", "Print include graph in PlantUML format");
     // clang-format on
 
     try {

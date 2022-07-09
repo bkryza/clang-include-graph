@@ -93,6 +93,9 @@ void config_t::init(boost::program_options::variables_map &vm)
     else if (vm.count("cycles") > 0U) {
         printer_ = printer_t::cycles;
     }
+    else if (vm.count("plantuml") > 0U) {
+        printer_ = printer_t::plantuml;
+    }
 }
 
 bool config_t::verbose() const noexcept { return verbose_; }

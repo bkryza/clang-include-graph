@@ -30,7 +30,14 @@
 
 namespace clang_include_graph {
 
-enum class printer_t { topological_sort, tree, graphviz, cycles, unknown };
+enum class printer_t {
+    topological_sort,
+    tree,
+    cycles,
+    graphviz,
+    plantuml,
+    unknown
+};
 
 class config_t {
 public:

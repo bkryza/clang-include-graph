@@ -5,12 +5,13 @@
 `clang-include-graph` provides several simple commands for analyzing and visualizing C++ project include graphs.
 
 Main features include:
-* Generates correct inclusion order of all includes of the project or a single translation unit
+* Generates correct (topological) inclusion order of all includes of the project or a single translation unit
 * Prints include graph in several formats into stdout:
   * Topologically ordered include list
   * Tree format
+  * Include graph cycles list
   * Graphviz
-  * Include cycles
+  * PlantUML
 * Handles cyclic include graphs
 
 ## Installation
@@ -40,10 +41,9 @@ export PATH=$PATH:$PWD/release
 ## Usage
 ### Basic usage
 
-
 `clang-include-graph` provides the following command line options:
 
-```bash
+```
 ❯ release/clang-include-graph -h
 clang-include-graph options:
   -h [ --help ]                         Print help message and exit
@@ -61,10 +61,10 @@ clang-include-graph options:
                                         'relative-to' directory
   -s [ --topological-sort ]             Print output includes and translation 
                                         units in topologicalsort order
-  -t [ --tree ]                         Print output graph in tree form
-  -g [ --graphviz ]                     Print output graph in GraphViz format
+  -t [ --tree ]                         Print include graph in tree form
   -c [ --cycles ]                       Print include graph cycles, if any
-
+  -g [ --graphviz ]                     Print include graph in GraphViz format
+  -p [ --plantuml ]                     Print include graph in PlantUML format
 ```
 
 ### Example output
@@ -74,7 +74,7 @@ cd clang-include-graph
 make release
 ```
 
-#### Topologically sorted includes for project including only project files with full paths
+#### Topologically sorted includes and translation units for project with full paths
 ```
 ❯ release/clang-include-graph --compilation-database-dir release
 /usr/include/boost/config/user.hpp
@@ -102,7 +102,7 @@ make release
 /home/bartek/devel/clang-include-graph/tests/test_topological_sort_printer.cc
 ```
 
-#### Include tree for project including only project files with relative paths
+#### Include tree for a single translation unit including only project files with relative paths
 ```
 ❯ release/clang-include-graph -d release -u src/main.cc -r . -l --tree
 src/main.cc
@@ -151,13 +151,13 @@ src/main.cc
                 └── src/util.h
 ```
 
-#### Generate GraphViz include graph of project files
+#### GraphViz include graph of project files
 ```bash
 ❯ release/clang-include-graph --compilation-database-dir release --relative-to src --relative-only --graphviz > /tmp/include.dot
 ❯ dot -Tpng -o/tmp/include.png /tmp/include.dot
 ```
 
-#### Print all include cycles in the include graph
+#### List of include cycles within a single translation unit
 ```
 ❯ release/clang-include-graph --compilation-database-dir release -u src/util.cc --cycles
 [
@@ -181,6 +181,27 @@ src/main.cc
   /usr/include/boost/preprocessor/control/while.hpp
   /usr/include/boost/preprocessor/list/fold_right.hpp
 ]
+```
+
+####  PlantUML diagram of include graph for a single translation unit
+```
+❯ release/clang-include-graph --compilation-database-dir release -r . -u src/include_graph_tree_printer.cc -p -l
+@startuml
+file "src/include_graph_tree_printer.h" as F_0
+file "src/include_graph_tree_printer.cc" as F_1
+file "src/include_graph_printer.h" as F_2
+file "src/include_graph.h" as F_3
+file "src/config.h" as F_4
+file "src/util.h" as F_5
+file "src/path_printer.h" as F_6
+F_0 -->  F_2
+F_1 -->  F_0
+F_2 -->  F_3
+F_2 -->  F_6
+F_3 -->  F_4
+F_4 -->  F_5
+F_6 -->  F_4
+@enduml
 ```
 
 #### Count all files that need to be parsed when processing a translation unit

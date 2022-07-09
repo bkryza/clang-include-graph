@@ -1,8 +1,8 @@
-
 list(APPEND TESTCASES
         test_topological_sort_printer
         test_cycles_printer
-        test_tree_printer)
+        test_tree_printer
+        test_plantuml_printer)
 
 foreach(TESTCASE IN LISTS TESTCASES)
     add_executable(
