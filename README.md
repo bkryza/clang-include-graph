@@ -48,6 +48,17 @@ export PATH=$PATH:$PWD/release
 ```
 
 ## Usage
+### Generating compile commands database
+`clang-include-graph` requires an up-to-date
+[compile_commands.json](https://clang.llvm.org/docs/JSONCompilationDatabase.html)
+file, containing the list of commands used for compiling the source code.
+Nowadays, this file can be generated rather easily using multiple methods:
+* For [CMake](https://cmake.org/) projects, simply invoke the `cmake` command
+  as `cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ...`
+* For Make projects checkout [compiledb](https://github.com/nickdiego/compiledb) or [Bear](https://github.com/rizsotto/Bear)
+* For Boost-based projects try [commands_to_compilation_database](https://github.com/tee3/commands_to_compilation_database)
+* For SCons, invoke `compilation_db` tool (requires SCons > 4.0.0)
+
 ### Basic usage
 
 `clang-include-graph` provides the following command line options:
