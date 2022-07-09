@@ -16,6 +16,14 @@ Main features include:
 * Handles cyclic include graphs
 
 ## Installation
+### Distribution packages
+#### Ubuntu
+```bash
+sudo add-apt-repository ppa:bkryza/clang-include-graph
+sudo apt update
+sudo apt install clang-include-graph
+```
+
 ### Building from source
 First make sure that you have the following dependencies installed:
 
