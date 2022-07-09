@@ -1,0 +1,32 @@
+Source: clang-include-graph
+Maintainer: Bartek Kryza <bkryza@gmail.com>
+Section: devel
+Priority: optional
+Build-Depends:
+    debhelper,
+    make,
+    gcc,
+    g++,
+    cmake (>= 3.10),
+    llvm-14,
+    llvm-14-dev,
+    clang-14,
+    libclang-14-dev,
+    libclang-cpp14-dev,
+    libboost-graph1.74-dev,
+    libboost-filesystem1.74-dev,
+    libboost-test1.74-dev,
+    libboost-program-options1.74-dev
+Standards-Version: 4.3.0
+Vcs-Browser: https://github.com/bkryza/clang-include-graph
+Vcs-Git: https://github.com/bkryza/clang-include-graph.git
+Homepage: https://github.com/bkryza/clang-include-graph
+
+Package: clang-include-graph
+Architecture: any
+Section: utils
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Pre-Depends: ${misc:Pre-Depends}
+Description: Simple tool for analyzing C++ project include graph.
+ .
+ This package provides the clang-include-graph binary.

@@ -1,0 +1,3 @@
+version=4
+
+https://github.com/bkryza/clang-include-graph/releases .*/[relasymcp.-]*(\d\S*)\.tar\.gz

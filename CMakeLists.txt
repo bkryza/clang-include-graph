@@ -9,6 +9,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 option(LLVM_CONFIG_PATH "Path to custom llvm-config executable")
 
+option(GIT_VERSION "clang-include-graph version" "0.1.0")
+
 if (LLVM_CONFIG_PATH)
     message(STATUS "Using llvm-config from ${LLVM_CONFIG_PATH}")
     set(LIBCLANG_LLVM_CONFIG_EXECUTABLE ${LLVM_CONFIG_PATH})
@@ -22,6 +24,10 @@ set(LLVM_PREFERRED_VERSION 12.0.0)
 #   -DLLVM_CONFIG_PATH=/path/to/llvm-config
 # to use custom LLVM version
 find_package(LibClang REQUIRED)
+#
+## Configure executable version
+#file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/src/version)
+#configure_file(src/version.h.in ${PROJECT_BINARY_DIR}/src/version/version.h)
 
 include_directories()
 
@@ -32,8 +38,7 @@ find_package(Boost REQUIRED COMPONENTS graph program_options filesystem unit_tes
 
 include_directories(${Boost_INCLUDE_DIRS})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -std=c++11 -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" ${LIBCLANG_CXXFLAGS}")
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -std=c++11 -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" -DGIT_VERSION=\\\"${GIT_VERSION}\\\" ${LIBCLANG_CXXFLAGS}")
 
 file(GLOB_RECURSE SOURCES src/*.cc src/*.h)
 set(MAIN_SOURCE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cc)

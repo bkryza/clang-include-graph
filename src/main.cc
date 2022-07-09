@@ -24,6 +24,7 @@
 #include "include_graph_plantuml_printer.h"
 #include "include_graph_topological_sort_printer.h"
 #include "include_graph_tree_printer.h"
+//#include "version.h"
 
 #include <boost/program_options.hpp>
 
@@ -32,6 +33,10 @@
 
 #ifndef LIBCLANG_VERSION_STRING
 #define LIBCLANG_VERSION_STRING "0.0.0"
+#endif
+
+#ifndef GIT_VERSION
+#define GIT_VERSION "0.1.0"
 #endif
 
 namespace po = boost::program_options;
@@ -184,7 +189,7 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
 
 void print_version()
 {
-    std::cout << "clang-include-graph 0.1.0" << std::endl;
+    std::cout << "clang-include-graph " << GIT_VERSION << std::endl;
     std::cout << "Copyright (C) 2022-present Bartek Kryza <bkryza@gmail.com>"
               << '\n';
     std::cout << "Built with libclang: " << LIBCLANG_VERSION_STRING
