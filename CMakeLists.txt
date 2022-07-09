@@ -73,6 +73,11 @@ else(CLANG_TIDY)
     message(STATUS "run-clang-tidy script not found - target clang-tidy not available")
 endif(CLANG_TIDY)
 
+include(GNUInstallDirs)
+
+install(TARGETS clang-include-graph DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES LICENSE.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES README.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
 # Enable testing via CTest
 enable_testing()
