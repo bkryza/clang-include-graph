@@ -11,6 +11,8 @@ option(LLVM_CONFIG_PATH "Path to custom llvm-config executable")
 
 option(GIT_VERSION "clang-include-graph version" "0.1.0")
 
+option(BOOST_STATIC "Enable linking static Boost libraries" ON)
+
 if (LLVM_CONFIG_PATH)
     message(STATUS "Using llvm-config from ${LLVM_CONFIG_PATH}")
     set(LIBCLANG_LLVM_CONFIG_EXECUTABLE ${LLVM_CONFIG_PATH})
@@ -31,7 +33,7 @@ find_package(LibClang REQUIRED)
 
 include_directories()
 
-set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS ${BOOST_STATIC})
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost REQUIRED COMPONENTS graph program_options filesystem unit_test_framework)

@@ -23,7 +23,7 @@ dput ppa:bkryza/clang-include-graph *.changes
 
 ```bash
 docker run --rm -v $PWD:$PWD continuum/miniconda3 bash
-conda install conda-build
+conda install conda-build make
 cd packaging
-make conda
+make CONDA_TOKEN=<CONDA_TOKEN> conda
 ```

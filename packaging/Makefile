@@ -56,7 +56,7 @@ _BUILD/$(SOURCE_ARCHIVE):
 		echo "Creating source archive from latest commit $(COMMIT) - $(SOURCE_ARCHIVE)"
 		echo "############################"
 		mkdir -p $(build_dir)
-		git-archive-all --prefix=$(NAME)-$(VERSION)/ _BUILD/$(SOURCE_ARCHIVE)
+		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(VERSION) > _BUILD/$(NAME)-$(VERSION).tar.gz
 
 deb: _BUILD/$(SOURCE_ARCHIVE)
 		echo "############################"
