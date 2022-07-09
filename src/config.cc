@@ -56,7 +56,7 @@ void config_t::init(boost::program_options::variables_map &vm)
         relative_to_ = util::to_absolute_path(".");
     }
 
-    if (relative_to_.has_value() && filenames_only_) {
+    if (relative_to_ && filenames_only_) {
         std::cerr << "ERROR: --relative-to and --names-only cannot be enabled "
                      "at the same time"
                   << " - aborting..." << std::endl;

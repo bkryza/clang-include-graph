@@ -25,7 +25,7 @@ namespace clang_include_graph {
 void include_graph_topological_sort_printer_t::operator()(
     std::ostream &os) const
 {
-    assert(include_graph().dag().has_value());
+    assert(include_graph().dag());
 
     std::vector<include_graph_t::graph_t::vertex_descriptor> include_order;
     boost::topological_sort(

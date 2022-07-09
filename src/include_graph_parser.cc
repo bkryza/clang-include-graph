@@ -57,7 +57,7 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         config_.compilation_database_directory().value().c_str(), &error);
 
     CXCompileCommands compile_commands{nullptr};
-    if (config_.translation_unit().has_value()) {
+    if (config_.translation_unit()) {
         auto tu_path = config_.translation_unit().value();
 
         translation_units_.emplace(tu_path);

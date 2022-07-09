@@ -28,7 +28,7 @@ include_graph_tree_printer_t::include_graph_tree_printer_t(
 
 void include_graph_tree_printer_t::operator()(std::ostream &os) const
 {
-    assert(include_graph().dag().has_value());
+    assert(include_graph().dag());
 
     auto begin = boost::vertices(include_graph().dag().value().graph()).first;
     auto end = boost::vertices(include_graph().dag().value().graph()).second;
