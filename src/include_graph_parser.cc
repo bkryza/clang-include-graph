@@ -192,13 +192,23 @@ enum CXChildVisitResult inclusion_cursor_visitor(
 
     if (clang_getCursorKind(cursor) == CXCursor_InclusionDirective) {
         CXFile source_file{nullptr};
+        unsigned line{};
+        unsigned column{};
+        unsigned offset{};
         clang_getFileLocation(clang_getCursorLocation(cursor), &source_file,
-            nullptr, nullptr, nullptr);
+            &line, &column, &offset);
 
         std::string source_file_str{
             clang_getCString(clang_getFileName(source_file))};
 
         CXFile included_file = clang_getIncludedFile(cursor);
+
+        if (included_file == nullptr) {
+            std::cerr
+                << "WARNING: Cannot find header from include directive at "
+                << source_file_str << ":" << line << '\n';
+            return CXChildVisit_Continue;
+        }
 
         std::string included_file_str{
             clang_getCString(clang_getFileName(included_file))};
