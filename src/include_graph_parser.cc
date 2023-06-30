@@ -93,6 +93,18 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         std::string current_file{
             clang_getCString(clang_CompileCommand_getFilename(command))};
 
+        // Skip compile commands for headers (e.g. precompiled headers)
+        if (boost::filesystem::extension(current_file).empty() ||
+            boost::filesystem::extension(current_file).find(".h") == 0) {
+            continue;
+        }
+
+        if (!boost::filesystem::exists(current_file)) {
+            std::cerr << "ERROR: Cannot find translation unit at  "
+                      << current_file << '\n';
+            exit(-1);
+        }
+
         auto tu_path =
             boost::filesystem::canonical(boost::filesystem::path(current_file));
 
@@ -109,9 +121,22 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         args.reserve(clang_CompileCommand_getNumArgs(command));
 
         for (auto i = 0U; i < clang_CompileCommand_getNumArgs(command); i++) {
-            args.emplace_back(
-                clang_getCString(clang_CompileCommand_getArg(command, i)));
-            args_cstr.emplace_back(args[i].c_str());
+            std::string arg =
+                clang_getCString(clang_CompileCommand_getArg(command, i));
+
+            // Skip precompiled headers args
+            if (arg == "-Xclang") {
+                std::string nextArg{clang_getCString(
+                    clang_CompileCommand_getArg(command, i + 1))};
+                if (nextArg.find("pch") != std::string::npos ||
+                    nextArg.find("gch") != std::string::npos) {
+                    i++;
+                    continue;
+                }
+            }
+
+            args.emplace_back(std::move(arg));
+            args_cstr.emplace_back(args.back().c_str());
         }
 
         // Remove the file name from the arguments list
@@ -133,8 +158,8 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
                 print_diagnostics(unit);
             }
 
-            std::cerr << "ERROR: Unable to parse translation unit - aborting..."
-                      << std::endl;
+            std::cerr << "ERROR: Unable to parse translation unit '"
+                      << current_file << "' - aborting..." << std::endl;
             exit(-1);
         }
 
