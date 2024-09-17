@@ -90,12 +90,12 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         CXCompileCommand command =
             clang_CompileCommands_getCommand(compile_commands, command_it);
 
-        std::string current_file{
+        boost::filesystem::path current_file{
             clang_getCString(clang_CompileCommand_getFilename(command))};
 
         // Skip compile commands for headers (e.g. precompiled headers)
-        if (boost::filesystem::extension(current_file).empty() ||
-            boost::filesystem::extension(current_file).find(".h") == 0) {
+        if (!current_file.has_extension() ||
+            current_file.extension().string().find(".h") == 0) {
             continue;
         }
 
@@ -106,7 +106,7 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         }
 
         auto tu_path =
-            boost::filesystem::canonical(boost::filesystem::path(current_file));
+            boost::filesystem::canonical(current_file);
 
         auto include_path_str = tu_path.string();
         translation_units_.emplace(include_path_str);
