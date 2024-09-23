@@ -24,7 +24,6 @@
 #include "include_graph_plantuml_printer.h"
 #include "include_graph_topological_sort_printer.h"
 #include "include_graph_tree_printer.h"
-//#include "version.h"
 
 #include <boost/program_options.hpp>
 

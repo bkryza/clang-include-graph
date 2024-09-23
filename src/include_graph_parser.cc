@@ -105,8 +105,7 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
             exit(-1);
         }
 
-        auto tu_path =
-            boost::filesystem::canonical(current_file);
+        auto tu_path = boost::filesystem::canonical(current_file);
 
         auto include_path_str = tu_path.string();
         translation_units_.emplace(include_path_str);
