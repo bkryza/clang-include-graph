@@ -52,8 +52,7 @@ void include_graph_plantuml_printer_t::operator()(std::ostream &os) const
             const include_graph_t::graph_t::vertex_descriptor &to =
                 boost::target(e, include_graph().graph());
 
-            os << "F_" << from << " --> "
-               << " F_" << to << '\n';
+            os << "F_" << from << " --> " << " F_" << to << '\n';
         });
 
     os << "@enduml" << '\n';
