@@ -18,6 +18,17 @@
 
 #include "include_graph_tree_printer.h"
 
+#include <boost/graph/detail/adjacency_list.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/labeled_graph.hpp>
+#include <boost/tuple/tuple.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <iterator>
+#include <ostream>
+#include <vector>
+
 namespace clang_include_graph {
 
 include_graph_tree_printer_t::include_graph_tree_printer_t(
@@ -39,11 +50,13 @@ void include_graph_tree_printer_t::operator()(std::ostream &os) const
 
             bool is_tree_root{false};
 
-            if (include_graph().printer() == printer_t::reverse_tree)
+            if (include_graph().printer() == printer_t::reverse_tree) {
                 is_tree_root =
                     (boost::in_degree(v, include_graph().graph()) == 0);
-            else
+            }
+            else {
                 is_tree_root = vertex.is_translation_unit;
+            }
 
             if (is_tree_root) {
                 os << path_printer().print(vertex.file) << '\n';

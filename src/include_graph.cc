@@ -18,6 +18,15 @@
 
 #include "include_graph.h"
 
+#include "config.h"
+
+#include <boost/graph/depth_first_search.hpp>
+#include <boost/graph/labeled_graph.hpp>
+#include <boost/graph/named_function_params.hpp>
+#include <boost/optional/optional.hpp>
+
+#include <string>
+
 namespace clang_include_graph {
 
 void include_graph_t::add_edge(
@@ -34,10 +43,12 @@ void include_graph_t::add_edge(
         graph_.graph()[from_v].is_translation_unit = from_translation_unit;
     }
 
-    if (printer_ == printer_t::reverse_tree)
+    if (printer_ == printer_t::reverse_tree) {
         boost::add_edge_by_label(to, from, graph_);
-    else
+    }
+    else {
         boost::add_edge_by_label(from, to, graph_);
+    }
 }
 
 void include_graph_t::init(const config_t &config)
@@ -54,7 +65,7 @@ void include_graph_t::build_dag()
     }
 
     dag_ = include_graph_t::graph_t{};
-    detail::dag_include_graph_visitor_t visitor{*this};
+    const detail::dag_include_graph_visitor_t visitor{*this};
 
     boost::depth_first_search(graph_, boost::visitor(visitor));
 }

@@ -18,6 +18,8 @@
 
 #include "include_graph_printer.h"
 
+#include <ostream>
+
 namespace clang_include_graph {
 
 include_graph_printer_t::include_graph_printer_t(

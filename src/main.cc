@@ -25,8 +25,13 @@
 #include "include_graph_topological_sort_printer.h"
 #include "include_graph_tree_printer.h"
 
-#include <boost/program_options.hpp>
+#include <boost/program_options/detail/parsers.hpp>
+#include <boost/program_options/errors.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/value_semantic.hpp>
+#include <boost/program_options/variables_map.hpp>
 
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 
@@ -66,8 +71,7 @@ int main(int argc, char **argv)
 
     if (config.verbose()) {
         std::cout << "=== Loading compilation database from "
-                  << config.compilation_database_directory().value()
-                  << std::endl;
+                  << config.compilation_database_directory().value() << '\n';
     }
 
     // Parse translation units and build the include graph
@@ -75,7 +79,7 @@ int main(int argc, char **argv)
     include_graph_parser.parse(include_graph);
 
     // Select path printer based on config
-    std::unique_ptr<path_printer_t> path_printer =
+    std::unique_ptr<path_printer_t> const path_printer =
         path_printer_t::from_config(config);
 
     // Generate output using selected printer
@@ -142,7 +146,7 @@ int main(int argc, char **argv)
         std::cout << printer;
     }
     else {
-        std::cout << "ERROR: Invalid output printer - aborting..." << std::endl;
+        std::cout << "ERROR: Invalid output printer - aborting..." << '\n';
         exit(-1);
     }
 }
@@ -170,7 +174,7 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "Print output includes and translation units in topological"
             "sort order")
         ("tree,t", "Print include graph in tree form")
-        ("reverse-tree,r", "Print reverse include graph in tree form")
+        ("reverse-tree,T", "Print reverse include graph in tree form")
         ("cycles,c", "Print include graph cycles, if any")
         ("graphviz,g", "Print include graph in GraphViz format")
         ("plantuml,p", "Print include graph in PlantUML format");
@@ -181,7 +185,7 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         po::notify(vm);
     }
     catch (const po::error &e) {
-        std::cerr << "ERROR: Invalid options - " << e.what() << std::endl;
+        std::cerr << "ERROR: Invalid options - " << e.what() << '\n';
         exit(-1);
     }
 
@@ -200,9 +204,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
 
 void print_version()
 {
-    std::cout << "clang-include-graph " << GIT_VERSION << std::endl;
+    std::cout << "clang-include-graph " << GIT_VERSION << '\n';
     std::cout << "Copyright (C) 2022-present Bartek Kryza <bkryza@gmail.com>"
               << '\n';
-    std::cout << "Built with libclang: " << LIBCLANG_VERSION_STRING
-              << std::endl;
+    std::cout << "Built with libclang: " << LIBCLANG_VERSION_STRING << '\n';
 }

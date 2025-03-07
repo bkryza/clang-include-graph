@@ -30,7 +30,7 @@
 
 namespace clang_include_graph {
 
-enum class printer_t {
+enum class printer_t : std::uint8_t {
     topological_sort,
     tree,
     reverse_tree,

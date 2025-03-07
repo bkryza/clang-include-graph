@@ -17,6 +17,12 @@
  */
 
 #include "include_graph_graphviz_printer.h"
+#include "include_graph.h"
+#include "path_printer.h"
+
+#include <boost/graph/graphviz.hpp>
+
+#include <ostream>
 
 namespace clang_include_graph {
 
@@ -38,7 +44,7 @@ void label_writer::operator()(std::ostream &out, const Vertex &v) const
 
 void include_graph_graphviz_printer_t::operator()(std::ostream &os) const
 {
-    detail::label_writer writer{include_graph().graph(), path_printer()};
+    const detail::label_writer writer{include_graph().graph(), path_printer()};
 
     boost::write_graphviz(os, include_graph().graph(), writer);
 }

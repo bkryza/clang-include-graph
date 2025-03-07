@@ -30,6 +30,16 @@ public:
     include_graph_tree_printer_t(
         const include_graph_t &graph, const path_printer_t &pp);
 
+    ~include_graph_tree_printer_t() override = default;
+
+    include_graph_tree_printer_t(
+        const include_graph_tree_printer_t &) = default;
+    include_graph_tree_printer_t(include_graph_tree_printer_t &&) = default;
+    include_graph_tree_printer_t &operator=(
+        const include_graph_tree_printer_t &) = delete;
+    include_graph_tree_printer_t &operator=(
+        include_graph_tree_printer_t &&) = delete;
+
     void operator()(std::ostream &os) const override;
 
 private:

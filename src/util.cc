@@ -18,10 +18,16 @@
 
 #include "util.h"
 
+#include <boost/filesystem/exception.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/optional/optional.hpp>
+
+#include <string>
+
 namespace clang_include_graph {
 namespace util {
 
-boost::optional<std::string> to_absolute_path(std::string relative_path)
+boost::optional<std::string> to_absolute_path(const std::string &relative_path)
 {
     try {
         return boost::filesystem::canonical(

@@ -30,6 +30,17 @@ class include_graph_topological_sort_printer_t
 public:
     using include_graph_printer_t::include_graph_printer_t;
 
+    ~include_graph_topological_sort_printer_t() override = default;
+
+    include_graph_topological_sort_printer_t(
+        const include_graph_topological_sort_printer_t &) = default;
+    include_graph_topological_sort_printer_t(
+        include_graph_topological_sort_printer_t &&) = default;
+    include_graph_topological_sort_printer_t &operator=(
+        const include_graph_topological_sort_printer_t &) = delete;
+    include_graph_topological_sort_printer_t &operator=(
+        include_graph_topological_sort_printer_t &&) = delete;
+
     void operator()(std::ostream &os) const override;
 };
 

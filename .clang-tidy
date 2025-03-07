@@ -1,20 +1,25 @@
 Checks: >-
   *,
+  -abseil-*,
   -altera-*,
   -android-*,
   -clang-analyzer-cplusplus.NewDelete,
   -concurrency-mt-unsafe,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-avoid-const-or-ref-data-members,
   -google-runtime-int,
   -hicpp-no-array-decay,
   -fuchsia-*,
   -llvm-*,
   -llvmlibc-*,
   -misc-no-recursion*,
+  -misc-include-cleaner,  
   -modernize-use-trailing-return-type,
   -mpi-*,
   -objc-*,
   -openmp-*,
+  -readability-identifier-length,
+  -readability-function-cognitive-complexity,
   -zircon-*
 WarningsAsErrors: '*'
 HeaderFilterRegex: 'src'

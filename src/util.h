@@ -27,7 +27,7 @@
 namespace clang_include_graph {
 namespace util {
 
-boost::optional<std::string> to_absolute_path(std::string relative_path);
+boost::optional<std::string> to_absolute_path(const std::string &relative_path);
 
 std::string relative_to(
     std::string path, boost::optional<std::string> directory);

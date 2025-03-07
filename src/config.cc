@@ -17,6 +17,14 @@
  */
 
 #include "config.h"
+#include "util.h"
+
+#include <boost/optional/optional.hpp>
+#include <boost/program_options/variables_map.hpp>
+
+#include <cstdlib>
+#include <iostream>
+#include <ostream>
 
 namespace clang_include_graph {
 
@@ -35,7 +43,7 @@ void config_t::init(boost::program_options::variables_map &vm)
 
     if (!compilation_database_directory_) {
         std::cerr << "ERROR: Cannot find compilation database - aborting..."
-                  << std::endl;
+                  << '\n';
         exit(-1);
     }
 
@@ -59,7 +67,7 @@ void config_t::init(boost::program_options::variables_map &vm)
     if (relative_to_ && filenames_only_) {
         std::cerr << "ERROR: --relative-to and --names-only cannot be enabled "
                      "at the same time"
-                  << " - aborting..." << std::endl;
+                  << " - aborting..." << '\n';
         exit(-1);
     }
 
@@ -69,7 +77,7 @@ void config_t::init(boost::program_options::variables_map &vm)
         if (!translation_unit_) {
             std::cerr << "ERROR: Cannot find translation unit source at "
                       << vm["translation-unit"].as<std::string>()
-                      << " - aborting..." << std::endl;
+                      << " - aborting..." << '\n';
             exit(-1);
         }
     }
@@ -79,7 +87,7 @@ void config_t::init(boost::program_options::variables_map &vm)
             vm.count("plantuml") >
         1) {
         std::cerr << "ERROR: Only one output method can be selected at a time"
-                  << " - aborting..." << std::endl;
+                  << " - aborting..." << '\n';
         exit(-1);
     }
 

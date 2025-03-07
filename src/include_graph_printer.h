@@ -29,6 +29,14 @@ public:
     include_graph_printer_t(
         const include_graph_t &graph, const path_printer_t &pp);
 
+    virtual ~include_graph_printer_t() = default;
+
+    include_graph_printer_t(const include_graph_printer_t &) = default;
+    include_graph_printer_t(include_graph_printer_t &&) = default;
+    include_graph_printer_t &operator=(
+        const include_graph_printer_t &) = delete;
+    include_graph_printer_t &operator=(include_graph_printer_t &&) = delete;
+
     virtual void operator()(std::ostream &) const = 0;
 
     const path_printer_t &path_printer() const;
