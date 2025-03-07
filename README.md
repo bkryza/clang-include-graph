@@ -1,6 +1,7 @@
 # clang-include-graph - simple tool for analyzing C++ include graphs
 
 [![Build status](https://github.com/bkryza/clang-include-graph/actions/workflows/build.yml/badge.svg)](https://github.com/bkryza/clang-include-graph/actions)
+[![Build status](https://github.com/bkryza/clang-include-graph/actions/workflows/macos.yml/badge.svg)](https://github.com/bkryza/clang-include-graph/actions)
 [![Version](https://img.shields.io/badge/version-0.1.1-blue)](https://github.com/bkryza/clang-include-graph/releases)
 
 `clang-include-graph` provides several simple commands for analyzing and visualizing C++ project include graphs.
@@ -169,6 +170,43 @@ src/main.cc
         └── src/path_printer.h
             └── src/config.h
                 └── src/util.h
+```
+
+#### Reverse include tree for a single translation unit including only project files with relative paths
+```
+❯ release/clang-include-graph -d release -u src/main.cc -r . -l --reverse-tree
+src/util.h
+└── src/config.h
+    ├── src/main.cc
+    ├── src/include_graph.h
+    │   ├── src/main.cc
+    │   ├── src/include_graph_printer.h
+    │   │   ├── src/include_graph_cycles_printer.h
+    │   │   │   └── src/main.cc
+    │   │   ├── src/include_graph_graphviz_printer.h
+    │   │   │   └── src/main.cc
+    │   │   ├── src/include_graph_plantuml_printer.h
+    │   │   │   └── src/main.cc
+    │   │   ├── src/include_graph_topological_sort_printer.h
+    │   │   │   └── src/main.cc
+    │   │   └── src/include_graph_tree_printer.h
+    │   │       └── src/main.cc
+    │   └── src/include_graph_parser.h
+    │       └── src/main.cc
+    ├── src/path_printer.h
+    │   └── src/include_graph_printer.h
+    │       ├── src/include_graph_cycles_printer.h
+    │       │   └── src/main.cc
+    │       ├── src/include_graph_graphviz_printer.h
+    │       │   └── src/main.cc
+    │       ├── src/include_graph_plantuml_printer.h
+    │       │   └── src/main.cc
+    │       ├── src/include_graph_topological_sort_printer.h
+    │       │   └── src/main.cc
+    │       └── src/include_graph_tree_printer.h
+    │           └── src/main.cc
+    └── src/include_graph_parser.h
+        └── src/main.cc
 ```
 
 #### GraphViz include graph of project files
