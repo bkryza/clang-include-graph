@@ -63,6 +63,10 @@ test: debug
 test_release: release
 	CTEST_OUTPUT_ON_FAILURE=1 make -C release test
 
+.PHONY: check-formatting
+check-formatting:
+	./util/check_formatting.sh
+
 .PHONY: format
 format:
 	docker run --rm -v $(CURDIR):/root/sources bkryza/clang-format-check:1.5
