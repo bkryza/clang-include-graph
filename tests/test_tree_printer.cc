@@ -57,3 +57,40 @@ BOOST_AUTO_TEST_CASE(test_dag_prints_no_cycles)
     BOOST_TEST(includes[5] == "└── include4.h");
     BOOST_TEST(includes[6] == "    └── include5.h");
 }
+
+BOOST_AUTO_TEST_CASE(test_dag_prints_reverse_tree)
+{
+    include_graph_t graph;
+    graph.add_edge("main.cc", "include1.h", true);
+    graph.add_edge("main.cc", "include2.h", true);
+    graph.add_edge("main.cc", "include3.h", true);
+    graph.add_edge("main.cc", "include4.h", true);
+    graph.add_edge("main.cc", "include5.h", true);
+    graph.add_edge("include4.h", "include5.h");
+
+    graph.build_dag();
+
+    path_printer_t pp;
+
+    include_graph_tree_printer_t p{graph, pp};
+
+    std::stringstream ss;
+    ss << p;
+
+    std::vector<std::string> includes;
+    read_lines(ss, includes);
+
+    BOOST_TEST(includes.size() == 12);
+    BOOST_TEST(includes[0] == "include1.h");
+    BOOST_TEST(includes[1] == "└── main.cc");
+    BOOST_TEST(includes[2] == "include2.h");
+    BOOST_TEST(includes[3] == "└── main.cc");
+    BOOST_TEST(includes[4] == "include3.h");
+    BOOST_TEST(includes[5] == "└── main.cc");
+    BOOST_TEST(includes[6] == "include4.h");
+    BOOST_TEST(includes[7] == "└── main.cc");
+    BOOST_TEST(includes[8] == "include5.h");
+    BOOST_TEST(includes[9] == "├── main.cc");
+    BOOST_TEST(includes[10] == "└── include4.h");
+    BOOST_TEST(includes[11] == "    └── main.cc");
+}

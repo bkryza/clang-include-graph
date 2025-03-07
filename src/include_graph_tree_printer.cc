@@ -36,7 +36,16 @@ void include_graph_tree_printer_t::operator()(std::ostream &os) const
     std::for_each(
         begin, end, [&](const include_graph_t::graph_t::vertex_descriptor &v) {
             const auto &vertex = include_graph().graph().graph()[v];
-            if (vertex.is_translation_unit) {
+
+            bool is_tree_root{false};
+
+            if (include_graph().printer() == printer_t::reverse_tree)
+                is_tree_root =
+                    (boost::in_degree(v, include_graph().graph()) == 0);
+            else
+                is_tree_root = vertex.is_translation_unit;
+
+            if (is_tree_root) {
                 os << path_printer().print(vertex.file) << '\n';
                 print_tu_subtree(os, v, 0, include_graph(), {});
             }

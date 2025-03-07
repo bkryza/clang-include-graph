@@ -90,6 +90,17 @@ int main(int argc, char **argv)
 
         std::cout << printer;
     }
+    else if (config.printer() == printer_t::reverse_tree) {
+        if (config.verbose()) {
+            std::cout << "=== Printing reverse include graph tree\n";
+        }
+
+        include_graph.build_dag();
+
+        include_graph_tree_printer_t printer{include_graph, *path_printer};
+
+        std::cout << printer;
+    }
     else if (config.printer() == printer_t::topological_sort) {
         if (config.verbose()) {
             std::cout
@@ -159,6 +170,7 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "Print output includes and translation units in topological"
             "sort order")
         ("tree,t", "Print include graph in tree form")
+        ("reverse-tree,r", "Print reverse include graph in tree form")
         ("cycles,c", "Print include graph cycles, if any")
         ("graphviz,g", "Print include graph in GraphViz format")
         ("plantuml,p", "Print include graph in PlantUML format");

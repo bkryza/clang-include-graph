@@ -74,7 +74,9 @@ void config_t::init(boost::program_options::variables_map &vm)
         }
     }
 
-    if (vm.count("tree") + vm.count("graphviz") + vm.count("topological-sort") >
+    if (vm.count("tree") + vm.count("reverse-tree") + vm.count("cycles") +
+            vm.count("graphviz") + vm.count("topological-sort") +
+            vm.count("plantuml") >
         1) {
         std::cerr << "ERROR: Only one output method can be selected at a time"
                   << " - aborting..." << std::endl;
@@ -83,6 +85,9 @@ void config_t::init(boost::program_options::variables_map &vm)
 
     if (vm.count("tree") > 0U) {
         printer_ = printer_t::tree;
+    }
+    else if (vm.count("reverse-tree") > 0U) {
+        printer_ = printer_t::reverse_tree;
     }
     else if (vm.count("graphviz") > 0U) {
         printer_ = printer_t::graphviz;

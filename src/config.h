@@ -33,6 +33,7 @@ namespace clang_include_graph {
 enum class printer_t {
     topological_sort,
     tree,
+    reverse_tree,
     cycles,
     graphviz,
     plantuml,

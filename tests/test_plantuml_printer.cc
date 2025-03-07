@@ -45,9 +45,9 @@ file "include1.h" as F_0
 file "main.cc" as F_1
 file "include2.h" as F_2
 file "include3.h" as F_3
-F_0 -->  F_3
 F_1 -->  F_0
 F_1 -->  F_2
+F_0 -->  F_3
 @enduml
 )";
 

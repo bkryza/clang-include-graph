@@ -34,13 +34,17 @@ void include_graph_t::add_edge(
         graph_.graph()[from_v].is_translation_unit = from_translation_unit;
     }
 
-    boost::add_edge_by_label(from, to, graph_);
+    if (printer_ == printer_t::reverse_tree)
+        boost::add_edge_by_label(to, from, graph_);
+    else
+        boost::add_edge_by_label(from, to, graph_);
 }
 
 void include_graph_t::init(const config_t &config)
 {
     relative_to_ = config.relative_to();
     relative_only_ = config.relative_only();
+    printer_ = config.printer();
 }
 
 void include_graph_t::build_dag()
@@ -72,6 +76,8 @@ const include_graph_t::graph_t &include_graph_t::graph() const noexcept
 }
 
 bool include_graph_t::relative_only() const noexcept { return relative_only_; }
+
+printer_t include_graph_t::printer() const noexcept { return printer_; }
 
 const boost::optional<std::string> &
 include_graph_t::relative_to() const noexcept
