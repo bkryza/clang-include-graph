@@ -58,6 +58,38 @@ BOOST_AUTO_TEST_CASE(test_dag_prints_no_cycles)
     BOOST_TEST(includes[6] == "    └── include5.h");
 }
 
+BOOST_AUTO_TEST_CASE(test_dag_prints_with_cycles)
+{
+    include_graph_t graph;
+    graph.add_edge("include1.h", "main.cc", true);
+    graph.add_edge("include2.h", "main.cc", true);
+    graph.add_edge("include3.h", "util.cc", true);
+    graph.add_edge("include4.h", "util.cc", true);
+    graph.add_edge("include2.h", "include1.h");
+    graph.add_edge("include1.h", "include2.h");
+
+    graph.build_dag();
+
+    path_printer_t pp;
+
+    include_graph_tree_printer_t p{graph, pp};
+
+    std::stringstream ss;
+    ss << p;
+
+    std::vector<std::string> includes;
+    read_lines(ss, includes);
+
+    BOOST_TEST(includes.size() == 7);
+    BOOST_TEST(includes[0] == "main.cc");
+    BOOST_TEST(includes[1] == "├── include1.h");
+    BOOST_TEST(includes[2] == "│   └── include2.h");
+    BOOST_TEST(includes[3] == "└── include2.h");
+    BOOST_TEST(includes[4] == "util.cc");
+    BOOST_TEST(includes[5] == "├── include3.h");
+    BOOST_TEST(includes[6] == "└── include4.h");
+}
+
 BOOST_AUTO_TEST_CASE(test_dag_prints_reverse_tree)
 {
     config_t config;
