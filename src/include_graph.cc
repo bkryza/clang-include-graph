@@ -43,7 +43,8 @@ void include_graph_t::add_edge(
         graph_.graph()[from_v].is_translation_unit = from_translation_unit;
     }
 
-    if (printer_ == printer_t::reverse_tree) {
+    if (printer_ == printer_t::reverse_tree ||
+        printer_ == printer_t::dependants) {
         boost::add_edge_by_label(to, from, graph_);
     }
     else {
@@ -55,6 +56,8 @@ void include_graph_t::init(const config_t &config)
 {
     relative_to_ = config.relative_to();
     relative_only_ = config.relative_only();
+    dependants_of_ = config.dependants_of();
+    translation_units_only_ = config.translation_units_only();
     printer_ = config.printer();
 }
 
@@ -88,6 +91,11 @@ const include_graph_t::graph_t &include_graph_t::graph() const noexcept
 
 bool include_graph_t::relative_only() const noexcept { return relative_only_; }
 
+bool include_graph_t::translation_units_only() const noexcept
+{
+    return translation_units_only_;
+}
+
 printer_t include_graph_t::printer() const noexcept { return printer_; }
 
 const boost::optional<std::string> &
@@ -96,4 +104,9 @@ include_graph_t::relative_to() const noexcept
     return relative_to_;
 }
 
+const boost::optional<std::string> &
+include_graph_t::dependants_of() const noexcept
+{
+    return dependants_of_;
+}
 } // namespace clang_include_graph

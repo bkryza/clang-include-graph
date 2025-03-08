@@ -35,6 +35,7 @@ enum class printer_t : std::uint8_t {
     tree,
     reverse_tree,
     cycles,
+    dependants,
     graphviz,
     plantuml,
     unknown
@@ -52,20 +53,31 @@ public:
     const boost::optional<std::string> &translation_unit() const noexcept;
 
     const boost::optional<std::string> &relative_to() const noexcept;
+    void relative_to(std::string rt);
+
+    const boost::optional<std::string> &dependants_of() const noexcept;
+    void dependants_of(std::string file);
 
     bool filenames_only() const noexcept;
 
     bool relative_only() const noexcept;
+    void relative_only(bool ro) noexcept;
+
+    bool translation_units_only() const noexcept;
+    void translation_units_only(bool tuo) noexcept;
 
     printer_t printer() const noexcept;
+    void printer(printer_t printer) noexcept;
 
 private:
     bool verbose_{false};
     boost::optional<std::string> compilation_database_directory_;
     boost::optional<std::string> translation_unit_;
     boost::optional<std::string> relative_to_;
+    boost::optional<std::string> dependants_of_;
     bool filenames_only_{false};
     bool relative_only_{false};
+    bool translation_units_only_{false};
     printer_t printer_{printer_t::topological_sort};
 };
 

@@ -91,6 +91,16 @@ void config_t::init(boost::program_options::variables_map &vm)
         exit(-1);
     }
 
+    if (vm.count("dependants-of") > 0) {
+        printer_ = printer_t::dependants;
+        dependants_of_ =
+            util::to_absolute_path(vm["dependants-of"].as<std::string>());
+    }
+
+    if (vm.count("translation-units-only") == 1) {
+        translation_units_only_ = true;
+    }
+
     if (vm.count("tree") > 0U) {
         printer_ = printer_t::tree;
     }
@@ -117,22 +127,48 @@ const boost::optional<std::string> &
 config_t::compilation_database_directory() const noexcept
 {
     return compilation_database_directory_;
-};
+}
 
 const boost::optional<std::string> &config_t::translation_unit() const noexcept
 {
     return translation_unit_;
-};
+}
 
 const boost::optional<std::string> &config_t::relative_to() const noexcept
 {
     return relative_to_;
-};
+}
+
+void config_t::relative_to(std::string rt) { relative_to_ = std::move(rt); };
+
+const boost::optional<std::string> &config_t::dependants_of() const noexcept
+{
+    return dependants_of_;
+}
+
+void config_t::dependants_of(std::string file)
+{
+    dependants_of_ = std::move(file);
+}
 
 bool config_t::filenames_only() const noexcept { return filenames_only_; };
 
 bool config_t::relative_only() const noexcept { return relative_only_; }
 
+void config_t::relative_only(bool ro) noexcept { relative_only_ = ro; }
+
+bool config_t::translation_units_only() const noexcept
+{
+    return translation_units_only_;
+}
+
+void config_t::translation_units_only(bool tuo) noexcept
+{
+    translation_units_only_ = tuo;
+}
+
 printer_t config_t::printer() const noexcept { return printer_; }
+
+void config_t::printer(printer_t printer) noexcept { printer_ = printer; }
 
 } // namespace clang_include_graph

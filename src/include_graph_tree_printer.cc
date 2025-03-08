@@ -46,7 +46,8 @@ void include_graph_tree_printer_t::operator()(std::ostream &os) const
 
     std::for_each(
         begin, end, [&](const include_graph_t::graph_t::vertex_descriptor &v) {
-            const auto &vertex = include_graph().graph().graph()[v];
+            const auto &graph = include_graph().graph().graph();
+            const auto &vertex = graph[v];
 
             bool is_tree_root{false};
 

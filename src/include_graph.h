@@ -59,15 +59,21 @@ public:
 
     bool relative_only() const noexcept;
 
+    bool translation_units_only() const noexcept;
+
     printer_t printer() const noexcept;
 
     const boost::optional<std::string> &relative_to() const noexcept;
+
+    const boost::optional<std::string> &dependants_of() const noexcept;
 
 private:
     graph_t graph_;
     boost::optional<graph_t> dag_;
     boost::optional<std::string> relative_to_;
     bool relative_only_{false};
+    boost::optional<std::string> dependants_of_;
+    bool translation_units_only_{false};
     printer_t printer_{printer_t::unknown};
 };
 

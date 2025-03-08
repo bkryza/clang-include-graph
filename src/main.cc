@@ -19,6 +19,7 @@
 #include "config.h"
 #include "include_graph.h"
 #include "include_graph_cycles_printer.h"
+#include "include_graph_dependants_printer.h"
 #include "include_graph_graphviz_printer.h"
 #include "include_graph_parser.h"
 #include "include_graph_plantuml_printer.h"
@@ -54,6 +55,7 @@ int main(int argc, char **argv)
 {
     using clang_include_graph::config_t;
     using clang_include_graph::include_graph_cycles_printer_t;
+    using clang_include_graph::include_graph_dependants_printer_t;
     using clang_include_graph::include_graph_graphviz_printer_t;
     using clang_include_graph::include_graph_parser_t;
     using clang_include_graph::include_graph_plantuml_printer_t;
@@ -102,6 +104,19 @@ int main(int argc, char **argv)
         include_graph.build_dag();
 
         include_graph_tree_printer_t printer{include_graph, *path_printer};
+
+        std::cout << printer;
+    }
+    else if (config.printer() == printer_t::dependants) {
+        if (config.verbose()) {
+            std::cout << "=== Printing dependants of "
+                      << *config.dependants_of() << '\n';
+        }
+
+        include_graph.build_dag();
+
+        include_graph_dependants_printer_t printer{
+            include_graph, *path_printer};
 
         std::cout << printer;
     }
@@ -175,6 +190,9 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "sort order")
         ("tree,t", "Print include graph in tree form")
         ("reverse-tree,T", "Print reverse include graph in tree form")
+        ("dependants-of,e", po::value<std::string>(),
+            "Print all files that depend on a specific header")
+        ("translation-units-only", "Print only translation units")
         ("cycles,c", "Print include graph cycles, if any")
         ("graphviz,g", "Print include graph in GraphViz format")
         ("plantuml,p", "Print include graph in PlantUML format");
