@@ -89,8 +89,17 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
     auto compile_commands_size =
         clang_CompileCommands_getSize(compile_commands);
 
-    if (compile_commands_size == 0) {
-        std::cerr << "Cannot find compilation commands in compilation database"
+    if (error !=
+        CXCompilationDatabase_NoError) { // compile_commands_size == 0) {
+        std::cerr
+            << "ERROR: Cannot find compilation commands in compilation database"
+            << '\n';
+        exit(-1);
+    }
+
+    if (compile_commands_size == 0 && translation_units().empty()) {
+        std::cerr << "ERROR: No compilation database found and no translation "
+                     "units specified"
                   << '\n';
         exit(-1);
     }
@@ -132,6 +141,8 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         for (auto i = 0U; i < clang_CompileCommand_getNumArgs(command); i++) {
             std::string arg =
                 clang_getCString(clang_CompileCommand_getArg(command, i));
+
+            std::cout << "===== " << arg << "\n";
 
             // Skip precompiled headers args
             if (arg == "-Xclang") {
