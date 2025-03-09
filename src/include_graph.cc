@@ -98,13 +98,13 @@ bool include_graph_t::translation_units_only() const noexcept
 
 printer_t include_graph_t::printer() const noexcept { return printer_; }
 
-const boost::optional<std::string> &
+const boost::optional<boost::filesystem::path> &
 include_graph_t::relative_to() const noexcept
 {
     return relative_to_;
 }
 
-const boost::optional<std::string> &
+const boost::optional<boost::filesystem::path> &
 include_graph_t::dependants_of() const noexcept
 {
     return dependants_of_;

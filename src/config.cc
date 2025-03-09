@@ -19,12 +19,12 @@
 #include "config.h"
 #include "util.h"
 
+#include <boost/filesystem/path.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/program_options/variables_map.hpp>
 
 #include <cstdlib>
 #include <iostream>
-#include <ostream>
 
 namespace clang_include_graph {
 
@@ -34,11 +34,12 @@ void config_t::init(boost::program_options::variables_map &vm)
         verbose_ = true;
     }
 
-    compilation_database_directory_ = util::to_absolute_path(".");
-
     if (vm.count("compilation-database-dir") == 1) {
         compilation_database_directory_ = util::to_absolute_path(
             vm["compilation-database-dir"].as<std::string>());
+    }
+    else {
+        compilation_database_directory_ = util::to_absolute_path(".");
     }
 
     if (!compilation_database_directory_) {
@@ -73,7 +74,7 @@ void config_t::init(boost::program_options::variables_map &vm)
 
     if (vm.count("translation-unit") == 1) {
         translation_unit_ =
-            util::to_absolute_path(vm["translation-unit"].as<std::string>());
+            resolve_path(vm["translation-unit"].as<std::string>());
         if (!translation_unit_) {
             std::cerr << "ERROR: Cannot find translation unit source at "
                       << vm["translation-unit"].as<std::string>()
@@ -93,8 +94,7 @@ void config_t::init(boost::program_options::variables_map &vm)
 
     if (vm.count("dependants-of") > 0) {
         printer_ = printer_t::dependants;
-        dependants_of_ =
-            util::to_absolute_path(vm["dependants-of"].as<std::string>());
+        dependants_of_ = resolve_path(vm["dependants-of"].as<std::string>());
     }
 
     if (vm.count("translation-units-only") == 1) {
@@ -123,25 +123,28 @@ void config_t::init(boost::program_options::variables_map &vm)
 
 bool config_t::verbose() const noexcept { return verbose_; }
 
-const boost::optional<std::string> &
+const boost::optional<boost::filesystem::path> &
 config_t::compilation_database_directory() const noexcept
 {
     return compilation_database_directory_;
 }
 
-const boost::optional<std::string> &config_t::translation_unit() const noexcept
+const boost::optional<boost::filesystem::path> &
+config_t::translation_unit() const noexcept
 {
     return translation_unit_;
 }
 
-const boost::optional<std::string> &config_t::relative_to() const noexcept
+const boost::optional<boost::filesystem::path> &
+config_t::relative_to() const noexcept
 {
     return relative_to_;
 }
 
 void config_t::relative_to(std::string rt) { relative_to_ = std::move(rt); };
 
-const boost::optional<std::string> &config_t::dependants_of() const noexcept
+const boost::optional<boost::filesystem::path> &
+config_t::dependants_of() const noexcept
 {
     return dependants_of_;
 }
@@ -171,4 +174,19 @@ printer_t config_t::printer() const noexcept { return printer_; }
 
 void config_t::printer(printer_t printer) noexcept { printer_ = printer; }
 
+boost::filesystem::path config_t::resolve_path(
+    const boost::filesystem::path &p) const
+{
+    auto result{p};
+    if (p.is_absolute())
+        return p;
+
+    if (relative_to_)
+        result = boost::filesystem::path{*relative_to_} / p;
+
+    if (result.is_relative())
+        result = util::to_absolute_path(result);
+
+    return result;
+}
 } // namespace clang_include_graph

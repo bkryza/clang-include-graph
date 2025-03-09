@@ -45,8 +45,8 @@ public:
 
 class path_relative_printer_t final : public path_printer_t {
 public:
-    explicit path_relative_printer_t(const std::string &relative_to)
-        : relative_to_{relative_to}
+    explicit path_relative_printer_t(boost::filesystem::path relative_to)
+        : relative_to_{std::move(relative_to)}
     {
     }
 

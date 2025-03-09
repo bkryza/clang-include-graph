@@ -8,7 +8,9 @@ Checks: >-
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
   -cppcoreguidelines-avoid-const-or-ref-data-members,
   -google-runtime-int,
+  -google-readability-braces-around-statements,  
   -hicpp-no-array-decay,
+  -hicpp-braces-around-statements,
   -fuchsia-*,
   -llvm-*,
   -llvmlibc-*,
@@ -20,9 +22,10 @@ Checks: >-
   -openmp-*,
   -readability-identifier-length,
   -readability-function-cognitive-complexity,
+  -readability-braces-around-statements,
   -zircon-*
 WarningsAsErrors: '*'
 HeaderFilterRegex: 'src'
 CheckOptions:
-  - key:             readability-identifier-naming.ClassMemberSuffix
-    value:           '_'
+  - key: readability-identifier-naming.ClassMemberSuffix
+    value: '_'

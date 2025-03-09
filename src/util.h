@@ -22,15 +22,11 @@
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
-#include <string>
-
 namespace clang_include_graph {
 namespace util {
 
-boost::optional<std::string> to_absolute_path(const std::string &relative_path);
-
-std::string relative_to(
-    std::string path, boost::optional<std::string> directory);
+boost::filesystem::path to_absolute_path(
+    const boost::filesystem::path &relative_path);
 
 } // namespace util
 } // namespace clang_include_graph

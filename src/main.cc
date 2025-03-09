@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     process_command_line_options(argc, argv, vm, config);
 
     if (config.verbose()) {
-        std::cout << "=== Loading compilation database from "
+        std::cerr << "=== Loading compilation database from "
                   << config.compilation_database_directory().value() << '\n';
     }
 
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     // Generate output using selected printer
     if (config.printer() == printer_t::tree) {
         if (config.verbose()) {
-            std::cout << "=== Printing include graph tree\n";
+            std::cerr << "=== Printing include graph tree\n";
         }
 
         include_graph.build_dag();
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
     }
     else if (config.printer() == printer_t::reverse_tree) {
         if (config.verbose()) {
-            std::cout << "=== Printing reverse include graph tree\n";
+            std::cerr << "=== Printing reverse include graph tree\n";
         }
 
         include_graph.build_dag();
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     }
     else if (config.printer() == printer_t::dependants) {
         if (config.verbose()) {
-            std::cout << "=== Printing dependants of "
+            std::cerr << "=== Printing dependants of "
                       << *config.dependants_of() << '\n';
         }
 
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
     }
     else if (config.printer() == printer_t::topological_sort) {
         if (config.verbose()) {
-            std::cout
+            std::cerr
                 << "=== Printing include graph sorted in topological order\n";
         }
 
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
     }
     else if (config.printer() == printer_t::cycles) {
         if (config.verbose()) {
-            std::cout << "=== Printing include graph cycles\n";
+            std::cerr << "=== Printing include graph cycles\n";
         }
 
         include_graph_cycles_printer_t printer{include_graph, *path_printer};
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
     }
     else if (config.printer() == printer_t::graphviz) {
         if (config.verbose()) {
-            std::cout << "=== Printing include graph in GraphViz format\n";
+            std::cerr << "=== Printing include graph in GraphViz format\n";
         }
 
         include_graph_graphviz_printer_t printer{include_graph, *path_printer};
@@ -153,7 +153,7 @@ int main(int argc, char **argv)
     }
     else if (config.printer() == printer_t::plantuml) {
         if (config.verbose()) {
-            std::cout << "=== Printing include graph in PlantUML format\n";
+            std::cerr << "=== Printing include graph in PlantUML format\n";
         }
 
         include_graph_plantuml_printer_t printer{include_graph, *path_printer};
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
         std::cout << printer;
     }
     else {
-        std::cout << "ERROR: Invalid output printer - aborting..." << '\n';
+        std::cerr << "ERROR: Invalid output printer - aborting..." << '\n';
         exit(-1);
     }
 }

@@ -186,7 +186,8 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
     }
 }
 
-const std::set<std::string> &include_graph_parser_t::translation_units() const
+const std::set<boost::filesystem::path> &
+include_graph_parser_t::translation_units() const
 {
     return translation_units_;
 }
@@ -208,7 +209,8 @@ void print_diagnostics(const CXTranslationUnit &tu)
     }
 }
 
-bool is_relative(const std::string &filepath, const std::string &directory)
+bool is_relative(const boost::filesystem::path &filepath,
+    const boost::filesystem::path &directory)
 {
     return boost::starts_with(filepath, directory);
 }
@@ -255,8 +257,8 @@ enum CXChildVisitResult inclusion_cursor_visitor(
             boost::filesystem::path(source_file_str));
 
         if (!relative_only ||
-            (is_relative(from_path.string(), relative_to.value()) &&
-                is_relative(included_path.string(), relative_to.value()))) {
+            (is_relative(from_path, relative_to.value()) &&
+                is_relative(included_path, relative_to.value()))) {
             include_graph.add_edge(included_path.string(), from_path.string(),
                 tu_path == from_path);
         }
