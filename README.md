@@ -1,7 +1,9 @@
 # clang-include-graph - simple tool for analyzing C++ include graphs
 
 [![Build status](https://github.com/bkryza/clang-include-graph/actions/workflows/build.yml/badge.svg)](https://github.com/bkryza/clang-include-graph/actions)
+[![Build status](https://github.com/bkryza/clang-include-graph/actions/workflows/macos.yml/badge.svg)](https://github.com/bkryza/clang-include-graph/actions)
 [![Version](https://img.shields.io/badge/version-0.1.1-blue)](https://github.com/bkryza/clang-include-graph/releases)
+[![Version](https://img.shields.io/badge/LLVM-12..20-orange)](https://github.com/bkryza/clang-include-graph/releases)
 
 `clang-include-graph` provides several simple commands for analyzing and visualizing C++ project include graphs.
 
@@ -9,10 +11,11 @@ Main features include:
 * Generates correct (topological) inclusion order of all includes of the project or a single translation unit
 * Prints include graph in several formats into stdout:
   * Topologically ordered include list
-  * Tree format
+  * Include tree and reverse include tree
   * Include graph cycles list
-  * Graphviz
-  * PlantUML
+  * Listing all dependants of specified header file
+  * Graphviz diagram
+  * PlantUML diagram
 * Handles cyclic include graphs
 
 ## Installation
@@ -29,7 +32,7 @@ First make sure that you have the following dependencies installed:
 
 ```bash
 # Ubuntu (clang version will vary depending on Ubuntu version)
-apt install git make gcc g++ cmake clang-12 libclang-12-dev libclang-cpp12-dev libboost-graph1.71-dev libboost-filesystem1.71-dev libboost-test1.71-dev libboost-program-options1.71-dev
+apt install git make gcc g++ cmake clang-18 libclang-18-dev libclang-cpp18-dev libboost-graph1.83-dev libboost-filesystem1.83-dev libboost-test1.83-dev libboost-program-options1.83-dev
 ```
 
 Then proceed with building the sources:
@@ -42,7 +45,7 @@ make release
 release/clang-include-graph --help
 
 # To build using a specific installed version of LLVM use:
-LLVM_CONFIG_PATH=/usr/bin/llvm-config-13 make release
+LLVM_CONFIG_PATH=/usr/bin/llvm-config-18 make release
 
 export PATH=$PATH:$PWD/release
 ```
@@ -51,13 +54,14 @@ export PATH=$PATH:$PWD/release
 ### Generating compile commands database
 `clang-include-graph` requires an up-to-date
 [compile_commands.json](https://clang.llvm.org/docs/JSONCompilationDatabase.html)
-file, containing the list of commands used for compiling the source code.
-Nowadays, this file can be generated rather easily using multiple methods:
-* For [CMake](https://cmake.org/) projects, simply invoke the `cmake` command
-  as `cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ...`
-* For Make projects checkout [compiledb](https://github.com/nickdiego/compiledb) or [Bear](https://github.com/rizsotto/Bear)
-* For Boost-based projects try [commands_to_compilation_database](https://github.com/tee3/commands_to_compilation_database)
-* For SCons, invoke `compilation_db` tool (requires SCons > 4.0.0)
+file, containing the list of commands used for compiling the source code
+or alternatively a list of compilation flags in a file called
+`compile_flags.txt`
+(see [here](https://clang.llvm.org/docs/JSONCompilationDatabase.html#alternatives).
+
+See also [here](https://blog.bkryza.com/posts/compile-commands-json-gallery/)
+for instructions on how to generate `compile_commands.json` using some of the
+existing C++ build systems.
 
 ### Basic usage
 
@@ -82,9 +86,15 @@ clang-include-graph options:
   -s [ --topological-sort ]             Print output includes and translation 
                                         units in topologicalsort order
   -t [ --tree ]                         Print include graph in tree form
+  -T [ --reverse-tree ]                 Print reverse include graph in tree
+                                        form
+  -e [ --dependants-of ] arg            Print all files that depend on a
+                                        specific header
+  --translation-units-only              Print only translation units
   -c [ --cycles ]                       Print include graph cycles, if any
   -g [ --graphviz ]                     Print include graph in GraphViz format
   -p [ --plantuml ]                     Print include graph in PlantUML format
+
 ```
 
 ### Example output
@@ -171,6 +181,85 @@ src/main.cc
                 └── src/util.h
 ```
 
+#### Reverse include tree for a single translation unit including only project files with relative paths
+```
+❯ release/clang-include-graph -d release -u src/main.cc -r . -l --reverse-tree
+src/util.h
+└── src/config.h
+    ├── src/main.cc
+    ├── src/include_graph.h
+    │   ├── src/main.cc
+    │   ├── src/include_graph_printer.h
+    │   │   ├── src/include_graph_cycles_printer.h
+    │   │   │   └── src/main.cc
+    │   │   ├── src/include_graph_graphviz_printer.h
+    │   │   │   └── src/main.cc
+    │   │   ├── src/include_graph_plantuml_printer.h
+    │   │   │   └── src/main.cc
+    │   │   ├── src/include_graph_topological_sort_printer.h
+    │   │   │   └── src/main.cc
+    │   │   └── src/include_graph_tree_printer.h
+    │   │       └── src/main.cc
+    │   └── src/include_graph_parser.h
+    │       └── src/main.cc
+    ├── src/path_printer.h
+    │   └── src/include_graph_printer.h
+    │       ├── src/include_graph_cycles_printer.h
+    │       │   └── src/main.cc
+    │       ├── src/include_graph_graphviz_printer.h
+    │       │   └── src/main.cc
+    │       ├── src/include_graph_plantuml_printer.h
+    │       │   └── src/main.cc
+    │       ├── src/include_graph_topological_sort_printer.h
+    │       │   └── src/main.cc
+    │       └── src/include_graph_tree_printer.h
+    │           └── src/main.cc
+    └── src/include_graph_parser.h
+        └── src/main.cc
+```
+
+#### List of files dependent on a specific header
+```
+❯ release/clang-include-graph --dependants-of src/include_graph_printer.h --relative-to=. --relative-only -d release
+src/include_graph_cycles_printer.h
+src/include_graph_cycles_printer.cc
+src/include_graph_dependants_printer.h
+src/include_graph_dependants_printer.cc
+src/include_graph_graphviz_printer.h
+src/include_graph_graphviz_printer.cc
+src/include_graph_plantuml_printer.h
+src/include_graph_plantuml_printer.cc
+src/include_graph_printer.cc
+src/include_graph_topological_sort_printer.h
+src/include_graph_topological_sort_printer.cc
+src/include_graph_tree_printer.h
+src/include_graph_tree_printer.cc
+src/main.cc
+tests/test_topological_sort_printer.cc
+tests/test_cycles_printer.cc
+tests/test_tree_printer.cc
+tests/test_graphviz_printer.cc
+tests/test_plantuml_printer.cc
+```
+
+It is also possible to only list translation units with this generator:
+```
+❯ release/clang-include-graph --dependants-of src/include_graph_printer.h --translation-units-only --relative-to=. --relative-only -d release
+src/include_graph_cycles_printer.cc
+src/include_graph_dependants_printer.cc
+src/include_graph_graphviz_printer.cc
+src/include_graph_plantuml_printer.cc
+src/include_graph_printer.cc
+src/include_graph_topological_sort_printer.cc
+src/include_graph_tree_printer.cc
+src/main.cc
+tests/test_topological_sort_printer.cc
+tests/test_cycles_printer.cc
+tests/test_tree_printer.cc
+tests/test_graphviz_printer.cc
+tests/test_plantuml_printer.cc
+```
+
 #### GraphViz include graph of project files
 ```bash
 ❯ release/clang-include-graph --compilation-database-dir release --relative-to src --relative-only --graphviz > /tmp/include.dot
@@ -227,7 +316,7 @@ F_6 -->  F_4
 #### Count all files that need to be parsed when processing a translation unit
 ```bash
 ❯ release/clang-include-graph --compilation-database-dir release --translation-unit src/util.cc | wc -l
-572
+599
 ```
 
 ## LICENSE

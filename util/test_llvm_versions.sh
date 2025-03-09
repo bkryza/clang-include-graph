@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -e
+trap 'echo "Build failed!"' ERR
+
+declare -a llvm_configs=("llvm-config-12"
+                         "llvm-config-13"
+                         "llvm-config-14"
+                         "llvm-config-15"
+                         "llvm-config-16"
+                         "llvm-config-17"
+                         "llvm-config-18"
+                         "llvm-config-19"
+                         "llvm-config-20"                         )
+
+# Test with GCC and different LLVM versions
+for config_path in ${llvm_configs[@]}; do
+  echo "---------------------------------------------------------"
+  echo " Running clang-include-graph tests against LLVM $(${config_path} --version)"
+  echo "---------------------------------------------------------"
+  make clean
+  CC=/usr/bin/gcc-13 CXX=/usr/bin/g++-13 LLVM_CONFIG_PATH=$config_path NUMPROC=16 make test
+done
+
+# Also check compilation with Clang
+make clean
+CC=/usr/bin/clang-17 CXX=/usr/bin/clang++-17 LLVM_VERSION=17 NUMPROC=16 make test
+make clean
+CC=/usr/bin/clang-18 CXX=/usr/bin/clang++-18 LLVM_VERSION=18 NUMPROC=16 make test
+make clean
+CC=/usr/bin/clang-19 CXX=/usr/bin/clang++-19 LLVM_VERSION=19 NUMPROC=16 make test
+make clean
+CC=/usr/bin/clang-20 CXX=/usr/bin/clang++-20 LLVM_VERSION=20 NUMPROC=16 make test
+make clean

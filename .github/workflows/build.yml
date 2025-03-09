@@ -4,16 +4,23 @@ on: [push, pull_request]
 
 jobs:
   build-ubuntu:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Update package database
         run: sudo apt -y update
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          max-size: "2000M"
       - name: Install deps
-        run: sudo apt -y install git make gcc g++ cmake clang-12 libclang-12-dev libclang-cpp12-dev libboost-graph1.71-dev libboost-filesystem1.71-dev libboost-test1.71-dev libboost-program-options1.71-dev
+        run: sudo apt -y install git make gcc g++ cmake clang-18 libclang-18-dev libclang-cpp18-dev libboost-graph1.83-dev libboost-filesystem1.83-dev libboost-test1.83-dev libboost-program-options1.83-dev
+      - name: Check code formatting
+        run: |
+          make check-formatting
       - name: Build and unit test
         run: |
-          NUMPROC=2 make test
+          NUMPROC=2 LLVM_CONFIG_PATH=/usr/bin/llvm-config-18 make test

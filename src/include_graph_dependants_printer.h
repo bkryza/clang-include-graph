@@ -1,5 +1,5 @@
 /**
- * src/include_graph_plantuml_printer.h
+ * src/include_graph_dependants_printer.h
  *
  * Copyright (c) 2022-present Bartek Kryza <bkryza@gmail.com>
  *
@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_PLANTUML_PRINTER_H
-#define CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_PLANTUML_PRINTER_H
+#ifndef CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_DEPENDANTS_PRINTER_H
+#define CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_DEPENDANTS_PRINTER_H
 
 #include "include_graph_printer.h"
 
@@ -25,25 +25,25 @@
 
 namespace clang_include_graph {
 
-class include_graph_plantuml_printer_t : public include_graph_printer_t {
+class include_graph_dependants_printer_t : public include_graph_printer_t {
 public:
-    include_graph_plantuml_printer_t(
+    include_graph_dependants_printer_t(
         const include_graph_t &graph, const path_printer_t &pp);
 
-    ~include_graph_plantuml_printer_t() override = default;
+    ~include_graph_dependants_printer_t() override = default;
 
-    include_graph_plantuml_printer_t(
-        const include_graph_plantuml_printer_t &) = default;
-    include_graph_plantuml_printer_t(
-        include_graph_plantuml_printer_t &&) = default;
-    include_graph_plantuml_printer_t &operator=(
-        const include_graph_plantuml_printer_t &) = delete;
-    include_graph_plantuml_printer_t &operator=(
-        include_graph_plantuml_printer_t &&) = delete;
+    include_graph_dependants_printer_t(
+        const include_graph_dependants_printer_t &) = default;
+    include_graph_dependants_printer_t(
+        include_graph_dependants_printer_t &&) = default;
+    include_graph_dependants_printer_t &operator=(
+        const include_graph_dependants_printer_t &) = delete;
+    include_graph_dependants_printer_t &operator=(
+        include_graph_dependants_printer_t &&) = delete;
 
     void operator()(std::ostream &os) const override;
 };
 
 } // namespace clang_include_graph
 
-#endif // CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_PLANTUML_PRINTER_H
+#endif // CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_DEPENDANTS_PRINTER_H

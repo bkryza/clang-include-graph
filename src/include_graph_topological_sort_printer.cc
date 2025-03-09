@@ -18,7 +18,12 @@
 
 #include "include_graph_topological_sort_printer.h"
 
+#include <boost/graph/topological_sort.hpp>
+
+#include <cassert>
 #include <iostream>
+#include <iterator>
+#include <vector>
 
 namespace clang_include_graph {
 
@@ -33,7 +38,7 @@ void include_graph_topological_sort_printer_t::operator()(
 
     for (const auto id : include_order) {
         os << path_printer().print(include_graph().graph().graph()[id].file)
-           << std::endl;
+           << '\n';
     }
 }
 

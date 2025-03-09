@@ -18,6 +18,15 @@
 
 #include "include_graph.h"
 
+#include "config.h"
+
+#include <boost/graph/depth_first_search.hpp>
+#include <boost/graph/labeled_graph.hpp>
+#include <boost/graph/named_function_params.hpp>
+#include <boost/optional/optional.hpp>
+
+#include <string>
+
 namespace clang_include_graph {
 
 void include_graph_t::add_edge(
@@ -34,13 +43,22 @@ void include_graph_t::add_edge(
         graph_.graph()[from_v].is_translation_unit = from_translation_unit;
     }
 
-    boost::add_edge_by_label(from, to, graph_);
+    if (printer_ == printer_t::reverse_tree ||
+        printer_ == printer_t::dependants) {
+        boost::add_edge_by_label(to, from, graph_);
+    }
+    else {
+        boost::add_edge_by_label(from, to, graph_);
+    }
 }
 
 void include_graph_t::init(const config_t &config)
 {
     relative_to_ = config.relative_to();
     relative_only_ = config.relative_only();
+    dependants_of_ = config.dependants_of();
+    translation_units_only_ = config.translation_units_only();
+    printer_ = config.printer();
 }
 
 void include_graph_t::build_dag()
@@ -50,7 +68,7 @@ void include_graph_t::build_dag()
     }
 
     dag_ = include_graph_t::graph_t{};
-    detail::dag_include_graph_visitor_t visitor{*this};
+    const detail::dag_include_graph_visitor_t visitor{*this};
 
     boost::depth_first_search(graph_, boost::visitor(visitor));
 }
@@ -73,10 +91,22 @@ const include_graph_t::graph_t &include_graph_t::graph() const noexcept
 
 bool include_graph_t::relative_only() const noexcept { return relative_only_; }
 
-const boost::optional<std::string> &
+bool include_graph_t::translation_units_only() const noexcept
+{
+    return translation_units_only_;
+}
+
+printer_t include_graph_t::printer() const noexcept { return printer_; }
+
+const boost::optional<boost::filesystem::path> &
 include_graph_t::relative_to() const noexcept
 {
     return relative_to_;
 }
 
+const boost::optional<boost::filesystem::path> &
+include_graph_t::dependants_of() const noexcept
+{
+    return dependants_of_;
+}
 } // namespace clang_include_graph

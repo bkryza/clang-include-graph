@@ -43,12 +43,12 @@ public:
 
     void parse(include_graph_t &include_graph);
 
-    const std::set<std::string> &translation_units() const;
+    const std::set<boost::filesystem::path> &translation_units() const;
 
 private:
     CXIndex index_;
     const config_t &config_;
-    std::set<std::string> translation_units_;
+    std::set<boost::filesystem::path> translation_units_;
 };
 
 } // namespace clang_include_graph

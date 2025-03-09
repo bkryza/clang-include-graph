@@ -40,7 +40,7 @@ public:
     };
 
     using graph_adjlist_t = boost::adjacency_list<boost::setS, boost::vecS,
-        boost::directedS, vertex_t>;
+        boost::bidirectionalS, vertex_t>;
     using graph_t =
         boost::labeled_graph<graph_adjlist_t, std::string, boost::hash_mapS>;
 
@@ -59,13 +59,24 @@ public:
 
     bool relative_only() const noexcept;
 
-    const boost::optional<std::string> &relative_to() const noexcept;
+    bool translation_units_only() const noexcept;
+
+    printer_t printer() const noexcept;
+
+    const boost::optional<boost::filesystem::path> &
+    relative_to() const noexcept;
+
+    const boost::optional<boost::filesystem::path> &
+    dependants_of() const noexcept;
 
 private:
     graph_t graph_;
     boost::optional<graph_t> dag_;
-    boost::optional<std::string> relative_to_;
+    boost::optional<boost::filesystem::path> relative_to_;
     bool relative_only_{false};
+    boost::optional<boost::filesystem::path> dependants_of_;
+    bool translation_units_only_{false};
+    printer_t printer_{printer_t::unknown};
 };
 
 namespace detail {

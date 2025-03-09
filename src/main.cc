@@ -19,14 +19,20 @@
 #include "config.h"
 #include "include_graph.h"
 #include "include_graph_cycles_printer.h"
+#include "include_graph_dependants_printer.h"
 #include "include_graph_graphviz_printer.h"
 #include "include_graph_parser.h"
 #include "include_graph_plantuml_printer.h"
 #include "include_graph_topological_sort_printer.h"
 #include "include_graph_tree_printer.h"
 
-#include <boost/program_options.hpp>
+#include <boost/program_options/detail/parsers.hpp>
+#include <boost/program_options/errors.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/value_semantic.hpp>
+#include <boost/program_options/variables_map.hpp>
 
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 
@@ -49,6 +55,7 @@ int main(int argc, char **argv)
 {
     using clang_include_graph::config_t;
     using clang_include_graph::include_graph_cycles_printer_t;
+    using clang_include_graph::include_graph_dependants_printer_t;
     using clang_include_graph::include_graph_graphviz_printer_t;
     using clang_include_graph::include_graph_parser_t;
     using clang_include_graph::include_graph_plantuml_printer_t;
@@ -65,9 +72,8 @@ int main(int argc, char **argv)
     process_command_line_options(argc, argv, vm, config);
 
     if (config.verbose()) {
-        std::cout << "=== Loading compilation database from "
-                  << config.compilation_database_directory().value()
-                  << std::endl;
+        std::cerr << "=== Loading compilation database from "
+                  << config.compilation_database_directory().value() << '\n';
     }
 
     // Parse translation units and build the include graph
@@ -75,13 +81,13 @@ int main(int argc, char **argv)
     include_graph_parser.parse(include_graph);
 
     // Select path printer based on config
-    std::unique_ptr<path_printer_t> path_printer =
+    std::unique_ptr<path_printer_t> const path_printer =
         path_printer_t::from_config(config);
 
     // Generate output using selected printer
     if (config.printer() == printer_t::tree) {
         if (config.verbose()) {
-            std::cout << "=== Printing include graph tree\n";
+            std::cerr << "=== Printing include graph tree\n";
         }
 
         include_graph.build_dag();
@@ -90,9 +96,33 @@ int main(int argc, char **argv)
 
         std::cout << printer;
     }
+    else if (config.printer() == printer_t::reverse_tree) {
+        if (config.verbose()) {
+            std::cerr << "=== Printing reverse include graph tree\n";
+        }
+
+        include_graph.build_dag();
+
+        include_graph_tree_printer_t printer{include_graph, *path_printer};
+
+        std::cout << printer;
+    }
+    else if (config.printer() == printer_t::dependants) {
+        if (config.verbose()) {
+            std::cerr << "=== Printing dependants of "
+                      << *config.dependants_of() << '\n';
+        }
+
+        include_graph.build_dag();
+
+        include_graph_dependants_printer_t printer{
+            include_graph, *path_printer};
+
+        std::cout << printer;
+    }
     else if (config.printer() == printer_t::topological_sort) {
         if (config.verbose()) {
-            std::cout
+            std::cerr
                 << "=== Printing include graph sorted in topological order\n";
         }
 
@@ -105,7 +135,7 @@ int main(int argc, char **argv)
     }
     else if (config.printer() == printer_t::cycles) {
         if (config.verbose()) {
-            std::cout << "=== Printing include graph cycles\n";
+            std::cerr << "=== Printing include graph cycles\n";
         }
 
         include_graph_cycles_printer_t printer{include_graph, *path_printer};
@@ -114,7 +144,7 @@ int main(int argc, char **argv)
     }
     else if (config.printer() == printer_t::graphviz) {
         if (config.verbose()) {
-            std::cout << "=== Printing include graph in GraphViz format\n";
+            std::cerr << "=== Printing include graph in GraphViz format\n";
         }
 
         include_graph_graphviz_printer_t printer{include_graph, *path_printer};
@@ -123,7 +153,7 @@ int main(int argc, char **argv)
     }
     else if (config.printer() == printer_t::plantuml) {
         if (config.verbose()) {
-            std::cout << "=== Printing include graph in PlantUML format\n";
+            std::cerr << "=== Printing include graph in PlantUML format\n";
         }
 
         include_graph_plantuml_printer_t printer{include_graph, *path_printer};
@@ -131,7 +161,7 @@ int main(int argc, char **argv)
         std::cout << printer;
     }
     else {
-        std::cout << "ERROR: Invalid output printer - aborting..." << std::endl;
+        std::cerr << "ERROR: Invalid output printer - aborting..." << '\n';
         exit(-1);
     }
 }
@@ -159,6 +189,10 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "Print output includes and translation units in topological"
             "sort order")
         ("tree,t", "Print include graph in tree form")
+        ("reverse-tree,T", "Print reverse include graph in tree form")
+        ("dependants-of,e", po::value<std::string>(),
+            "Print all files that depend on a specific header")
+        ("translation-units-only", "Print only translation units")
         ("cycles,c", "Print include graph cycles, if any")
         ("graphviz,g", "Print include graph in GraphViz format")
         ("plantuml,p", "Print include graph in PlantUML format");
@@ -169,7 +203,7 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         po::notify(vm);
     }
     catch (const po::error &e) {
-        std::cerr << "ERROR: Invalid options - " << e.what() << std::endl;
+        std::cerr << "ERROR: Invalid options - " << e.what() << '\n';
         exit(-1);
     }
 
@@ -188,9 +222,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
 
 void print_version()
 {
-    std::cout << "clang-include-graph " << GIT_VERSION << std::endl;
+    std::cout << "clang-include-graph " << GIT_VERSION << '\n';
     std::cout << "Copyright (C) 2022-present Bartek Kryza <bkryza@gmail.com>"
               << '\n';
-    std::cout << "Built with libclang: " << LIBCLANG_VERSION_STRING
-              << std::endl;
+    std::cout << "Built with libclang: " << LIBCLANG_VERSION_STRING << '\n';
 }

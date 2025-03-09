@@ -25,15 +25,14 @@
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 
-#include <iostream>
-#include <string>
-
 namespace clang_include_graph {
 
-enum class printer_t {
+enum class printer_t : std::uint8_t {
     topological_sort,
     tree,
+    reverse_tree,
     cycles,
+    dependants,
     graphviz,
     plantuml,
     unknown
@@ -45,26 +44,43 @@ public:
 
     bool verbose() const noexcept;
 
-    const boost::optional<std::string> &
+    const boost::optional<boost::filesystem::path> &
     compilation_database_directory() const noexcept;
 
-    const boost::optional<std::string> &translation_unit() const noexcept;
+    const boost::optional<boost::filesystem::path> &
+    translation_unit() const noexcept;
 
-    const boost::optional<std::string> &relative_to() const noexcept;
+    const boost::optional<boost::filesystem::path> &
+    relative_to() const noexcept;
+    void relative_to(std::string rt);
+
+    const boost::optional<boost::filesystem::path> &
+    dependants_of() const noexcept;
+    void dependants_of(std::string file);
 
     bool filenames_only() const noexcept;
 
     bool relative_only() const noexcept;
+    void relative_only(bool ro) noexcept;
+
+    bool translation_units_only() const noexcept;
+    void translation_units_only(bool tuo) noexcept;
 
     printer_t printer() const noexcept;
+    void printer(printer_t printer) noexcept;
+
+    boost::filesystem::path resolve_path(
+        const boost::filesystem::path &p) const;
 
 private:
     bool verbose_{false};
-    boost::optional<std::string> compilation_database_directory_;
-    boost::optional<std::string> translation_unit_;
-    boost::optional<std::string> relative_to_;
+    boost::optional<boost::filesystem::path> compilation_database_directory_;
+    boost::optional<boost::filesystem::path> translation_unit_;
+    boost::optional<boost::filesystem::path> relative_to_;
+    boost::optional<boost::filesystem::path> dependants_of_;
     bool filenames_only_{false};
     bool relative_only_{false};
+    bool translation_units_only_{false};
     printer_t printer_{printer_t::topological_sort};
 };
 

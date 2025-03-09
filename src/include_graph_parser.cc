@@ -17,11 +17,21 @@
  */
 
 #include "include_graph_parser.h"
+#include "config.h"
+#include "include_graph.h"
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <clang-c/CXCompilationDatabase.h>
+
+#include <cstdlib>
+#include <iostream>
+#include <ostream>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace clang_include_graph {
 
@@ -79,9 +89,18 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
     auto compile_commands_size =
         clang_CompileCommands_getSize(compile_commands);
 
-    if (compile_commands_size == 0) {
-        std::cerr << "Cannot find compilation commands in compilation database"
-                  << std::endl;
+    if (error !=
+        CXCompilationDatabase_NoError) { // compile_commands_size == 0) {
+        std::cerr
+            << "ERROR: Cannot find compilation commands in compilation database"
+            << '\n';
+        exit(-1);
+    }
+
+    if (compile_commands_size == 0 && translation_units().empty()) {
+        std::cerr << "ERROR: No compilation database found and no translation "
+                     "units specified"
+                  << '\n';
         exit(-1);
     }
 
@@ -90,7 +109,7 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         CXCompileCommand command =
             clang_CompileCommands_getCommand(compile_commands, command_it);
 
-        boost::filesystem::path current_file{
+        const boost::filesystem::path current_file{
             clang_getCString(clang_CompileCommand_getFilename(command))};
 
         // Skip compile commands for headers (e.g. precompiled headers)
@@ -112,7 +131,7 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
         if (config_.verbose()) {
             std::cout << "=== Parsing translation unit: " << include_path_str
-                      << std::endl;
+                      << '\n';
         }
 
         std::vector<std::string> args;
@@ -123,9 +142,11 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
             std::string arg =
                 clang_getCString(clang_CompileCommand_getArg(command, i));
 
+            std::cout << "===== " << arg << "\n";
+
             // Skip precompiled headers args
             if (arg == "-Xclang") {
-                std::string nextArg{clang_getCString(
+                const std::string nextArg{clang_getCString(
                     clang_CompileCommand_getArg(command, i + 1))};
                 if (nextArg.find("pch") != std::string::npos ||
                     nextArg.find("gch") != std::string::npos) {
@@ -158,7 +179,7 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
             }
 
             std::cerr << "ERROR: Unable to parse translation unit '"
-                      << current_file << "' - aborting..." << std::endl;
+                      << current_file << "' - aborting..." << '\n';
             exit(-1);
         }
 
@@ -168,7 +189,7 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
         visitor_context_t visitor_context{include_graph, tu_path.string()};
 
-        CXCursor start_cursor = clang_getTranslationUnitCursor(unit);
+        const CXCursor start_cursor = clang_getTranslationUnitCursor(unit);
         clang_visitChildren(
             start_cursor, inclusion_cursor_visitor, &visitor_context);
 
@@ -176,7 +197,8 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
     }
 }
 
-const std::set<std::string> &include_graph_parser_t::translation_units() const
+const std::set<boost::filesystem::path> &
+include_graph_parser_t::translation_units() const
 {
     return translation_units_;
 }
@@ -190,14 +212,16 @@ void print_diagnostics(const CXTranslationUnit &tu)
         CXString diagnostic_file;
         unsigned line{0U};
         clang_getPresumedLocation(diag_loc, &diagnostic_file, &line, nullptr);
-        std::string text = clang_getCString(clang_getDiagnosticSpelling(diag));
+        const std::string text =
+            clang_getCString(clang_getDiagnosticSpelling(diag));
 
         std::cout << "=== [" << clang_getCString(diagnostic_file) << ":" << line
-                  << "] " << text << std::endl;
+                  << "] " << text << '\n';
     }
 }
 
-bool is_relative(const std::string &filepath, const std::string &directory)
+bool is_relative(const boost::filesystem::path &filepath,
+    const boost::filesystem::path &directory)
 {
     return boost::starts_with(filepath, directory);
 }
@@ -222,7 +246,7 @@ enum CXChildVisitResult inclusion_cursor_visitor(
         clang_getFileLocation(clang_getCursorLocation(cursor), &source_file,
             &line, &column, &offset);
 
-        std::string source_file_str{
+        const std::string source_file_str{
             clang_getCString(clang_getFileName(source_file))};
 
         CXFile included_file = clang_getIncludedFile(cursor);
@@ -234,7 +258,7 @@ enum CXChildVisitResult inclusion_cursor_visitor(
             return CXChildVisit_Continue;
         }
 
-        std::string included_file_str{
+        const std::string included_file_str{
             clang_getCString(clang_getFileName(included_file))};
 
         auto included_path = boost::filesystem::canonical(
@@ -244,8 +268,8 @@ enum CXChildVisitResult inclusion_cursor_visitor(
             boost::filesystem::path(source_file_str));
 
         if (!relative_only ||
-            (is_relative(from_path.string(), relative_to.value()) &&
-                is_relative(included_path.string(), relative_to.value()))) {
+            (is_relative(from_path, relative_to.value()) &&
+                is_relative(included_path, relative_to.value()))) {
             include_graph.add_edge(included_path.string(), from_path.string(),
                 tu_path == from_path);
         }

@@ -1,0 +1,27 @@
+name: macOS
+
+on: [push, pull_request]
+
+jobs:
+  build-macos:
+    name: Build and test on macos
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+
+      - name: Install dependencies using homebrew
+        run: brew update && brew install llvm@19 ninja boost cmake ccache
+
+      - name: Build and test
+        run: CC=/opt/homebrew/opt/llvm/bin/clang CXX=/opt/homebrew/opt/llvm/bin/clang++ CMAKE_PREFIX=/opt/homebrew/opt/llvm/lib/cmake/llvm CMAKE_EXE_LINKER_FLAGS="-L/opt/homebrew/opt/llvm/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++" make test
+
+      - name: Print build version
+        run: debug/clang-include-graph --version
+
+      - name: Print help
+        run: debug/clang-include-graph --help

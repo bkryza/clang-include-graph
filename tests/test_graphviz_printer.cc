@@ -45,9 +45,9 @@ BOOST_AUTO_TEST_CASE(test_simple_graphviz)
 1[label="main.cc"];
 2[label="include2.h"];
 3[label="include3.h"];
-0->3 ;
 1->0 ;
 1->2 ;
+0->3 ;
 }
 )";
 

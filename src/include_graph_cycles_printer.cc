@@ -17,6 +17,12 @@
  */
 
 #include "include_graph_cycles_printer.h"
+#include "include_graph.h"
+#include "path_printer.h"
+
+#include <boost/graph/tiernan_all_cycles.hpp>
+
+#include <ostream>
 
 namespace boost {
 void renumber_vertex_indices(
@@ -50,7 +56,7 @@ void cycle_printer_t::cycle(const Path &p, const Graph & /*g*/)
 
 void include_graph_cycles_printer_t::operator()(std::ostream &os) const
 {
-    detail::cycle_printer_t cycle_printer_visitor{
+    const detail::cycle_printer_t cycle_printer_visitor{
         include_graph().graph(), path_printer(), os};
 
     boost::tiernan_all_cycles(

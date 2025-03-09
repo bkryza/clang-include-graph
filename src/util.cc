@@ -18,31 +18,25 @@
 
 #include "util.h"
 
+#include <boost/filesystem/exception.hpp>
+#include <boost/filesystem/operations.hpp>
+
+#include <iostream>
+
 namespace clang_include_graph {
 namespace util {
 
-boost::optional<std::string> to_absolute_path(std::string relative_path)
+boost::filesystem::path to_absolute_path(
+    const boost::filesystem::path &relative_path)
 {
     try {
-        return boost::filesystem::canonical(
-            boost::filesystem::path(relative_path))
-            .string();
+        return boost::filesystem::canonical(relative_path).string();
     }
     catch (const boost::filesystem::filesystem_error &e) {
-        return {};
+        std::cerr << "ERROR: Failed to resolve absolute path from '"
+                  << relative_path << "': " << e.what() << 'n';
+        throw e; // NOLINT
     }
-}
-
-std::string relative_to(
-    std::string path, boost::optional<std::string> directory)
-{
-    if (!directory) {
-        return path;
-    }
-
-    return boost::filesystem::relative(boost::filesystem::path(path),
-        boost::filesystem::path(directory.value()))
-        .string();
 }
 
 } // namespace util
