@@ -176,6 +176,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         ("help,h", "Print help message and exit")
         ("version,V", "Print program version and exit")
         ("verbose,v", "Print verbose information during processing")
+        ("jobs,j", po::value<unsigned>(),
+            "Number of threads used to parse translation units")
         ("compilation-database-dir,d", po::value<std::string>(),
             "Path to compilation database directory (default $PWD)")
         ("translation-unit,u", po::value<std::string>(),

@@ -25,6 +25,8 @@
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 
+#include <thread>
+
 namespace clang_include_graph {
 
 enum class printer_t : std::uint8_t {
@@ -69,6 +71,9 @@ public:
     printer_t printer() const noexcept;
     void printer(printer_t printer) noexcept;
 
+    unsigned jobs() const noexcept;
+    void jobs(unsigned j) noexcept;
+
     boost::filesystem::path resolve_path(
         const boost::filesystem::path &p) const;
 
@@ -82,6 +87,7 @@ private:
     bool relative_only_{false};
     bool translation_units_only_{false};
     printer_t printer_{printer_t::topological_sort};
+    unsigned jobs_{std::thread::hardware_concurrency()};
 };
 
 } // namespace clang_include_graph

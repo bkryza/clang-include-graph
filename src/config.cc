@@ -34,6 +34,13 @@ void config_t::init(boost::program_options::variables_map &vm)
         verbose_ = true;
     }
 
+    if (vm.count("jobs") == 1) {
+        auto jobs_arg = vm["jobs"].as<unsigned>();
+        if (jobs_arg != 0) {
+            jobs_ = jobs_arg;
+        }
+    }
+
     if (vm.count("compilation-database-dir") == 1) {
         compilation_database_directory_ = util::to_absolute_path(
             vm["compilation-database-dir"].as<std::string>());
@@ -173,6 +180,10 @@ void config_t::translation_units_only(bool tuo) noexcept
 printer_t config_t::printer() const noexcept { return printer_; }
 
 void config_t::printer(printer_t printer) noexcept { printer_ = printer; }
+
+unsigned config_t::jobs() const noexcept { return jobs_; }
+
+void config_t::jobs(unsigned j) noexcept { jobs_ = j; }
 
 boost::filesystem::path config_t::resolve_path(
     const boost::filesystem::path &p) const

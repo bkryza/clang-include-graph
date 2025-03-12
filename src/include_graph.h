@@ -77,6 +77,8 @@ private:
     boost::optional<boost::filesystem::path> dependants_of_;
     bool translation_units_only_{false};
     printer_t printer_{printer_t::unknown};
+
+    std::mutex mutex_;
 };
 
 namespace detail {

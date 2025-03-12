@@ -21,6 +21,7 @@
 #include "include_graph.h"
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/asio/post.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <clang-c/CXCompilationDatabase.h>
@@ -104,6 +105,10 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         exit(-1);
     }
 
+    boost::asio::thread_pool thread_pool{config_.jobs()};
+
+    std::cerr << "Starting thread pool with " << config_.jobs() << " threads\n";
+
     for (auto command_it = 0U; command_it < compile_commands_size;
          command_it++) {
         CXCompileCommand command =
@@ -129,72 +134,88 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         auto include_path_str = tu_path.string();
         translation_units_.emplace(include_path_str);
 
-        if (config_.verbose()) {
-            std::cout << "=== Parsing translation unit: " << include_path_str
-                      << '\n';
-        }
+        auto &index = index_;
 
-        std::vector<std::string> args;
-        std::vector<const char *> args_cstr;
-        args.reserve(clang_CompileCommand_getNumArgs(command));
-
-        for (auto i = 0U; i < clang_CompileCommand_getNumArgs(command); i++) {
-            std::string arg =
-                clang_getCString(clang_CompileCommand_getArg(command, i));
-
-            std::cout << "===== " << arg << "\n";
-
-            // Skip precompiled headers args
-            if (arg == "-Xclang") {
-                const std::string nextArg{clang_getCString(
-                    clang_CompileCommand_getArg(command, i + 1))};
-                if (nextArg.find("pch") != std::string::npos ||
-                    nextArg.find("gch") != std::string::npos) {
-                    i++;
-                    continue;
+        boost::asio::post(thread_pool,
+            [&include_graph, &index, tu_path, include_path_str, command,
+                verbose = config_.verbose(), current_file]() {
+                if (verbose) {
+                    std::cout
+                        << "=== Parsing translation unit: " << include_path_str
+                        << '\n';
                 }
-            }
 
-            args.emplace_back(std::move(arg));
-            args_cstr.emplace_back(args.back().c_str());
-        }
+                auto flags =
+                    static_cast<unsigned int>(
+                        CXTranslationUnit_DetailedPreprocessingRecord) |
+                    static_cast<unsigned int>(
+                        CXTranslationUnit_IgnoreNonErrorsFromIncludedFiles) |
+                    static_cast<unsigned int>(CXTranslationUnit_KeepGoing);
 
-        // Remove the file name from the arguments list
-        args.pop_back();
-        args_cstr.pop_back();
+                std::vector<std::string> args;
+                std::vector<const char *> args_cstr;
+                args.reserve(clang_CompileCommand_getNumArgs(command));
 
-        auto flags = static_cast<unsigned int>(
-                         CXTranslationUnit_DetailedPreprocessingRecord) |
-            static_cast<unsigned int>(
-                CXTranslationUnit_IgnoreNonErrorsFromIncludedFiles) |
-            static_cast<unsigned int>(CXTranslationUnit_KeepGoing);
+                for (auto i = 0U; i < clang_CompileCommand_getNumArgs(command);
+                     i++) {
+                    std::string arg = clang_getCString(
+                        clang_CompileCommand_getArg(command, i));
 
-        CXTranslationUnit unit = clang_parseTranslationUnit(index_,
-            include_path_str.c_str(), args_cstr.data(),
-            static_cast<int>(args_cstr.size()), nullptr, 0, flags);
+                    // Skip precompiled headers args
+                    if (arg == "-Xclang") {
+                        const std::string nextArg{clang_getCString(
+                            clang_CompileCommand_getArg(command, i + 1))};
+                        if (nextArg.find("pch") != std::string::npos ||
+                            nextArg.find("gch") != std::string::npos) {
+                            i++;
+                            continue;
+                        }
+                    }
 
-        if (unit == nullptr) {
-            if (config_.verbose()) {
-                print_diagnostics(unit);
-            }
+                    args.emplace_back(std::move(arg));
+                    args_cstr.emplace_back(args.back().c_str());
+                }
 
-            std::cerr << "ERROR: Unable to parse translation unit '"
-                      << current_file << "' - aborting..." << '\n';
-            exit(-1);
-        }
+                // Remove the file name from the arguments list
+                args.pop_back();
+                args_cstr.pop_back();
 
-        if (config_.verbose()) {
-            print_diagnostics(unit);
-        }
+                args.emplace_back("-Wno-unknown-warning-option");
+                args_cstr.emplace_back(args.back().c_str());
 
-        visitor_context_t visitor_context{include_graph, tu_path.string()};
+                CXTranslationUnit unit = clang_parseTranslationUnit(index,
+                    include_path_str.c_str(), args_cstr.data(),
+                    static_cast<int>(args_cstr.size()), nullptr, 0, flags);
 
-        const CXCursor start_cursor = clang_getTranslationUnitCursor(unit);
-        clang_visitChildren(
-            start_cursor, inclusion_cursor_visitor, &visitor_context);
+                if (unit == nullptr) {
+                    if (verbose) {
+                        print_diagnostics(unit);
+                    }
 
-        clang_disposeTranslationUnit(unit);
+                    std::cerr << "ERROR: Unable to parse translation unit '"
+                              << current_file << "' - aborting..." << '\n';
+                    exit(-1);
+                }
+
+                if (verbose) {
+                    print_diagnostics(unit);
+                }
+
+                visitor_context_t visitor_context{
+                    include_graph, tu_path.string()};
+
+                const CXCursor start_cursor =
+                    clang_getTranslationUnitCursor(unit);
+                clang_visitChildren(
+                    start_cursor, inclusion_cursor_visitor, &visitor_context);
+
+                clang_disposeTranslationUnit(unit);
+            });
     }
+
+    thread_pool.join();
+
+    thread_pool.stop();
 }
 
 const std::set<boost::filesystem::path> &
