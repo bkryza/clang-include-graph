@@ -37,10 +37,10 @@ include_directories()
 set(Boost_USE_STATIC_LIBS ${BOOST_STATIC})
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost REQUIRED COMPONENTS graph program_options filesystem unit_test_framework)
+find_package(Boost REQUIRED COMPONENTS graph program_options filesystem log unit_test_framework)
 include_directories(${Boost_INCLUDE_DIRS})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-deprecated-copy-with-user-provided-copy -std=c++11 -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" -DGIT_VERSION=\\\"${GIT_VERSION}\\\" ${LIBCLANG_CXXFLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-deprecated-copy-with-user-provided-copy -std=c++11 -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" -DGIT_VERSION=\\\"${GIT_VERSION}\\\" -DBOOST_LOG_DYN_LINK ${LIBCLANG_CXXFLAGS}")
 
 file(GLOB_RECURSE SOURCES src/*.cc src/*.h)
 set(MAIN_SOURCE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cc)
@@ -50,7 +50,7 @@ add_library(lib-clang-include-graph OBJECT ${SOURCES})
 
 add_executable(clang-include-graph $<TARGET_OBJECTS:lib-clang-include-graph> src/main.cc)
 
-target_link_libraries(clang-include-graph ${LIBCLANG_LIBRARIES} Boost::filesystem Boost::graph Boost::program_options)
+target_link_libraries(clang-include-graph ${LIBCLANG_LIBRARIES} Boost::filesystem Boost::graph Boost::program_options Boost::log)
 
 find_program(
         CLANG_TIDY

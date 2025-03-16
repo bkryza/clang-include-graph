@@ -19,6 +19,7 @@
 #include "include_graph_parser.h"
 #include "config.h"
 #include "include_graph.h"
+#include "util.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/asio/post.hpp>
@@ -76,8 +77,8 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
             database, tu_path.c_str());
 
         if (compile_commands == nullptr) {
-            std::cerr << "ERROR: Cannot find " << tu_path
-                      << " in compilation database - aborting...";
+            LOG(error) << "ERROR: Cannot find " << tu_path
+                       << " in compilation database - aborting...";
             exit(-1);
         }
     }
@@ -92,22 +93,22 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
     if (error !=
         CXCompilationDatabase_NoError) { // compile_commands_size == 0) {
-        std::cerr
+        LOG(error)
             << "ERROR: Cannot find compilation commands in compilation database"
             << '\n';
         exit(-1);
     }
 
     if (compile_commands_size == 0 && translation_units().empty()) {
-        std::cerr << "ERROR: No compilation database found and no translation "
-                     "units specified"
-                  << '\n';
+        LOG(error) << "ERROR: No compilation database found and no translation "
+                      "units specified"
+                   << '\n';
         exit(-1);
     }
 
     boost::asio::thread_pool thread_pool{config_.jobs()};
 
-    std::cerr << "Starting thread pool with " << config_.jobs() << " threads\n";
+    LOG(info) << "Starting thread pool with " << config_.jobs() << " threads\n";
 
     for (auto command_it = 0U; command_it < compile_commands_size;
          command_it++) {
@@ -124,8 +125,8 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         }
 
         if (!boost::filesystem::exists(current_file)) {
-            std::cerr << "ERROR: Cannot find translation unit at  "
-                      << current_file << '\n';
+            LOG(error) << "ERROR: Cannot find translation unit at  "
+                       << current_file << '\n';
             exit(-1);
         }
 
@@ -138,12 +139,9 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
         boost::asio::post(thread_pool,
             [&include_graph, &index, tu_path, include_path_str, command,
-                verbose = config_.verbose(), current_file]() {
-                if (verbose) {
-                    std::cout
-                        << "=== Parsing translation unit: " << include_path_str
-                        << '\n';
-                }
+                current_file]() {
+                LOG(info) << "Parsing translation unit: " << include_path_str
+                          << '\n';
 
                 auto flags =
                     static_cast<unsigned int>(
@@ -188,16 +186,17 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
                     static_cast<int>(args_cstr.size()), nullptr, 0, flags);
 
                 if (unit == nullptr) {
-                    if (verbose) {
-                        print_diagnostics(unit);
-                    }
+                    print_diagnostics(unit);
 
-                    std::cerr << "ERROR: Unable to parse translation unit '"
-                              << current_file << "' - aborting..." << '\n';
+                    LOG(error) << "ERROR: Unable to parse translation unit '"
+                               << current_file << "' - aborting..." << '\n';
                     exit(-1);
                 }
 
-                if (verbose) {
+                if (global_logger::get().open_record(
+                        // NOLINTNEXTLINE
+                        boost::log::keywords::severity =
+                            boost::log::trivial::debug)) {
                     print_diagnostics(unit);
                 }
 
@@ -236,8 +235,8 @@ void print_diagnostics(const CXTranslationUnit &tu)
         const std::string text =
             clang_getCString(clang_getDiagnosticSpelling(diag));
 
-        std::cout << "=== [" << clang_getCString(diagnostic_file) << ":" << line
-                  << "] " << text << '\n';
+        LOG(error) << "=== [" << clang_getCString(diagnostic_file) << ":"
+                   << line << "] " << text << '\n';
     }
 }
 

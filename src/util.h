@@ -20,13 +20,37 @@
 #define CLANG_INCLUDE_GRAPH_UTIL_H
 
 #include <boost/filesystem.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/common.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sinks.hpp>
+#include <boost/log/sources/logger.hpp>
+#include <boost/log/trivial.hpp>
 #include <boost/optional.hpp>
+
+BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(global_logger,
+    boost::log::sources::severity_logger_mt<
+        boost::log::trivial::severity_level>)
+
+// NOLINTNEXTLINE
+#define LOG(lvl)                                                               \
+    BOOST_LOG_SEV(                                                             \
+        global_logger::get(), boost::log::trivial::severity_level::lvl)
 
 namespace clang_include_graph {
 namespace util {
 
+namespace logging = boost::log;
+namespace attrs = boost::log::attributes;
+namespace src = boost::log::sources;
+namespace sinks = boost::log::sinks;
+namespace expr = boost::log::expressions;
+namespace keywords = boost::log::keywords;
+
 boost::filesystem::path to_absolute_path(
     const boost::filesystem::path &relative_path);
+
+void setup_logging(int log_level);
 
 } // namespace util
 } // namespace clang_include_graph

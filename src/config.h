@@ -44,7 +44,7 @@ class config_t {
 public:
     void init(boost::program_options::variables_map &vm);
 
-    bool verbose() const noexcept;
+    int verbosity() const noexcept;
 
     const boost::optional<boost::filesystem::path> &
     compilation_database_directory() const noexcept;
@@ -78,7 +78,7 @@ public:
         const boost::filesystem::path &p) const;
 
 private:
-    bool verbose_{false};
+    int verbosity_{0};
     boost::optional<boost::filesystem::path> compilation_database_directory_;
     boost::optional<boost::filesystem::path> translation_unit_;
     boost::optional<boost::filesystem::path> relative_to_;

@@ -19,7 +19,8 @@ foreach(TESTCASE IN LISTS TESTCASES)
             Boost::filesystem
             Boost::graph
             Boost::program_options
-            Boost::unit_test_framework)
+            Boost::unit_test_framework
+            Boost::log)
 
     add_test(${TESTCASE} ${TESTCASE})
 endforeach()

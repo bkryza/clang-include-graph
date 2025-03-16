@@ -31,7 +31,7 @@ namespace clang_include_graph {
 void config_t::init(boost::program_options::variables_map &vm)
 {
     if (vm.count("verbose") == 1) {
-        verbose_ = true;
+        verbosity_ = vm["verbose"].as<int>();
     }
 
     if (vm.count("jobs") == 1) {
@@ -128,7 +128,7 @@ void config_t::init(boost::program_options::variables_map &vm)
     }
 }
 
-bool config_t::verbose() const noexcept { return verbose_; }
+int config_t::verbosity() const noexcept { return verbosity_; }
 
 const boost::optional<boost::filesystem::path> &
 config_t::compilation_database_directory() const noexcept

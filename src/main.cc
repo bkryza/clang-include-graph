@@ -36,6 +36,8 @@
 #include <iostream>
 #include <memory>
 
+namespace po = boost::program_options;
+
 #ifndef LIBCLANG_VERSION_STRING
 #define LIBCLANG_VERSION_STRING "0.0.0"
 #endif
@@ -43,8 +45,6 @@
 #ifndef GIT_VERSION
 #define GIT_VERSION "0.1.0"
 #endif
-
-namespace po = boost::program_options;
 
 void print_version();
 
@@ -71,10 +71,8 @@ int main(int argc, char **argv)
 
     process_command_line_options(argc, argv, vm, config);
 
-    if (config.verbose()) {
-        std::cerr << "=== Loading compilation database from "
-                  << config.compilation_database_directory().value() << '\n';
-    }
+    LOG(info) << "Loading compilation database from "
+              << config.compilation_database_directory().value() << '\n';
 
     // Parse translation units and build the include graph
     include_graph_parser_t include_graph_parser{config};
@@ -86,9 +84,7 @@ int main(int argc, char **argv)
 
     // Generate output using selected printer
     if (config.printer() == printer_t::tree) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing include graph tree\n";
-        }
+        LOG(info) << "Printing include graph tree\n";
 
         include_graph.build_dag();
 
@@ -97,9 +93,7 @@ int main(int argc, char **argv)
         std::cout << printer;
     }
     else if (config.printer() == printer_t::reverse_tree) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing reverse include graph tree\n";
-        }
+        LOG(info) << "Printing reverse include graph tree\n";
 
         include_graph.build_dag();
 
@@ -108,10 +102,8 @@ int main(int argc, char **argv)
         std::cout << printer;
     }
     else if (config.printer() == printer_t::dependants) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing dependants of "
-                      << *config.dependants_of() << '\n';
-        }
+        LOG(info) << "Printing dependants of " << *config.dependants_of()
+                  << '\n';
 
         include_graph.build_dag();
 
@@ -121,10 +113,7 @@ int main(int argc, char **argv)
         std::cout << printer;
     }
     else if (config.printer() == printer_t::topological_sort) {
-        if (config.verbose()) {
-            std::cerr
-                << "=== Printing include graph sorted in topological order\n";
-        }
+        LOG(info) << "Printing include graph sorted in topological order\n";
 
         include_graph.build_dag();
 
@@ -134,34 +123,28 @@ int main(int argc, char **argv)
         std::cout << printer;
     }
     else if (config.printer() == printer_t::cycles) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing include graph cycles\n";
-        }
+        LOG(info) << "Printing include graph cycles\n";
 
         include_graph_cycles_printer_t printer{include_graph, *path_printer};
 
         std::cout << printer;
     }
     else if (config.printer() == printer_t::graphviz) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing include graph in GraphViz format\n";
-        }
+        LOG(info) << "Printing include graph in GraphViz format\n";
 
         include_graph_graphviz_printer_t printer{include_graph, *path_printer};
 
         std::cout << printer;
     }
     else if (config.printer() == printer_t::plantuml) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing include graph in PlantUML format\n";
-        }
+        LOG(info) << "Printing include graph in PlantUML format\n";
 
         include_graph_plantuml_printer_t printer{include_graph, *path_printer};
 
         std::cout << printer;
     }
     else {
-        std::cerr << "ERROR: Invalid output printer - aborting..." << '\n';
+        LOG(error) << "ERROR: Invalid output printer - aborting..." << '\n';
         exit(-1);
     }
 }
@@ -175,7 +158,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
     options.add_options()
         ("help,h", "Print help message and exit")
         ("version,V", "Print program version and exit")
-        ("verbose,v", "Print verbose information during processing")
+        ("verbose,v", po::value<int>(),
+            "Set log verbosity level")
         ("jobs,j", po::value<unsigned>(),
             "Number of threads used to parse translation units")
         ("compilation-database-dir,d", po::value<std::string>(),
@@ -220,6 +204,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
     }
 
     config.init(vm);
+
+    clang_include_graph::util::setup_logging(config.verbosity());
 }
 
 void print_version()
