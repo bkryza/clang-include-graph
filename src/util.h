@@ -50,7 +50,8 @@ namespace keywords = boost::log::keywords;
 boost::filesystem::path to_absolute_path(
     const boost::filesystem::path &relative_path);
 
-void setup_logging(int log_level);
+void setup_logging(
+    int log_level, boost::optional<boost::filesystem::path> log_file);
 
 } // namespace util
 } // namespace clang_include_graph

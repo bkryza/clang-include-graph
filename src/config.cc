@@ -34,6 +34,10 @@ void config_t::init(boost::program_options::variables_map &vm)
         verbosity_ = vm["verbose"].as<int>();
     }
 
+    if (vm.count("log-file") == 1) {
+        log_file_ = vm["log-file"].as<std::string>();
+    }
+
     if (vm.count("jobs") == 1) {
         auto jobs_arg = vm["jobs"].as<unsigned>();
         if (jobs_arg != 0) {
@@ -129,6 +133,12 @@ void config_t::init(boost::program_options::variables_map &vm)
 }
 
 int config_t::verbosity() const noexcept { return verbosity_; }
+
+const boost::optional<boost::filesystem::path> &
+config_t::log_file() const noexcept
+{
+    return log_file_;
+}
 
 const boost::optional<boost::filesystem::path> &
 config_t::compilation_database_directory() const noexcept

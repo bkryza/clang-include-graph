@@ -46,6 +46,8 @@ public:
 
     int verbosity() const noexcept;
 
+    const boost::optional<boost::filesystem::path> &log_file() const noexcept;
+
     const boost::optional<boost::filesystem::path> &
     compilation_database_directory() const noexcept;
 
@@ -79,6 +81,7 @@ public:
 
 private:
     int verbosity_{0};
+    boost::optional<boost::filesystem::path> log_file_;
     boost::optional<boost::filesystem::path> compilation_database_directory_;
     boost::optional<boost::filesystem::path> translation_unit_;
     boost::optional<boost::filesystem::path> relative_to_;

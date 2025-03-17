@@ -160,6 +160,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         ("version,V", "Print program version and exit")
         ("verbose,v", po::value<int>(),
             "Set log verbosity level")
+        ("log-file", po::value<std::string>(),
+            "Log to specified file instead of console")
         ("jobs,j", po::value<unsigned>(),
             "Number of threads used to parse translation units")
         ("compilation-database-dir,d", po::value<std::string>(),
@@ -205,7 +207,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
 
     config.init(vm);
 
-    clang_include_graph::util::setup_logging(config.verbosity());
+    clang_include_graph::util::setup_logging(
+        config.verbosity(), config.log_file());
 }
 
 void print_version()
