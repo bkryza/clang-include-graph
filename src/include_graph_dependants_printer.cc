@@ -51,8 +51,8 @@ void include_graph_dependants_printer_t::operator()(std::ostream &os) const
         });
 
     if (it == vertices_range.second) {
-        std::cerr << "ERROR: Dependants root '" << dependants_root
-                  << "' not found.\n";
+        LOG(error) << "ERROR: Dependants root '" << dependants_root
+                   << "' not found.\n";
         return;
     }
 

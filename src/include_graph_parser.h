@@ -22,6 +22,7 @@
 #include "config.h"
 #include "include_graph.h"
 
+#include <boost/asio/thread_pool.hpp>
 #include <clang-c/Index.h>
 
 #include <iostream>

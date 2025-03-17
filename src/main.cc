@@ -36,6 +36,8 @@
 #include <iostream>
 #include <memory>
 
+namespace po = boost::program_options;
+
 #ifndef LIBCLANG_VERSION_STRING
 #define LIBCLANG_VERSION_STRING "0.0.0"
 #endif
@@ -44,12 +46,13 @@
 #define GIT_VERSION "0.1.0"
 #endif
 
-namespace po = boost::program_options;
-
 void print_version();
 
 void process_command_line_options(int argc, char **argv, po::variables_map &vm,
     clang_include_graph::config_t &config);
+
+std::ostream &get_output_stream(
+    const boost::optional<boost::filesystem::path> &output_path);
 
 int main(int argc, char **argv)
 {
@@ -71,98 +74,88 @@ int main(int argc, char **argv)
 
     process_command_line_options(argc, argv, vm, config);
 
-    if (config.verbose()) {
-        std::cerr << "=== Loading compilation database from "
-                  << config.compilation_database_directory().value() << '\n';
-    }
+    LOG(info) << "Loading compilation database from "
+              << config.compilation_database_directory().value() << '\n';
 
     // Parse translation units and build the include graph
     include_graph_parser_t include_graph_parser{config};
     include_graph_parser.parse(include_graph);
 
-    // Select path printer based on config
+    // Select file path printer based on config
     std::unique_ptr<path_printer_t> const path_printer =
         path_printer_t::from_config(config);
 
+    auto &output = get_output_stream(config.output_file());
+
     // Generate output using selected printer
     if (config.printer() == printer_t::tree) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing include graph tree\n";
-        }
+        LOG(info) << "Printing include graph tree\n";
 
         include_graph.build_dag();
 
         include_graph_tree_printer_t printer{include_graph, *path_printer};
 
-        std::cout << printer;
+        output << printer;
     }
     else if (config.printer() == printer_t::reverse_tree) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing reverse include graph tree\n";
-        }
+        LOG(info) << "Printing reverse include graph tree\n";
 
         include_graph.build_dag();
 
         include_graph_tree_printer_t printer{include_graph, *path_printer};
 
-        std::cout << printer;
+        output << printer;
     }
     else if (config.printer() == printer_t::dependants) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing dependants of "
-                      << *config.dependants_of() << '\n';
-        }
+        LOG(info) << "Printing dependants of " << *config.dependants_of()
+                  << '\n';
 
         include_graph.build_dag();
 
         include_graph_dependants_printer_t printer{
             include_graph, *path_printer};
 
-        std::cout << printer;
+        output << printer;
     }
     else if (config.printer() == printer_t::topological_sort) {
-        if (config.verbose()) {
-            std::cerr
-                << "=== Printing include graph sorted in topological order\n";
-        }
+        LOG(info) << "Printing include graph sorted in topological order\n";
 
         include_graph.build_dag();
 
         include_graph_topological_sort_printer_t printer{
             include_graph, *path_printer};
 
-        std::cout << printer;
+        output << printer;
     }
     else if (config.printer() == printer_t::cycles) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing include graph cycles\n";
-        }
+        LOG(info) << "Printing include graph cycles\n";
 
         include_graph_cycles_printer_t printer{include_graph, *path_printer};
 
-        std::cout << printer;
+        output << printer;
     }
     else if (config.printer() == printer_t::graphviz) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing include graph in GraphViz format\n";
-        }
+        LOG(info) << "Printing include graph in GraphViz format\n";
 
         include_graph_graphviz_printer_t printer{include_graph, *path_printer};
 
-        std::cout << printer;
+        output << printer;
     }
     else if (config.printer() == printer_t::plantuml) {
-        if (config.verbose()) {
-            std::cerr << "=== Printing include graph in PlantUML format\n";
-        }
+        LOG(info) << "Printing include graph in PlantUML format\n";
 
         include_graph_plantuml_printer_t printer{include_graph, *path_printer};
 
-        std::cout << printer;
+        output << printer;
     }
     else {
-        std::cerr << "ERROR: Invalid output printer - aborting..." << '\n';
+        LOG(error) << "ERROR: Invalid output printer - aborting..." << '\n';
         exit(-1);
+    }
+
+    if (config.output_file()) {
+        LOG(info) << "Output written to file: "
+                  << config.output_file()->string() << '\n';
     }
 }
 
@@ -175,7 +168,12 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
     options.add_options()
         ("help,h", "Print help message and exit")
         ("version,V", "Print program version and exit")
-        ("verbose,v", "Print verbose information during processing")
+        ("verbose,v", po::value<int>(),
+            "Set log verbosity level")
+        ("log-file", po::value<std::string>(),
+            "Log to specified file instead of console")
+        ("jobs,j", po::value<unsigned>(),
+            "Number of threads used to parse translation units")
         ("compilation-database-dir,d", po::value<std::string>(),
             "Path to compilation database directory (default $PWD)")
         ("translation-unit,u", po::value<std::string>(),
@@ -185,6 +183,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         ("names-only,n", "Print only file names")
         ("relative-only,l",
             "Include only files relative to 'relative-to' directory")
+        ("output,o", po::value<std::string>(),
+            "Write the output to a specified file instead of stdout")
         ("topological-sort,s",
             "Print output includes and translation units in topological"
             "sort order")
@@ -218,6 +218,43 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
     }
 
     config.init(vm);
+
+    clang_include_graph::util::setup_logging(
+        config.verbosity(), config.log_file());
+}
+
+std::ostream &get_output_stream(
+    const boost::optional<boost::filesystem::path> &output_path)
+{
+    if (!output_path) {
+        return std::cout;
+    }
+
+    try {
+        boost::filesystem::create_directories(
+            output_path.value().parent_path());
+    }
+    catch (const boost::filesystem::filesystem_error &e) {
+        std::cerr << "ERROR: Cannot create output directory "
+                  << output_path.value().parent_path() << ": '" << e.what()
+                  << "'" << '\n';
+        exit(-1);
+    }
+
+    static std::ofstream output_file;
+
+    if (output_file.is_open()) {
+        output_file.close();
+    }
+    output_file.clear();
+
+    output_file.open(output_path->string());
+    if (!output_file) {
+        LOG(error) << "Failed to open output file: " << output_path->string();
+        exit(-1);
+    }
+
+    return output_file;
 }
 
 void print_version()

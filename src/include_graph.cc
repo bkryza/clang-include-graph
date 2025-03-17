@@ -32,6 +32,8 @@ namespace clang_include_graph {
 void include_graph_t::add_edge(
     const std::string &to, const std::string &from, bool from_translation_unit)
 {
+    const std::lock_guard<std::mutex> guard{mutex_};
+
     if (graph_.vertex(to) == graph_t::null_vertex()) {
         const auto &to_v = boost::add_vertex(to, graph_);
         graph_.graph()[to_v].file = to;
@@ -63,6 +65,8 @@ void include_graph_t::init(const config_t &config)
 
 void include_graph_t::build_dag()
 {
+    const std::lock_guard<std::mutex> guard{mutex_};
+
     if (dag_) {
         return;
     }

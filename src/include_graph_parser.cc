@@ -19,8 +19,10 @@
 #include "include_graph_parser.h"
 #include "config.h"
 #include "include_graph.h"
+#include "util.h"
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/asio/post.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <clang-c/CXCompilationDatabase.h>
@@ -75,8 +77,8 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
             database, tu_path.c_str());
 
         if (compile_commands == nullptr) {
-            std::cerr << "ERROR: Cannot find " << tu_path
-                      << " in compilation database - aborting...";
+            LOG(error) << "ERROR: Cannot find " << tu_path
+                       << " in compilation database - aborting...";
             exit(-1);
         }
     }
@@ -91,18 +93,22 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
     if (error !=
         CXCompilationDatabase_NoError) { // compile_commands_size == 0) {
-        std::cerr
+        LOG(error)
             << "ERROR: Cannot find compilation commands in compilation database"
             << '\n';
         exit(-1);
     }
 
     if (compile_commands_size == 0 && translation_units().empty()) {
-        std::cerr << "ERROR: No compilation database found and no translation "
-                     "units specified"
-                  << '\n';
+        LOG(error) << "ERROR: No compilation database found and no translation "
+                      "units specified"
+                   << '\n';
         exit(-1);
     }
+
+    boost::asio::thread_pool thread_pool{config_.jobs()};
+
+    LOG(info) << "Starting thread pool with " << config_.jobs() << " threads\n";
 
     for (auto command_it = 0U; command_it < compile_commands_size;
          command_it++) {
@@ -119,8 +125,8 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         }
 
         if (!boost::filesystem::exists(current_file)) {
-            std::cerr << "ERROR: Cannot find translation unit at  "
-                      << current_file << '\n';
+            LOG(error) << "ERROR: Cannot find translation unit at  "
+                       << current_file << '\n';
             exit(-1);
         }
 
@@ -129,72 +135,86 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         auto include_path_str = tu_path.string();
         translation_units_.emplace(include_path_str);
 
-        if (config_.verbose()) {
-            std::cout << "=== Parsing translation unit: " << include_path_str
-                      << '\n';
-        }
+        auto &index = index_;
 
-        std::vector<std::string> args;
-        std::vector<const char *> args_cstr;
-        args.reserve(clang_CompileCommand_getNumArgs(command));
+        boost::asio::post(thread_pool,
+            [&include_graph, &index, tu_path, include_path_str, command,
+                current_file]() {
+                LOG(info) << "Parsing translation unit: " << include_path_str
+                          << '\n';
 
-        for (auto i = 0U; i < clang_CompileCommand_getNumArgs(command); i++) {
-            std::string arg =
-                clang_getCString(clang_CompileCommand_getArg(command, i));
+                auto flags =
+                    static_cast<unsigned int>(
+                        CXTranslationUnit_DetailedPreprocessingRecord) |
+                    static_cast<unsigned int>(
+                        CXTranslationUnit_IgnoreNonErrorsFromIncludedFiles) |
+                    static_cast<unsigned int>(CXTranslationUnit_KeepGoing);
 
-            std::cout << "===== " << arg << "\n";
+                std::vector<std::string> args;
+                std::vector<const char *> args_cstr;
+                args.reserve(clang_CompileCommand_getNumArgs(command));
 
-            // Skip precompiled headers args
-            if (arg == "-Xclang") {
-                const std::string nextArg{clang_getCString(
-                    clang_CompileCommand_getArg(command, i + 1))};
-                if (nextArg.find("pch") != std::string::npos ||
-                    nextArg.find("gch") != std::string::npos) {
-                    i++;
-                    continue;
+                for (auto i = 0U; i < clang_CompileCommand_getNumArgs(command);
+                     i++) {
+                    std::string arg = clang_getCString(
+                        clang_CompileCommand_getArg(command, i));
+
+                    // Skip precompiled headers args
+                    if (arg == "-Xclang") {
+                        const std::string nextArg{clang_getCString(
+                            clang_CompileCommand_getArg(command, i + 1))};
+                        if (nextArg.find("pch") != std::string::npos ||
+                            nextArg.find("gch") != std::string::npos) {
+                            i++;
+                            continue;
+                        }
+                    }
+
+                    args.emplace_back(std::move(arg));
+                    args_cstr.emplace_back(args.back().c_str());
                 }
-            }
 
-            args.emplace_back(std::move(arg));
-            args_cstr.emplace_back(args.back().c_str());
-        }
+                // Remove the file name from the arguments list
+                args.pop_back();
+                args_cstr.pop_back();
 
-        // Remove the file name from the arguments list
-        args.pop_back();
-        args_cstr.pop_back();
+                args.emplace_back("-Wno-unknown-warning-option");
+                args_cstr.emplace_back(args.back().c_str());
 
-        auto flags = static_cast<unsigned int>(
-                         CXTranslationUnit_DetailedPreprocessingRecord) |
-            static_cast<unsigned int>(
-                CXTranslationUnit_IgnoreNonErrorsFromIncludedFiles) |
-            static_cast<unsigned int>(CXTranslationUnit_KeepGoing);
+                CXTranslationUnit unit = clang_parseTranslationUnit(index,
+                    include_path_str.c_str(), args_cstr.data(),
+                    static_cast<int>(args_cstr.size()), nullptr, 0, flags);
 
-        CXTranslationUnit unit = clang_parseTranslationUnit(index_,
-            include_path_str.c_str(), args_cstr.data(),
-            static_cast<int>(args_cstr.size()), nullptr, 0, flags);
+                if (unit == nullptr) {
+                    print_diagnostics(unit);
 
-        if (unit == nullptr) {
-            if (config_.verbose()) {
-                print_diagnostics(unit);
-            }
+                    LOG(error) << "ERROR: Unable to parse translation unit '"
+                               << current_file << "' - aborting..." << '\n';
+                    exit(-1);
+                }
 
-            std::cerr << "ERROR: Unable to parse translation unit '"
-                      << current_file << "' - aborting..." << '\n';
-            exit(-1);
-        }
+                if (global_logger::get().open_record(
+                        // NOLINTNEXTLINE
+                        boost::log::keywords::severity =
+                            boost::log::trivial::debug)) {
+                    print_diagnostics(unit);
+                }
 
-        if (config_.verbose()) {
-            print_diagnostics(unit);
-        }
+                visitor_context_t visitor_context{
+                    include_graph, tu_path.string()};
 
-        visitor_context_t visitor_context{include_graph, tu_path.string()};
+                const CXCursor start_cursor =
+                    clang_getTranslationUnitCursor(unit);
+                clang_visitChildren(
+                    start_cursor, inclusion_cursor_visitor, &visitor_context);
 
-        const CXCursor start_cursor = clang_getTranslationUnitCursor(unit);
-        clang_visitChildren(
-            start_cursor, inclusion_cursor_visitor, &visitor_context);
-
-        clang_disposeTranslationUnit(unit);
+                clang_disposeTranslationUnit(unit);
+            });
     }
+
+    thread_pool.join();
+
+    thread_pool.stop();
 }
 
 const std::set<boost::filesystem::path> &
@@ -215,8 +235,8 @@ void print_diagnostics(const CXTranslationUnit &tu)
         const std::string text =
             clang_getCString(clang_getDiagnosticSpelling(diag));
 
-        std::cout << "=== [" << clang_getCString(diagnostic_file) << ":" << line
-                  << "] " << text << '\n';
+        LOG(error) << "=== [" << clang_getCString(diagnostic_file) << ":"
+                   << line << "] " << text << '\n';
     }
 }
 

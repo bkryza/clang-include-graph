@@ -25,6 +25,8 @@
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 
+#include <thread>
+
 namespace clang_include_graph {
 
 enum class printer_t : std::uint8_t {
@@ -42,10 +44,15 @@ class config_t {
 public:
     void init(boost::program_options::variables_map &vm);
 
-    bool verbose() const noexcept;
+    int verbosity() const noexcept;
+
+    const boost::optional<boost::filesystem::path> &log_file() const noexcept;
 
     const boost::optional<boost::filesystem::path> &
     compilation_database_directory() const noexcept;
+
+    const boost::optional<boost::filesystem::path> &
+    output_file() const noexcept;
 
     const boost::optional<boost::filesystem::path> &
     translation_unit() const noexcept;
@@ -69,12 +76,17 @@ public:
     printer_t printer() const noexcept;
     void printer(printer_t printer) noexcept;
 
+    unsigned jobs() const noexcept;
+    void jobs(unsigned j) noexcept;
+
     boost::filesystem::path resolve_path(
         const boost::filesystem::path &p) const;
 
 private:
-    bool verbose_{false};
+    int verbosity_{0};
+    boost::optional<boost::filesystem::path> log_file_;
     boost::optional<boost::filesystem::path> compilation_database_directory_;
+    boost::optional<boost::filesystem::path> output_file_;
     boost::optional<boost::filesystem::path> translation_unit_;
     boost::optional<boost::filesystem::path> relative_to_;
     boost::optional<boost::filesystem::path> dependants_of_;
@@ -82,6 +94,7 @@ private:
     bool relative_only_{false};
     bool translation_units_only_{false};
     printer_t printer_{printer_t::topological_sort};
+    unsigned jobs_{std::thread::hardware_concurrency()};
 };
 
 } // namespace clang_include_graph

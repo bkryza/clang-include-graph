@@ -31,7 +31,18 @@ namespace clang_include_graph {
 void config_t::init(boost::program_options::variables_map &vm)
 {
     if (vm.count("verbose") == 1) {
-        verbose_ = true;
+        verbosity_ = vm["verbose"].as<int>();
+    }
+
+    if (vm.count("log-file") == 1) {
+        log_file_ = vm["log-file"].as<std::string>();
+    }
+
+    if (vm.count("jobs") == 1) {
+        auto jobs_arg = vm["jobs"].as<unsigned>();
+        if (jobs_arg != 0) {
+            jobs_ = jobs_arg;
+        }
     }
 
     if (vm.count("compilation-database-dir") == 1) {
@@ -40,6 +51,10 @@ void config_t::init(boost::program_options::variables_map &vm)
     }
     else {
         compilation_database_directory_ = util::to_absolute_path(".");
+    }
+
+    if (vm.count("output") == 1) {
+        output_file_ = vm["output"].as<std::string>();
     }
 
     if (!compilation_database_directory_) {
@@ -121,12 +136,24 @@ void config_t::init(boost::program_options::variables_map &vm)
     }
 }
 
-bool config_t::verbose() const noexcept { return verbose_; }
+int config_t::verbosity() const noexcept { return verbosity_; }
+
+const boost::optional<boost::filesystem::path> &
+config_t::log_file() const noexcept
+{
+    return log_file_;
+}
 
 const boost::optional<boost::filesystem::path> &
 config_t::compilation_database_directory() const noexcept
 {
     return compilation_database_directory_;
+}
+
+const boost::optional<boost::filesystem::path> &
+config_t::output_file() const noexcept
+{
+    return output_file_;
 }
 
 const boost::optional<boost::filesystem::path> &
@@ -173,6 +200,10 @@ void config_t::translation_units_only(bool tuo) noexcept
 printer_t config_t::printer() const noexcept { return printer_; }
 
 void config_t::printer(printer_t printer) noexcept { printer_ = printer; }
+
+unsigned config_t::jobs() const noexcept { return jobs_; }
+
+void config_t::jobs(unsigned j) noexcept { jobs_ = j; }
 
 boost::filesystem::path config_t::resolve_path(
     const boost::filesystem::path &p) const
