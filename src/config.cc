@@ -53,6 +53,10 @@ void config_t::init(boost::program_options::variables_map &vm)
         compilation_database_directory_ = util::to_absolute_path(".");
     }
 
+    if (vm.count("output") == 1) {
+        output_file_ = vm["output"].as<std::string>();
+    }
+
     if (!compilation_database_directory_) {
         std::cerr << "ERROR: Cannot find compilation database - aborting..."
                   << '\n';
@@ -144,6 +148,12 @@ const boost::optional<boost::filesystem::path> &
 config_t::compilation_database_directory() const noexcept
 {
     return compilation_database_directory_;
+}
+
+const boost::optional<boost::filesystem::path> &
+config_t::output_file() const noexcept
+{
+    return output_file_;
 }
 
 const boost::optional<boost::filesystem::path> &
