@@ -32,6 +32,21 @@ namespace clang_include_graph {
 
 std::set<boost::filesystem::path> get_all_files(CXCompilationDatabase database);
 
+void intersect_glob_matches_with_compilation_database(void *database,
+    bool is_fixed,
+    const std::set<boost::filesystem::path>
+        &compilation_database_files_absolute,
+    std::vector<CXCompileCommands> &matching_compile_commands,
+    std::set<boost::filesystem::path> &glob_files_absolute);
+
+void resolve_whitelist_glob_patterns(
+    const std::vector<boost::filesystem::path> &translation_unit_patterns,
+    std::set<boost::filesystem::path> &glob_files_absolute);
+
+void filter_blacklist_glob_patterns(
+    const std::vector<boost::filesystem::path> &translation_unit_patterns,
+    std::set<boost::filesystem::path> &glob_files_absolute);
+
 } // namespace clang_include_graph
 
 #endif // CLANG_INCLUDE_GRAPH_COMPILATION_DATABASE_H

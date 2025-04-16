@@ -19,11 +19,9 @@
 #include "include_graph_parser.h"
 #include "compilation_database.h"
 #include "config.h"
-#include "glob/glob.hpp"
 #include "include_graph.h"
 #include "util.h"
 
-#include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -185,7 +183,7 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         config_.translation_unit();
 
     if (only_negative_glob_patterns && !is_fixed) {
-        translation_unit_patterns.push_back("**/*");
+        translation_unit_patterns.emplace_back("**/*");
     }
 
     if (!translation_unit_patterns.empty()) {
@@ -202,7 +200,8 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
         // Now remove all paths which match the blacklisted glob patterns
         // i.e. start with `!`
-        filter_blacklist_glob_patterns(glob_files_absolute);
+        filter_blacklist_glob_patterns(
+            config_.translation_unit(), glob_files_absolute);
 
         intersect_glob_matches_with_compilation_database(database, is_fixed,
             compilation_database_files_absolute, matching_compile_commands,
@@ -224,7 +223,7 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
     LOG(info) << "Starting thread pool with " << config_.jobs() << " threads\n";
 
-    for (auto compile_commands : matching_compile_commands) {
+    for (auto *compile_commands : matching_compile_commands) {
         auto compile_commands_size =
             clang_CompileCommands_getSize(compile_commands);
 
@@ -355,93 +354,6 @@ enum CXChildVisitResult inclusion_cursor_visitor(
         }
     }
     return CXChildVisit_Continue;
-}
-
-void include_graph_parser_t::intersect_glob_matches_with_compilation_database(
-    void *database, const bool is_fixed,
-    const std::set<boost::filesystem::path>
-        &compilation_database_files_absolute,
-    std::vector<CXCompileCommands> &matching_compile_commands,
-    std::set<boost::filesystem::path> &glob_files_absolute) const
-{
-    std::vector<std::string> matching_files;
-
-    for (const auto &gm : glob_files_absolute) {
-        auto preferred_path = gm;
-        preferred_path.make_preferred();
-
-        if (is_fixed ||
-            boost::algorithm::any_of_equal(
-                compilation_database_files_absolute, gm) ||
-            boost::algorithm::any_of_equal(
-                compilation_database_files_absolute, preferred_path)) {
-            matching_files.emplace_back(gm.string());
-
-            LOG(trace) << "Found matching compilation database file: "
-                       << gm.string();
-        }
-    }
-
-    for (const auto &file : matching_files) {
-        matching_compile_commands.emplace_back(
-            clang_CompilationDatabase_getCompileCommands(
-                database, file.c_str()));
-    }
-}
-
-void include_graph_parser_t::filter_blacklist_glob_patterns(
-    std::set<boost::filesystem::path> &glob_files_absolute) const
-{
-    for (const auto &glob : config_.translation_unit()) {
-        if (glob.string().size() < 2 || glob.string()[0] != '!')
-            continue;
-
-        boost::filesystem::path absolute_glob_path{glob.string().substr(1)};
-        auto matches = glob::glob(absolute_glob_path.string(), true, false);
-
-        for (const auto &match : matches) {
-            const auto path = boost::filesystem::weakly_canonical(match);
-
-            assert(path.is_absolute());
-
-            LOG(trace) << "Removing match " << path.string()
-                       << " based on glob " << glob.string();
-
-            glob_files_absolute.erase(path);
-        }
-    }
-}
-
-void include_graph_parser_t::resolve_whitelist_glob_patterns(
-    std::vector<boost::filesystem::path> &translation_unit_patterns,
-    std::set<boost::filesystem::path> &glob_files_absolute) const
-{
-    for (const auto &glob : translation_unit_patterns) {
-        if (glob.string().empty() || glob.string()[0] == '!')
-            continue;
-
-        boost::filesystem::path absolute_glob_path{glob.string()};
-
-        if (!absolute_glob_path.is_absolute())
-            absolute_glob_path =
-                boost::filesystem::current_path() / absolute_glob_path;
-
-        LOG(debug) << "Searching glob path " << absolute_glob_path.string()
-                   << '\n';
-
-        auto matches = glob::glob(absolute_glob_path.string(), true, false);
-
-        LOG(debug) << "Found " << matches.size()
-                   << " files matching glob: " << absolute_glob_path.string();
-
-        for (const auto &match : matches) {
-            const auto path = boost::filesystem::weakly_canonical(match);
-
-            assert(path.is_absolute());
-
-            glob_files_absolute.emplace(std::move(path));
-        }
-    }
 }
 
 } // namespace clang_include_graph
