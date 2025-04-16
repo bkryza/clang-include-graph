@@ -40,9 +40,7 @@
 
 namespace clang_include_graph {
 
-namespace {
 using visitor_context_t = std::pair<include_graph_t &, std::string>;
-}
 
 void print_diagnostics(const CXTranslationUnit &tu);
 
@@ -51,6 +49,76 @@ enum CXChildVisitResult inclusion_cursor_visitor(
 
 void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
     unsigned include_len, CXClientData include_graph_ptr);
+
+void process_translation_unit(include_graph_t &include_graph,
+    CXCompileCommand command, const boost::filesystem::path &current_file,
+    const boost::filesystem::path &tu_path, std::string &include_path_str,
+    CXIndex &index)
+{
+    LOG(info) << "Parsing translation unit: " << include_path_str << '\n';
+
+    auto flags = static_cast<unsigned int>(
+                     CXTranslationUnit_DetailedPreprocessingRecord) |
+        static_cast<unsigned int>(
+            CXTranslationUnit_IgnoreNonErrorsFromIncludedFiles) |
+        static_cast<unsigned int>(CXTranslationUnit_KeepGoing);
+
+    std::vector<std::string> args;
+    std::vector<const char *> args_cstr;
+    args.reserve(clang_CompileCommand_getNumArgs(command));
+
+    for (auto i = 0U; i < clang_CompileCommand_getNumArgs(command); i++) {
+        std::string arg =
+            clang_getCString(clang_CompileCommand_getArg(command, i));
+
+        // Skip precompiled headers args
+        if (arg == "-Xclang") {
+            const std::string nextArg{
+                clang_getCString(clang_CompileCommand_getArg(command, i + 1))};
+            if (nextArg.find("pch") != std::string::npos ||
+                nextArg.find("gch") != std::string::npos) {
+                i++;
+                continue;
+            }
+        }
+
+        args.emplace_back(std::move(arg));
+        args_cstr.emplace_back(args.back().c_str());
+    }
+
+    // Remove the file name from the arguments list
+    args.pop_back();
+    args_cstr.pop_back();
+
+    args.emplace_back("-Wno-unknown-warning-option");
+    args_cstr.emplace_back(args.back().c_str());
+
+    CXTranslationUnit unit = clang_parseTranslationUnit(index,
+        include_path_str.c_str(), args_cstr.data(),
+        static_cast<int>(args_cstr.size()), nullptr, 0, flags);
+
+    if (unit == nullptr) {
+        print_diagnostics(unit);
+
+        LOG(error) << "ERROR: Unable to parse translation unit '"
+                   << current_file << "' - aborting..." << '\n';
+        exit(-1);
+    }
+
+    if (global_logger::get().open_record(
+            // NOLINTNEXTLINE
+            boost::log::keywords::severity = boost::log::trivial::debug)) {
+        print_diagnostics(unit);
+    }
+
+    visitor_context_t visitor_context{include_graph, tu_path.string()};
+
+    const CXCursor start_cursor = clang_getTranslationUnitCursor(unit);
+    clang_visitChildren(
+        start_cursor, inclusion_cursor_visitor, &visitor_context);
+
+    clang_disposeTranslationUnit(unit);
+}
 
 include_graph_parser_t::include_graph_parser_t(const config_t &config)
     : index_{clang_createIndex(0, 0)}
@@ -68,7 +136,7 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
     include_graph.init(config_);
 
     auto error = CXCompilationDatabase_NoError;
-    auto database = clang_CompilationDatabase_fromDirectory(
+    auto *database = clang_CompilationDatabase_fromDirectory(
         config_.compilation_database_directory().value().c_str(), &error);
 
     if (error != CXCompilationDatabase_NoError) {
@@ -113,37 +181,20 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
     std::vector<CXCompileCommands> matching_compile_commands;
 
-    if (!config_.translation_unit().empty()) {
+    std::vector<boost::filesystem::path> translation_unit_patterns =
+        config_.translation_unit();
+
+    if (only_negative_glob_patterns && !is_fixed) {
+        translation_unit_patterns.push_back("**/*");
+    }
+
+    if (!translation_unit_patterns.empty()) {
         std::set<boost::filesystem::path> glob_files_absolute;
 
         // First find all files matching whitelisted glob patterns
         // i.e. not starting with an `!`
-        for (const auto &glob : config_.translation_unit()) {
-            if (glob.string().empty() || glob.string()[0] == '!')
-                continue;
-
-            boost::filesystem::path absolute_glob_path{glob.string()};
-
-            if (!absolute_glob_path.is_absolute())
-                absolute_glob_path =
-                    boost::filesystem::current_path() / absolute_glob_path;
-
-            LOG(debug) << "Searching glob path " << absolute_glob_path.string()
-                       << '\n';
-
-            auto matches = glob::glob(absolute_glob_path.string(), true, false);
-
-            LOG(debug) << "Found " << matches.size() << " files matching glob: "
-                       << absolute_glob_path.string();
-
-            for (const auto &match : matches) {
-                const auto path = boost::filesystem::weakly_canonical(match);
-
-                assert(path.is_absolute());
-
-                glob_files_absolute.emplace(std::move(path));
-            }
-        }
+        resolve_whitelist_glob_patterns(
+            translation_unit_patterns, glob_files_absolute);
 
         LOG(debug)
             << "Found " << glob_files_absolute.size()
@@ -151,49 +202,11 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
         // Now remove all paths which match the blacklisted glob patterns
         // i.e. start with `!`
-        for (const auto &glob : config_.translation_unit()) {
-            if (glob.string().size() < 2 || glob.string()[0] != '!')
-                continue;
+        filter_blacklist_glob_patterns(glob_files_absolute);
 
-            boost::filesystem::path absolute_glob_path{glob.string().substr(1)};
-            auto matches = glob::glob(absolute_glob_path.string(), true, false);
-
-            for (const auto &match : matches) {
-                const auto path = boost::filesystem::weakly_canonical(match);
-
-                assert(path.is_absolute());
-
-                LOG(trace) << "Removing match " << path.string()
-                           << " based on glob " << glob.string();
-
-                glob_files_absolute.erase(path);
-            }
-        }
-
-        // Calculate intersection between glob matches and compilation database
-        std::vector<std::string> matching_files;
-
-        for (const auto &gm : glob_files_absolute) {
-            auto preffered_path = gm;
-            preffered_path.make_preferred();
-
-            if (is_fixed ||
-                boost::algorithm::any_of_equal(
-                    compilation_database_files_absolute, gm) ||
-                boost::algorithm::any_of_equal(
-                    compilation_database_files_absolute, preffered_path)) {
-                matching_files.emplace_back(gm.string());
-
-                LOG(trace) << "Found matching compilation database file: "
-                           << gm.string();
-            }
-        }
-
-        for (const auto &file : matching_files) {
-            matching_compile_commands.emplace_back(
-                clang_CompilationDatabase_getCompileCommands(
-                    database, file.c_str()));
-        }
+        intersect_glob_matches_with_compilation_database(database, is_fixed,
+            compilation_database_files_absolute, matching_compile_commands,
+            glob_files_absolute);
     }
     else {
         // Parse entire compilation database
@@ -252,78 +265,9 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
             boost::asio::post(thread_pool,
                 [&include_graph, &index, tu_path, include_path_str, command,
-                    current_file]() {
-                    LOG(info)
-                        << "Parsing translation unit: " << include_path_str
-                        << '\n';
-
-                    auto flags =
-                        static_cast<unsigned int>(
-                            CXTranslationUnit_DetailedPreprocessingRecord) |
-                        static_cast<unsigned int>(
-                            CXTranslationUnit_IgnoreNonErrorsFromIncludedFiles) |
-                        static_cast<unsigned int>(CXTranslationUnit_KeepGoing);
-
-                    std::vector<std::string> args;
-                    std::vector<const char *> args_cstr;
-                    args.reserve(clang_CompileCommand_getNumArgs(command));
-
-                    for (auto i = 0U;
-                         i < clang_CompileCommand_getNumArgs(command); i++) {
-                        std::string arg = clang_getCString(
-                            clang_CompileCommand_getArg(command, i));
-
-                        // Skip precompiled headers args
-                        if (arg == "-Xclang") {
-                            const std::string nextArg{clang_getCString(
-                                clang_CompileCommand_getArg(command, i + 1))};
-                            if (nextArg.find("pch") != std::string::npos ||
-                                nextArg.find("gch") != std::string::npos) {
-                                i++;
-                                continue;
-                            }
-                        }
-
-                        args.emplace_back(std::move(arg));
-                        args_cstr.emplace_back(args.back().c_str());
-                    }
-
-                    // Remove the file name from the arguments list
-                    args.pop_back();
-                    args_cstr.pop_back();
-
-                    args.emplace_back("-Wno-unknown-warning-option");
-                    args_cstr.emplace_back(args.back().c_str());
-
-                    CXTranslationUnit unit = clang_parseTranslationUnit(index,
-                        include_path_str.c_str(), args_cstr.data(),
-                        static_cast<int>(args_cstr.size()), nullptr, 0, flags);
-
-                    if (unit == nullptr) {
-                        print_diagnostics(unit);
-
-                        LOG(error)
-                            << "ERROR: Unable to parse translation unit '"
-                            << current_file << "' - aborting..." << '\n';
-                        exit(-1);
-                    }
-
-                    if (global_logger::get().open_record(
-                            // NOLINTNEXTLINE
-                            boost::log::keywords::severity =
-                                boost::log::trivial::debug)) {
-                        print_diagnostics(unit);
-                    }
-
-                    visitor_context_t visitor_context{
-                        include_graph, tu_path.string()};
-
-                    const CXCursor start_cursor =
-                        clang_getTranslationUnitCursor(unit);
-                    clang_visitChildren(start_cursor, inclusion_cursor_visitor,
-                        &visitor_context);
-
-                    clang_disposeTranslationUnit(unit);
+                    current_file]() mutable {
+                    process_translation_unit(include_graph, command,
+                        current_file, tu_path, include_path_str, index);
                 });
         }
     }
@@ -411,6 +355,93 @@ enum CXChildVisitResult inclusion_cursor_visitor(
         }
     }
     return CXChildVisit_Continue;
+}
+
+void include_graph_parser_t::intersect_glob_matches_with_compilation_database(
+    void *database, const bool is_fixed,
+    const std::set<boost::filesystem::path>
+        &compilation_database_files_absolute,
+    std::vector<CXCompileCommands> &matching_compile_commands,
+    std::set<boost::filesystem::path> &glob_files_absolute) const
+{
+    std::vector<std::string> matching_files;
+
+    for (const auto &gm : glob_files_absolute) {
+        auto preferred_path = gm;
+        preferred_path.make_preferred();
+
+        if (is_fixed ||
+            boost::algorithm::any_of_equal(
+                compilation_database_files_absolute, gm) ||
+            boost::algorithm::any_of_equal(
+                compilation_database_files_absolute, preferred_path)) {
+            matching_files.emplace_back(gm.string());
+
+            LOG(trace) << "Found matching compilation database file: "
+                       << gm.string();
+        }
+    }
+
+    for (const auto &file : matching_files) {
+        matching_compile_commands.emplace_back(
+            clang_CompilationDatabase_getCompileCommands(
+                database, file.c_str()));
+    }
+}
+
+void include_graph_parser_t::filter_blacklist_glob_patterns(
+    std::set<boost::filesystem::path> &glob_files_absolute) const
+{
+    for (const auto &glob : config_.translation_unit()) {
+        if (glob.string().size() < 2 || glob.string()[0] != '!')
+            continue;
+
+        boost::filesystem::path absolute_glob_path{glob.string().substr(1)};
+        auto matches = glob::glob(absolute_glob_path.string(), true, false);
+
+        for (const auto &match : matches) {
+            const auto path = boost::filesystem::weakly_canonical(match);
+
+            assert(path.is_absolute());
+
+            LOG(trace) << "Removing match " << path.string()
+                       << " based on glob " << glob.string();
+
+            glob_files_absolute.erase(path);
+        }
+    }
+}
+
+void include_graph_parser_t::resolve_whitelist_glob_patterns(
+    std::vector<boost::filesystem::path> &translation_unit_patterns,
+    std::set<boost::filesystem::path> &glob_files_absolute) const
+{
+    for (const auto &glob : translation_unit_patterns) {
+        if (glob.string().empty() || glob.string()[0] == '!')
+            continue;
+
+        boost::filesystem::path absolute_glob_path{glob.string()};
+
+        if (!absolute_glob_path.is_absolute())
+            absolute_glob_path =
+                boost::filesystem::current_path() / absolute_glob_path;
+
+        LOG(debug) << "Searching glob path " << absolute_glob_path.string()
+                   << '\n';
+
+        auto matches = glob::glob(absolute_glob_path.string(), true, false);
+
+        LOG(debug) << "Found " << matches.size()
+                   << " files matching glob: " << absolute_glob_path.string();
+
+        for (const auto &match : matches) {
+            const auto path = boost::filesystem::weakly_canonical(match);
+
+            assert(path.is_absolute());
+
+            glob_files_absolute.emplace(std::move(path));
+        }
+    }
 }
 
 } // namespace clang_include_graph

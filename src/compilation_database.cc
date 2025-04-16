@@ -24,22 +24,21 @@
 
 namespace clang_include_graph {
 
-std::set<boost::filesystem::path> get_all_files(
-    const CXCompilationDatabase database)
+std::set<boost::filesystem::path> get_all_files(CXCompilationDatabase database)
 {
     std::set<boost::filesystem::path> result;
 
-    auto compile_commands =
+    auto *compile_commands =
         clang_CompilationDatabase_getAllCompileCommands(database);
 
     auto compile_commands_size =
         clang_CompileCommands_getSize(compile_commands);
 
     for (auto i = 0U; i < compile_commands_size; i++) {
-        auto command = clang_CompileCommands_getCommand(compile_commands, i);
-        boost::filesystem::path directory =
+        auto *command = clang_CompileCommands_getCommand(compile_commands, i);
+        const boost::filesystem::path directory =
             clang_getCString(clang_CompileCommand_getDirectory(command));
-        boost::filesystem::path file =
+        const boost::filesystem::path file =
             clang_getCString(clang_CompileCommand_getFilename(command));
 
         LOG(trace) << "Found file " << file.string()

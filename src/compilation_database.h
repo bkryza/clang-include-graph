@@ -30,8 +30,7 @@
 
 namespace clang_include_graph {
 
-std::set<boost::filesystem::path> get_all_files(
-    const CXCompilationDatabase database);
+std::set<boost::filesystem::path> get_all_files(CXCompilationDatabase database);
 
 } // namespace clang_include_graph
 

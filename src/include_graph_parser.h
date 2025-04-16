@@ -23,6 +23,7 @@
 #include "include_graph.h"
 
 #include <boost/asio/thread_pool.hpp>
+#include <clang-c/CXCompilationDatabase.h>
 #include <clang-c/Index.h>
 
 #include <iostream>
@@ -31,6 +32,11 @@
 #include <vector>
 
 namespace clang_include_graph {
+
+void process_translation_unit(include_graph_t &include_graph,
+    CXCompileCommand command, const boost::filesystem::path &current_file,
+    const boost::filesystem::path &tu_path, std::string &include_path_str,
+    CXIndex &index);
 
 class include_graph_parser_t {
 public:
@@ -45,6 +51,20 @@ public:
     void parse(include_graph_t &include_graph);
 
     const std::set<boost::filesystem::path> &translation_units() const;
+
+    void resolve_whitelist_glob_patterns(
+        std::vector<boost::filesystem::path> &translation_unit_patterns,
+        std::set<boost::filesystem::path> &glob_files_absolute) const;
+
+    void filter_blacklist_glob_patterns(
+        std::set<boost::filesystem::path> &glob_files_absolute) const;
+
+    void intersect_glob_matches_with_compilation_database(void *database,
+        const bool is_fixed,
+        const std::set<boost::filesystem::path>
+            &compilation_database_files_absolute,
+        std::vector<CXCompileCommands> &matching_compile_commands,
+        std::set<boost::filesystem::path> &glob_files_absolute) const;
 
 private:
     CXIndex index_;
