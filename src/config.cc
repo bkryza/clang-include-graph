@@ -89,13 +89,7 @@ void config_t::init(boost::program_options::variables_map &vm)
 
     if (vm.count("translation-unit") == 1) {
         translation_unit_ =
-            resolve_path(vm["translation-unit"].as<std::string>());
-        if (!translation_unit_) {
-            std::cerr << "ERROR: Cannot find translation unit source at "
-                      << vm["translation-unit"].as<std::string>()
-                      << " - aborting..." << '\n';
-            exit(-1);
-        }
+            vm["translation-unit"].as<std::vector<boost::filesystem::path>>();
     }
 
     if (vm.count("tree") + vm.count("reverse-tree") + vm.count("cycles") +
@@ -156,7 +150,7 @@ config_t::output_file() const noexcept
     return output_file_;
 }
 
-const boost::optional<boost::filesystem::path> &
+const std::vector<boost::filesystem::path> &
 config_t::translation_unit() const noexcept
 {
     return translation_unit_;

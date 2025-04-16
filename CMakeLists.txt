@@ -40,6 +40,9 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost REQUIRED COMPONENTS graph program_options filesystem log unit_test_framework)
 include_directories(${Boost_INCLUDE_DIRS})
 
+set(THIRDPARTY_HEADERS_DIR ${PROJECT_SOURCE_DIR}/thirdparty/)
+include_directories(${THIRDPARTY_HEADERS_DIR})
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-deprecated-copy-with-user-provided-copy -std=c++11 -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" -DGIT_VERSION=\\\"${GIT_VERSION}\\\" -DBOOST_LOG_DYN_LINK ${LIBCLANG_CXXFLAGS}")
 
 file(GLOB_RECURSE SOURCES src/*.cc src/*.h)
