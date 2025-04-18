@@ -23,6 +23,7 @@ endif (LLVM_CONFIG_PATH)
 
 message(STATUS "Checking for libclang...")
 set(LLVM_PREFERRED_VERSION 16.0.0)
+
 # Add
 #   -DLLVM_CONFIG_PATH=/path/to/llvm-config
 # to use custom LLVM version
