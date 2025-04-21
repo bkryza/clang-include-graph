@@ -176,6 +176,11 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "Number of threads used to parse translation units")
         ("compilation-database-dir,d", po::value<std::string>(),
             "Path to compilation database directory (default: $PWD)")
+        ("add-compile-flag", po::value<std::vector<std::string>>(),
+             "Add a compile flag to the compilation database")
+        ("remove-compile-flag", po::value<std::vector<std::string>>(),
+             "Remove a compile flag from the compilation database. "
+             "Can contain a '*' to match multiple flags")
         ("translation-unit,u", po::value<std::vector<boost::filesystem::path>>(),
             "Path or glob patterns to match translation units for processing "
             "(relative to $PWD). ")

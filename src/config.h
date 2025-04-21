@@ -79,6 +79,10 @@ public:
     unsigned jobs() const noexcept;
     void jobs(unsigned j) noexcept;
 
+    const std::vector<std::string> &add_compile_flag() const noexcept;
+
+    const std::vector<std::string> &remove_compile_flag() const noexcept;
+
     boost::filesystem::path resolve_path(
         const boost::filesystem::path &p) const;
 
@@ -95,6 +99,8 @@ private:
     bool translation_units_only_{false};
     printer_t printer_{printer_t::topological_sort};
     unsigned jobs_{std::thread::hardware_concurrency()};
+    std::vector<std::string> add_compile_flag_;
+    std::vector<std::string> remove_compile_flag_;
 };
 
 } // namespace clang_include_graph

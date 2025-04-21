@@ -92,6 +92,16 @@ void config_t::init(boost::program_options::variables_map &vm)
             vm["translation-unit"].as<std::vector<boost::filesystem::path>>();
     }
 
+    if (vm.count("add-compile-flag") == 1) {
+        add_compile_flag_ =
+            vm["add-compile-flag"].as<std::vector<std::string>>();
+    }
+
+    if (vm.count("remove-compile-flag") == 1) {
+        remove_compile_flag_ =
+            vm["remove-compile-flag"].as<std::vector<std::string>>();
+    }
+
     if (vm.count("tree") + vm.count("reverse-tree") + vm.count("cycles") +
             vm.count("graphviz") + vm.count("topological-sort") +
             vm.count("plantuml") >
@@ -198,6 +208,16 @@ void config_t::printer(printer_t printer) noexcept { printer_ = printer; }
 unsigned config_t::jobs() const noexcept { return jobs_; }
 
 void config_t::jobs(unsigned j) noexcept { jobs_ = j; }
+
+const std::vector<std::string> &config_t::add_compile_flag() const noexcept
+{
+    return add_compile_flag_;
+}
+
+const std::vector<std::string> &config_t::remove_compile_flag() const noexcept
+{
+    return remove_compile_flag_;
+}
 
 boost::filesystem::path config_t::resolve_path(
     const boost::filesystem::path &p) const

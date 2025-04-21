@@ -48,8 +48,9 @@ enum CXChildVisitResult inclusion_cursor_visitor(
 void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
     unsigned include_len, CXClientData include_graph_ptr);
 
-void process_translation_unit(include_graph_t &include_graph,
-    CXCompileCommand command, const boost::filesystem::path &current_file,
+void process_translation_unit(const config_t &config,
+    include_graph_t &include_graph, CXCompileCommand command,
+    const boost::filesystem::path &current_file,
     const boost::filesystem::path &tu_path, std::string &include_path_str,
     CXIndex &index)
 {
@@ -62,34 +63,36 @@ void process_translation_unit(include_graph_t &include_graph,
         static_cast<unsigned int>(CXTranslationUnit_KeepGoing);
 
     std::vector<std::string> args;
-    std::vector<const char *> args_cstr;
     args.reserve(clang_CompileCommand_getNumArgs(command));
 
+    std::vector<const char *> args_cstr;
+    args_cstr.reserve(clang_CompileCommand_getNumArgs(command));
+
     for (auto i = 0U; i < clang_CompileCommand_getNumArgs(command); i++) {
-        std::string arg =
-            clang_getCString(clang_CompileCommand_getArg(command, i));
-
-        // Skip precompiled headers args
-        if (arg == "-Xclang") {
-            const std::string nextArg{
-                clang_getCString(clang_CompileCommand_getArg(command, i + 1))};
-            if (nextArg.find("pch") != std::string::npos ||
-                nextArg.find("gch") != std::string::npos) {
-                i++;
-                continue;
-            }
-        }
-
+        std::string arg{
+            clang_getCString(clang_CompileCommand_getArg(command, i))};
         args.emplace_back(std::move(arg));
-        args_cstr.emplace_back(args.back().c_str());
     }
 
     // Remove the file name from the arguments list
     args.pop_back();
-    args_cstr.pop_back();
 
-    args.emplace_back("-Wno-unknown-warning-option");
-    args_cstr.emplace_back(args.back().c_str());
+    if (!config.add_compile_flag().empty()) {
+        args.insert(
+            // Add flags after argv[0]
+            args.begin() + 1, config.add_compile_flag().begin(),
+            config.add_compile_flag().end());
+    }
+
+    for (const auto &flag : config.remove_compile_flag()) {
+        args.erase(std::remove_if(args.begin(), args.end(),
+                       [&flag](const auto &arg) { return arg == flag; }),
+            args.end());
+    }
+
+    for (const auto &arg : args) {
+        args_cstr.emplace_back(arg.c_str());
+    }
 
     CXTranslationUnit unit = clang_parseTranslationUnit(index,
         include_path_str.c_str(), args_cstr.data(),
@@ -263,9 +266,9 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
             auto &index = index_;
 
             boost::asio::post(thread_pool,
-                [&include_graph, &index, tu_path, include_path_str, command,
-                    current_file]() mutable {
-                    process_translation_unit(include_graph, command,
+                [&config = config_, &include_graph, &index, tu_path,
+                    include_path_str, command, current_file]() mutable {
+                    process_translation_unit(config, include_graph, command,
                         current_file, tu_path, include_path_str, index);
                 });
         }
