@@ -28,6 +28,8 @@
 #include <boost/log/trivial.hpp>
 #include <boost/optional.hpp>
 
+#include <regex>
+
 BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(global_logger,
     boost::log::sources::severity_logger_mt<
         boost::log::trivial::severity_level>)
@@ -52,6 +54,10 @@ boost::filesystem::path to_absolute_path(
 
 void setup_logging(
     int log_level, boost::optional<boost::filesystem::path> log_file);
+
+std::regex glob_to_regex(const std::string &glob_pattern);
+
+bool match_flag_glob(const std::string &flag, const std::string &glob);
 
 } // namespace util
 } // namespace clang_include_graph

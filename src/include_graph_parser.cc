@@ -22,6 +22,7 @@
 #include "include_graph.h"
 #include "util.h"
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -86,9 +87,14 @@ void process_translation_unit(const config_t &config,
 
     for (const auto &flag : config.remove_compile_flag()) {
         args.erase(std::remove_if(args.begin(), args.end(),
-                       [&flag](const auto &arg) { return arg == flag; }),
+                       [&flag](const auto &arg) {
+                           return util::match_flag_glob(arg, flag);
+                       }),
             args.end());
     }
+
+    LOG(trace) << "Parsing " << tu_path << " with the following compile flags: "
+               << boost::algorithm::join(args, " ");
 
     for (const auto &arg : args) {
         args_cstr.emplace_back(arg.c_str());
