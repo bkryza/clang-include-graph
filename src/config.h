@@ -37,12 +37,14 @@ enum class printer_t : std::uint8_t {
     dependants,
     graphviz,
     plantuml,
+    json,
     unknown
 };
 
 class config_t {
 public:
-    void init(boost::program_options::variables_map &vm);
+    void init(boost::program_options::variables_map &vm,
+        const std::string &cli_arguments);
 
     int verbosity() const noexcept;
 
@@ -83,6 +85,8 @@ public:
 
     const std::vector<std::string> &remove_compile_flag() const noexcept;
 
+    const std::string &cli_arguments() const noexcept;
+
     boost::filesystem::path resolve_path(
         const boost::filesystem::path &p) const;
 
@@ -101,6 +105,7 @@ private:
     unsigned jobs_{std::thread::hardware_concurrency()};
     std::vector<std::string> add_compile_flag_;
     std::vector<std::string> remove_compile_flag_;
+    std::string cli_arguments_;
 };
 
 } // namespace clang_include_graph

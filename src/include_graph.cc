@@ -61,6 +61,7 @@ void include_graph_t::init(const config_t &config)
     dependants_of_ = config.dependants_of();
     translation_units_only_ = config.translation_units_only();
     printer_ = config.printer();
+    cli_arguments_ = config.cli_arguments();
 }
 
 void include_graph_t::build_dag()
@@ -112,5 +113,10 @@ const boost::optional<boost::filesystem::path> &
 include_graph_t::dependants_of() const noexcept
 {
     return dependants_of_;
+}
+
+const std::string &include_graph_t::cli_arguments() const noexcept
+{
+    return cli_arguments_;
 }
 } // namespace clang_include_graph

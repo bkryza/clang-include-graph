@@ -30,6 +30,17 @@
 namespace clang_include_graph {
 namespace util {
 
+std::string join_cli_args(int argc, char *argv[])
+{
+    std::string result;
+    for (auto i = 1U; i < argc; ++i) {
+        if (i > 1)
+            result += ' ';
+        result += argv[i];
+    }
+    return result;
+}
+
 boost::filesystem::path to_absolute_path(
     const boost::filesystem::path &relative_path)
 {

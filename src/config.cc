@@ -28,8 +28,11 @@
 
 namespace clang_include_graph {
 
-void config_t::init(boost::program_options::variables_map &vm)
+void config_t::init(
+    boost::program_options::variables_map &vm, const std::string &cli_arguments)
 {
+    cli_arguments_ = cli_arguments;
+
     if (vm.count("verbose") == 1) {
         verbosity_ = vm["verbose"].as<int>();
     }
@@ -138,6 +141,9 @@ void config_t::init(boost::program_options::variables_map &vm)
     else if (vm.count("plantuml") > 0U) {
         printer_ = printer_t::plantuml;
     }
+    else if (vm.count("json") > 0U) {
+        printer_ = printer_t::json;
+    }
 }
 
 int config_t::verbosity() const noexcept { return verbosity_; }
@@ -217,6 +223,11 @@ const std::vector<std::string> &config_t::add_compile_flag() const noexcept
 const std::vector<std::string> &config_t::remove_compile_flag() const noexcept
 {
     return remove_compile_flag_;
+}
+
+const std::string &config_t::cli_arguments() const noexcept
+{
+    return cli_arguments_;
 }
 
 boost::filesystem::path config_t::resolve_path(

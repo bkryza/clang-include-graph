@@ -21,6 +21,7 @@ foreach(TESTCASE IN LISTS TESTCASES)
             Boost::graph
             Boost::program_options
             Boost::unit_test_framework
+            Boost::json
             Boost::log)
 
     add_test(${TESTCASE} ${TESTCASE})

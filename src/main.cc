@@ -21,10 +21,12 @@
 #include "include_graph_cycles_printer.h"
 #include "include_graph_dependants_printer.h"
 #include "include_graph_graphviz_printer.h"
+#include "include_graph_json_printer.h"
 #include "include_graph_parser.h"
 #include "include_graph_plantuml_printer.h"
 #include "include_graph_topological_sort_printer.h"
 #include "include_graph_tree_printer.h"
+#include "util.h"
 
 #include <boost/program_options/detail/parsers.hpp>
 #include <boost/program_options/errors.hpp>
@@ -60,6 +62,7 @@ int main(int argc, char **argv)
     using clang_include_graph::include_graph_cycles_printer_t;
     using clang_include_graph::include_graph_dependants_printer_t;
     using clang_include_graph::include_graph_graphviz_printer_t;
+    using clang_include_graph::include_graph_json_printer_t;
     using clang_include_graph::include_graph_parser_t;
     using clang_include_graph::include_graph_plantuml_printer_t;
     using clang_include_graph::include_graph_t;
@@ -103,6 +106,15 @@ int main(int argc, char **argv)
         include_graph.build_dag();
 
         include_graph_tree_printer_t printer{include_graph, *path_printer};
+
+        output << printer;
+    }
+    if (config.printer() == printer_t::json) {
+        LOG(info) << "Printing include graph in Json Graph format\n";
+
+        include_graph.build_dag();
+
+        include_graph_json_printer_t printer{include_graph, *path_printer};
 
         output << printer;
     }
@@ -172,7 +184,7 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "Set log verbosity level")
         ("log-file", po::value<std::string>(),
             "Log to specified file instead of console")
-        ("jobs,j", po::value<unsigned>(),
+        ("jobs,J", po::value<unsigned>(),
             "Number of threads used to parse translation units")
         ("compilation-database-dir,d", po::value<std::string>(),
             "Path to compilation database directory (default: $PWD)")
@@ -195,6 +207,7 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "Print output includes and translation units in topological"
             "sort order")
         ("tree,t", "Print include graph in tree form")
+        ("json,j", "Print include graph in Json Graph format")
         ("reverse-tree,T", "Print reverse include graph in tree form")
         ("dependants-of,e", po::value<std::string>(),
             "Print all files that depend on a specific header")
@@ -223,7 +236,7 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         exit(0);
     }
 
-    config.init(vm);
+    config.init(vm, clang_include_graph::util::join_cli_args(argc, argv));
 
     clang_include_graph::util::setup_logging(
         config.verbosity(), config.log_file());

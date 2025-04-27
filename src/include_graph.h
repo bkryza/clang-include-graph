@@ -69,6 +69,8 @@ public:
     const boost::optional<boost::filesystem::path> &
     dependants_of() const noexcept;
 
+    const std::string &cli_arguments() const noexcept;
+
 private:
     graph_t graph_;
     boost::optional<graph_t> dag_;
@@ -76,6 +78,8 @@ private:
     bool relative_only_{false};
     boost::optional<boost::filesystem::path> dependants_of_;
     bool translation_units_only_{false};
+    std::string cli_arguments_;
+
     printer_t printer_{printer_t::unknown};
 
     std::mutex mutex_;
@@ -114,8 +118,8 @@ private:
     include_graph_t &graph_;
     include_graph_t::graph_t &dag_;
 };
-} // namespace detail
 
+} // namespace detail
 } // namespace clang_include_graph
 
 #endif // CLANG_INCLUDE_GRAPH_INCLUDE_GRAPH_H
