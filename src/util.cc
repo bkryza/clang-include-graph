@@ -142,7 +142,7 @@ std::regex glob_to_regex(const std::string &glob_pattern)
 
     regex_pattern += '^'; // Match start of string
 
-    for (char c : glob_pattern) {
+    for (const auto c : glob_pattern) {
         switch (c) {
         case '*':
             regex_pattern += ".*";

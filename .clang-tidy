@@ -25,6 +25,7 @@ Checks: >-
   -readability-identifier-length,
   -readability-function-cognitive-complexity,
   -readability-braces-around-statements,
+  -readability-suspicious-call-argument,
   -zircon-*
 WarningsAsErrors: '*'
 HeaderFilterRegex: 'src'
