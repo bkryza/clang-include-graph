@@ -135,5 +135,54 @@ void setup_logging(
               << '\n';
 }
 
+std::regex glob_to_regex(const std::string &glob_pattern)
+{
+    std::string regex_pattern;
+    regex_pattern.reserve(glob_pattern.size() * 2);
+
+    regex_pattern += '^'; // Match start of string
+
+    for (const auto c : glob_pattern) {
+        switch (c) {
+        case '*':
+            regex_pattern += ".*";
+            break;
+        case '?':
+            regex_pattern += ".";
+            break;
+        case '.':
+        case '+':
+        case '(':
+        case ')':
+        case '{':
+        case '}':
+        case '[':
+        case ']':
+        case '^':
+        case '$':
+        case '|':
+        case '\\':
+            // Escape special regex characters
+            regex_pattern += '\\';
+            regex_pattern += c;
+            break;
+        default:
+            regex_pattern += c;
+        }
+    }
+
+    regex_pattern += '$';
+
+    return std::regex(regex_pattern);
+}
+
+bool match_flag_glob(const std::string &flag, const std::string &glob)
+{
+    std::cmatch m;
+    std::regex_match(flag.c_str(), m, util::glob_to_regex(glob));
+
+    return m.size() == 1;
+}
+
 } // namespace util
 } // namespace clang_include_graph

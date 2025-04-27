@@ -4,7 +4,8 @@ list(APPEND TESTCASES
         test_tree_printer
         test_dependants_printer
         test_graphviz_printer
-        test_plantuml_printer)
+        test_plantuml_printer
+        test_util)
 
 foreach(TESTCASE IN LISTS TESTCASES)
     add_executable(

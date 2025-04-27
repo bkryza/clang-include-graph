@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   build-macos:
     name: Build and test on macos
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout
@@ -18,7 +18,7 @@ jobs:
         run: brew update && brew install llvm@19 ninja boost cmake ccache
 
       - name: Build and test
-        run: CC=/opt/homebrew/opt/llvm/bin/clang CXX=/opt/homebrew/opt/llvm/bin/clang++ CMAKE_PREFIX=/opt/homebrew/opt/llvm/lib/cmake/llvm CMAKE_EXE_LINKER_FLAGS="-L/opt/homebrew/opt/llvm/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++" make test
+        run: CC=/opt/homebrew/opt/llvm@19/bin/clang CXX=/opt/homebrew/opt/llvm@19/bin/clang++ CMAKE_PREFIX=/opt/homebrew/opt/llvm@19/lib/cmake/llvm LLVM_CONFIG_PATH=/opt/homebrew/opt/llvm@19/bin/llvm-config CMAKE_EXE_LINKER_FLAGS="-L/opt/homebrew/opt/llvm@19/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm@19/lib/c++" make test
 
       - name: Print build version
         run: debug/clang-include-graph --version

@@ -175,11 +175,17 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         ("jobs,j", po::value<unsigned>(),
             "Number of threads used to parse translation units")
         ("compilation-database-dir,d", po::value<std::string>(),
-            "Path to compilation database directory (default $PWD)")
-        ("translation-unit,u", po::value<std::string>(),
-            "Process a single source file from compilation database")
+            "Path to compilation database directory (default: $PWD)")
+        ("add-compile-flag", po::value<std::vector<std::string>>(),
+             "Add a compile flag to the compilation database")
+        ("remove-compile-flag", po::value<std::vector<std::string>>(),
+             "Remove a compile flag from the compilation database. "
+             "Can contain a '*' to match multiple flags")
+        ("translation-unit,u", po::value<std::vector<boost::filesystem::path>>(),
+            "Path or glob patterns to match translation units for processing "
+            "(relative to $PWD). ")
         ("relative-to,r", po::value<std::string>(),
-            "Generate paths relative to path (except for system headers)")
+            "Print paths relative to path (except for system headers)")
         ("names-only,n", "Print only file names")
         ("relative-only,l",
             "Include only files relative to 'relative-to' directory")

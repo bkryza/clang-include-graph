@@ -23,6 +23,7 @@
 #include "include_graph.h"
 
 #include <boost/asio/thread_pool.hpp>
+#include <clang-c/CXCompilationDatabase.h>
 #include <clang-c/Index.h>
 
 #include <iostream>
@@ -31,6 +32,11 @@
 #include <vector>
 
 namespace clang_include_graph {
+
+void process_translation_unit(include_graph_t &include_graph,
+    CXCompileCommand command, const boost::filesystem::path &current_file,
+    const boost::filesystem::path &tu_path, std::string &include_path_str,
+    CXIndex &index);
 
 class include_graph_parser_t {
 public:

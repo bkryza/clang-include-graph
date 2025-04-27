@@ -25,6 +25,8 @@ coverage*.info
 packaging/_BUILD
 packaging/conda/meta.yaml
 
+compile_flags.txt
+
 # CLion
 
 .idea/

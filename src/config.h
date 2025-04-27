@@ -54,7 +54,7 @@ public:
     const boost::optional<boost::filesystem::path> &
     output_file() const noexcept;
 
-    const boost::optional<boost::filesystem::path> &
+    const std::vector<boost::filesystem::path> &
     translation_unit() const noexcept;
 
     const boost::optional<boost::filesystem::path> &
@@ -79,6 +79,10 @@ public:
     unsigned jobs() const noexcept;
     void jobs(unsigned j) noexcept;
 
+    const std::vector<std::string> &add_compile_flag() const noexcept;
+
+    const std::vector<std::string> &remove_compile_flag() const noexcept;
+
     boost::filesystem::path resolve_path(
         const boost::filesystem::path &p) const;
 
@@ -87,7 +91,7 @@ private:
     boost::optional<boost::filesystem::path> log_file_;
     boost::optional<boost::filesystem::path> compilation_database_directory_;
     boost::optional<boost::filesystem::path> output_file_;
-    boost::optional<boost::filesystem::path> translation_unit_;
+    std::vector<boost::filesystem::path> translation_unit_;
     boost::optional<boost::filesystem::path> relative_to_;
     boost::optional<boost::filesystem::path> dependants_of_;
     bool filenames_only_{false};
@@ -95,6 +99,8 @@ private:
     bool translation_units_only_{false};
     printer_t printer_{printer_t::topological_sort};
     unsigned jobs_{std::thread::hardware_concurrency()};
+    std::vector<std::string> add_compile_flag_;
+    std::vector<std::string> remove_compile_flag_;
 };
 
 } // namespace clang_include_graph
