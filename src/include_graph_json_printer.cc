@@ -37,25 +37,23 @@ include_graph_json_printer_t::include_graph_json_printer_t(
 
 void include_graph_json_printer_t::operator()(std::ostream &os) const
 {
-    using namespace boost::json;
-
     assert(include_graph().dag());
 
     auto begin = boost::vertices(include_graph().dag().value().graph()).first;
     auto end = boost::vertices(include_graph().dag().value().graph()).second;
 
-    object g;
+    boost::json::object g;
     g["directed"] = true;
     g["type"] = "include_graph";
 
     if (include_graph().title())
         g["label"] = *include_graph().title();
 
-    object meta;
+    boost::json::object meta;
     meta["cli_arguments"] = include_graph().cli_arguments();
     g["metadata"] = std::move(meta);
 
-    object nodes;
+    boost::json::object nodes;
 
     std::for_each(
         begin, end, [&](const include_graph_t::graph_t::vertex_descriptor &v) {
@@ -63,9 +61,9 @@ void include_graph_json_printer_t::operator()(std::ostream &os) const
             const auto &vertex = graph[v];
 
             const auto file_path = path_printer().print(vertex.file);
-            object node;
+            boost::json::object node;
             node["label"] = file_path;
-            node["metadata"] = object{};
+            node["metadata"] = boost::json::object{};
 
             if (include_graph().numeric_ids())
                 nodes[std::to_string(v)] = std::move(node);
@@ -75,7 +73,7 @@ void include_graph_json_printer_t::operator()(std::ostream &os) const
 
     g["nodes"] = std::move(nodes);
 
-    array edges;
+    boost::json::array edges;
 
     auto edges_begin = boost::edges(include_graph().graph()).first;
     auto edges_end = boost::edges(include_graph().graph()).second;
@@ -89,7 +87,7 @@ void include_graph_json_printer_t::operator()(std::ostream &os) const
             const include_graph_t::graph_t::vertex_descriptor &to =
                 boost::target(e, graph);
 
-            object edge;
+            boost::json::object edge;
             if (include_graph().numeric_ids()) {
                 edge["target"] = std::to_string(to);
                 edge["source"] = std::to_string(from);
