@@ -4,6 +4,7 @@ list(APPEND TESTCASES
         test_tree_printer
         test_dependants_printer
         test_graphviz_printer
+        test_graphml_printer
         test_plantuml_printer
         test_json_printer
         test_util)
