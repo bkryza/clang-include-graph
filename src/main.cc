@@ -20,6 +20,7 @@
 #include "include_graph.h"
 #include "include_graph_cycles_printer.h"
 #include "include_graph_dependants_printer.h"
+#include "include_graph_graphml_printer.h"
 #include "include_graph_graphviz_printer.h"
 #include "include_graph_json_printer.h"
 #include "include_graph_parser.h"
@@ -61,6 +62,7 @@ int main(int argc, char **argv)
     using clang_include_graph::config_t;
     using clang_include_graph::include_graph_cycles_printer_t;
     using clang_include_graph::include_graph_dependants_printer_t;
+    using clang_include_graph::include_graph_graphml_printer_t;
     using clang_include_graph::include_graph_graphviz_printer_t;
     using clang_include_graph::include_graph_json_printer_t;
     using clang_include_graph::include_graph_parser_t;
@@ -153,6 +155,13 @@ int main(int argc, char **argv)
 
         output << printer;
     }
+    else if (config.printer() == printer_t::graphml) {
+        LOG(info) << "Printing include graph in GraphML format\n";
+
+        include_graph_graphml_printer_t printer{include_graph, *path_printer};
+
+        output << printer;
+    }
     else if (config.printer() == printer_t::plantuml) {
         LOG(info) << "Printing include graph in PlantUML format\n";
 
@@ -217,8 +226,8 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         ("json,j", "Print include graph in Json Graph format")
         ("cycles,c", "Print include graph cycles, if any")
         ("graphviz,g", "Print include graph in GraphViz format")
+        ("graphml,G", "Print include graph in GraphML format")
         ("plantuml,p", "Print include graph in PlantUML format");
-
     // clang-format on
 
     try {

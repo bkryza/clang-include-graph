@@ -36,6 +36,7 @@ enum class printer_t : std::uint8_t {
     cycles,
     dependants,
     graphviz,
+    graphml,
     plantuml,
     json,
     unknown

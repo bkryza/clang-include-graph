@@ -140,6 +140,9 @@ void config_t::init(
     else if (vm.count("graphviz") > 0U) {
         printer_ = printer_t::graphviz;
     }
+    else if (vm.count("graphml") > 0U) {
+        printer_ = printer_t::graphml;
+    }
     else if (vm.count("topological-sort") > 0U) {
         printer_ = printer_t::topological_sort;
     }
