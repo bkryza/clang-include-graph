@@ -34,40 +34,7 @@ include_graph_json_printer_t::include_graph_json_printer_t(
     : include_graph_printer_t{graph, pp}
 {
 }
-/*
-{
-    "graph": {
-        "id": "Usual Suspects",
-        "type": "movie characters",
-        "label": "Usual Suspects",
-        "nodes": {
-            "Roger Kint": {
-                "label": "Roger Kint",
-                "metadata": {
-                    "nickname": "Verbal",
-                    "actor": "Kevin Spacey"
-                }
-            },
-            "Keyser Söze": {
-                "label": "Keyser Söze",
-                "metadata": {
-                    "actor": "Kevin Spacey"
-                }
-            }
-        },
-        "edges": [
-            {
-                "source": "Roger Kint",
-                "target": "Keyser Söze",
-                "relation": "is"
-            }
-        ],
-        "metadata": {
-            "release year": "1995"
-        }
-    }
-}
- */
+
 void include_graph_json_printer_t::operator()(std::ostream &os) const
 {
     using namespace boost::json;
@@ -78,10 +45,8 @@ void include_graph_json_printer_t::operator()(std::ostream &os) const
     auto end = boost::vertices(include_graph().dag().value().graph()).second;
 
     object g;
-    g["id"] = "";
     g["directed"] = true;
     g["type"] = "include_graph";
-    g["label"] = "";
 
     object meta;
     meta["cli_arguments"] = include_graph().cli_arguments();
@@ -98,7 +63,11 @@ void include_graph_json_printer_t::operator()(std::ostream &os) const
             object node;
             node["label"] = file_path;
             node["metadata"] = object{};
-            nodes[file_path] = std::move(node);
+
+            if (include_graph().numeric_ids())
+                nodes[std::to_string(v)] = std::move(node);
+            else
+                nodes[file_path] = std::move(node);
         });
 
     g["nodes"] = std::move(nodes);
@@ -117,15 +86,22 @@ void include_graph_json_printer_t::operator()(std::ostream &os) const
             const include_graph_t::graph_t::vertex_descriptor &to =
                 boost::target(e, graph);
 
-            const auto &from_vertex = graph[from];
-            const auto from_file_path = path_printer().print(from_vertex.file);
-
-            const auto &to_vertex = graph[to];
-            const auto to_file_path = path_printer().print(to_vertex.file);
-
             object edge;
-            edge["target"] = to_file_path;
-            edge["source"] = from_file_path;
+            if (include_graph().numeric_ids()) {
+                edge["target"] = std::to_string(to);
+                edge["source"] = std::to_string(from);
+            }
+            else {
+                const auto &from_vertex = graph[from];
+                const auto from_file_path =
+                    path_printer().print(from_vertex.file);
+
+                const auto &to_vertex = graph[to];
+                const auto to_file_path = path_printer().print(to_vertex.file);
+
+                edge["target"] = to_file_path;
+                edge["source"] = from_file_path;
+            }
             edge["relation"] = "system";
 
             edges.emplace_back(std::move(edge));

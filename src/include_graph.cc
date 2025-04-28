@@ -62,6 +62,7 @@ void include_graph_t::init(const config_t &config)
     translation_units_only_ = config.translation_units_only();
     printer_ = config.printer();
     cli_arguments_ = config.cli_arguments();
+    numeric_ids_ = config.json_printer_opts().numeric_ids;
 }
 
 void include_graph_t::build_dag()
@@ -119,4 +120,7 @@ const std::string &include_graph_t::cli_arguments() const noexcept
 {
     return cli_arguments_;
 }
+
+bool include_graph_t::numeric_ids() const noexcept { return numeric_ids_; }
+
 } // namespace clang_include_graph

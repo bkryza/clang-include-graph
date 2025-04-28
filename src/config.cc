@@ -123,6 +123,10 @@ void config_t::init(
         translation_units_only_ = true;
     }
 
+    if (vm.count("json-numeric-ids") == 1) {
+        json_printer_opts_.numeric_ids = true;
+    }
+
     if (vm.count("tree") > 0U) {
         printer_ = printer_t::tree;
     }
@@ -228,6 +232,16 @@ const std::vector<std::string> &config_t::remove_compile_flag() const noexcept
 const std::string &config_t::cli_arguments() const noexcept
 {
     return cli_arguments_;
+}
+
+const json_printer_opts_t &config_t::json_printer_opts() const noexcept
+{
+    return json_printer_opts_;
+}
+
+json_printer_opts_t &config_t::json_printer_opts() noexcept
+{
+    return json_printer_opts_;
 }
 
 boost::filesystem::path config_t::resolve_path(

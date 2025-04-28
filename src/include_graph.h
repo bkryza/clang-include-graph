@@ -71,6 +71,8 @@ public:
 
     const std::string &cli_arguments() const noexcept;
 
+    bool numeric_ids() const noexcept;
+
 private:
     graph_t graph_;
     boost::optional<graph_t> dag_;
@@ -79,6 +81,7 @@ private:
     boost::optional<boost::filesystem::path> dependants_of_;
     bool translation_units_only_{false};
     std::string cli_arguments_;
+    bool numeric_ids_{false};
 
     printer_t printer_{printer_t::unknown};
 

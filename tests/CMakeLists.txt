@@ -5,6 +5,7 @@ list(APPEND TESTCASES
         test_dependants_printer
         test_graphviz_printer
         test_plantuml_printer
+        test_json_printer
         test_util)
 
 foreach(TESTCASE IN LISTS TESTCASES)

@@ -33,7 +33,7 @@ namespace util {
 std::string join_cli_args(int argc, char *argv[])
 {
     std::string result;
-    for (auto i = 1U; i < argc; ++i) {
+    for (auto i = 1; i < argc; ++i) {
         if (i > 1)
             result += ' ';
         result += argv[i];

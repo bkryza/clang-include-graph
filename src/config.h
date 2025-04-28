@@ -41,6 +41,10 @@ enum class printer_t : std::uint8_t {
     unknown
 };
 
+struct json_printer_opts_t {
+    bool numeric_ids{false};
+};
+
 class config_t {
 public:
     void init(boost::program_options::variables_map &vm,
@@ -90,6 +94,10 @@ public:
     boost::filesystem::path resolve_path(
         const boost::filesystem::path &p) const;
 
+    const json_printer_opts_t &json_printer_opts() const noexcept;
+
+    json_printer_opts_t &json_printer_opts() noexcept;
+
 private:
     int verbosity_{0};
     boost::optional<boost::filesystem::path> log_file_;
@@ -101,6 +109,7 @@ private:
     bool filenames_only_{false};
     bool relative_only_{false};
     bool translation_units_only_{false};
+    json_printer_opts_t json_printer_opts_;
     printer_t printer_{printer_t::topological_sort};
     unsigned jobs_{std::thread::hardware_concurrency()};
     std::vector<std::string> add_compile_flag_;

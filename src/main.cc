@@ -109,8 +109,8 @@ int main(int argc, char **argv)
 
         output << printer;
     }
-    if (config.printer() == printer_t::json) {
-        LOG(info) << "Printing include graph in Json Graph format\n";
+    else if (config.printer() == printer_t::json) {
+        LOG(info) << "Printing include graph in JSON Graph Format\n";
 
         include_graph.build_dag();
 
@@ -208,6 +208,7 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "sort order")
         ("tree,t", "Print include graph in tree form")
         ("json,j", "Print include graph in Json Graph format")
+        ("json-numeric-ids", "Use numeric ids for nodes instead of paths")
         ("reverse-tree,T", "Print reverse include graph in tree form")
         ("dependants-of,e", po::value<std::string>(),
             "Print all files that depend on a specific header")
