@@ -28,8 +28,11 @@
 
 namespace clang_include_graph {
 
-void config_t::init(boost::program_options::variables_map &vm)
+void config_t::init(
+    boost::program_options::variables_map &vm, const std::string &cli_arguments)
 {
+    cli_arguments_ = cli_arguments;
+
     if (vm.count("verbose") == 1) {
         verbosity_ = vm["verbose"].as<int>();
     }
@@ -120,6 +123,14 @@ void config_t::init(boost::program_options::variables_map &vm)
         translation_units_only_ = true;
     }
 
+    if (vm.count("title") == 1) {
+        title_ = vm["title"].as<std::string>();
+    }
+
+    if (vm.count("json-numeric-ids") == 1) {
+        json_printer_opts_.numeric_ids = true;
+    }
+
     if (vm.count("tree") > 0U) {
         printer_ = printer_t::tree;
     }
@@ -137,6 +148,9 @@ void config_t::init(boost::program_options::variables_map &vm)
     }
     else if (vm.count("plantuml") > 0U) {
         printer_ = printer_t::plantuml;
+    }
+    else if (vm.count("json") > 0U) {
+        printer_ = printer_t::json;
     }
 }
 
@@ -201,6 +215,11 @@ void config_t::translation_units_only(bool tuo) noexcept
     translation_units_only_ = tuo;
 }
 
+const boost::optional<std::string> &config_t::title() const noexcept
+{
+    return title_;
+}
+
 printer_t config_t::printer() const noexcept { return printer_; }
 
 void config_t::printer(printer_t printer) noexcept { printer_ = printer; }
@@ -217,6 +236,21 @@ const std::vector<std::string> &config_t::add_compile_flag() const noexcept
 const std::vector<std::string> &config_t::remove_compile_flag() const noexcept
 {
     return remove_compile_flag_;
+}
+
+const std::string &config_t::cli_arguments() const noexcept
+{
+    return cli_arguments_;
+}
+
+const json_printer_opts_t &config_t::json_printer_opts() const noexcept
+{
+    return json_printer_opts_;
+}
+
+json_printer_opts_t &config_t::json_printer_opts() noexcept
+{
+    return json_printer_opts_;
 }
 
 boost::filesystem::path config_t::resolve_path(

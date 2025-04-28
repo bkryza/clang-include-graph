@@ -49,6 +49,8 @@ namespace sinks = boost::log::sinks;
 namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
 
+std::string join_cli_args(int argc, char **argv);
+
 boost::filesystem::path to_absolute_path(
     const boost::filesystem::path &relative_path);
 

@@ -38,7 +38,7 @@ include_directories()
 set(Boost_USE_STATIC_LIBS ${BOOST_STATIC})
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost REQUIRED COMPONENTS graph program_options filesystem log unit_test_framework)
+find_package(Boost REQUIRED COMPONENTS graph program_options filesystem log json unit_test_framework)
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(THIRDPARTY_HEADERS_DIR ${PROJECT_SOURCE_DIR}/thirdparty/)
@@ -54,7 +54,9 @@ add_library(lib-clang-include-graph OBJECT ${SOURCES})
 
 add_executable(clang-include-graph $<TARGET_OBJECTS:lib-clang-include-graph> src/main.cc)
 
-target_link_libraries(clang-include-graph ${LIBCLANG_LIBRARIES} Boost::filesystem Boost::graph Boost::program_options Boost::log)
+target_link_libraries(clang-include-graph ${LIBCLANG_LIBRARIES}
+        Boost::filesystem Boost::graph Boost::program_options Boost::json
+        Boost::log)
 
 find_program(
         CLANG_TIDY

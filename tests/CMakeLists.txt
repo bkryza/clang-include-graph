@@ -5,6 +5,7 @@ list(APPEND TESTCASES
         test_dependants_printer
         test_graphviz_printer
         test_plantuml_printer
+        test_json_printer
         test_util)
 
 foreach(TESTCASE IN LISTS TESTCASES)
@@ -21,6 +22,7 @@ foreach(TESTCASE IN LISTS TESTCASES)
             Boost::graph
             Boost::program_options
             Boost::unit_test_framework
+            Boost::json
             Boost::log)
 
     add_test(${TESTCASE} ${TESTCASE})

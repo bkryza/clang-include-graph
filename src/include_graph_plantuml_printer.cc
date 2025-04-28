@@ -30,6 +30,10 @@ void include_graph_plantuml_printer_t::operator()(std::ostream &os) const
 {
     os << "@startuml" << '\n';
 
+    if (include_graph().title()) {
+        os << "title " << *include_graph().title() << '\n';
+    }
+
     // First generate vertices with PlantUML aliases
     auto vertex_begin = boost::vertices(include_graph().graph()).first;
     const auto vertex_end = boost::vertices(include_graph().graph()).second;
