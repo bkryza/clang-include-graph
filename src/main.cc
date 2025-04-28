@@ -203,21 +203,22 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "Include only files relative to 'relative-to' directory")
         ("output,o", po::value<std::string>(),
             "Write the output to a specified file instead of stdout")
+        ("json-numeric-ids", "Use numeric ids for nodes instead of paths")
+        ("dependants-of,e", po::value<std::string>(),
+            "Print all files that depend on a specific header")
+        ("translation-units-only", "Print only translation units")
+        ("title", po::value<std::string>(),
+            "Graph title that can be added ")
         ("topological-sort,s",
             "Print output includes and translation units in topological"
             "sort order")
         ("tree,t", "Print include graph in tree form")
-        ("json,j", "Print include graph in Json Graph format")
-        ("json-numeric-ids", "Use numeric ids for nodes instead of paths")
         ("reverse-tree,T", "Print reverse include graph in tree form")
-        ("dependants-of,e", po::value<std::string>(),
-            "Print all files that depend on a specific header")
-        ("translation-units-only", "Print only translation units")
+        ("json,j", "Print include graph in Json Graph format")
         ("cycles,c", "Print include graph cycles, if any")
         ("graphviz,g", "Print include graph in GraphViz format")
-        ("plantuml,p", "Print include graph in PlantUML format")
-        ("title", po::value<std::string>(),
-            "Graph title that can be added ");
+        ("plantuml,p", "Print include graph in PlantUML format");
+
     // clang-format on
 
     try {

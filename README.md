@@ -72,28 +72,45 @@ existing C++ build systems.
 clang-include-graph options:
   -h [ --help ]                         Print help message and exit
   -V [ --version ]                      Print program version and exit
-  -v [ --verbose ]                      Print verbose information during 
-                                        processing
+  -v [ --verbose ] arg                  Set log verbosity level
+  --log-file arg                        Log to specified file instead of 
+                                        console
+  -J [ --jobs ] arg                     Number of threads used to parse 
+                                        translation units
   -d [ --compilation-database-dir ] arg Path to compilation database directory 
-                                        (default $PWD)
-  -u [ --translation-unit ] arg         Process a single source file from 
-                                        compilation database
-  -r [ --relative-to ] arg              Generate paths relative to path (except
+                                        (default: $PWD)
+  --add-compile-flag arg                Add a compile flag to the compilation 
+                                        database
+  --remove-compile-flag arg             Remove a compile flag from the 
+                                        compilation database. Can contain a '*'
+                                        to match multiple flags
+  -u [ --translation-unit ] arg         Path or glob patterns to match 
+                                        translation units for processing 
+                                        (relative to $PWD). 
+  -r [ --relative-to ] arg              Print paths relative to path (except 
                                         for system headers)
   -n [ --names-only ]                   Print only file names
   -l [ --relative-only ]                Include only files relative to 
                                         'relative-to' directory
+  -o [ --output ] arg                   Write the output to a specified file 
+                                        instead of stdout
+  --json-numeric-ids                    Use numeric ids for nodes instead of 
+                                        paths
+  -e [ --dependants-of ] arg            Print all files that depend on a 
+                                        specific header
+  --translation-units-only              Print only translation units
+  --title arg                           Graph title that can be added 
   -s [ --topological-sort ]             Print output includes and translation 
                                         units in topologicalsort order
   -t [ --tree ]                         Print include graph in tree form
-  -T [ --reverse-tree ]                 Print reverse include graph in tree
+  -T [ --reverse-tree ]                 Print reverse include graph in tree 
                                         form
-  -e [ --dependants-of ] arg            Print all files that depend on a
-                                        specific header
-  --translation-units-only              Print only translation units
+  -j [ --json ]                         Print include graph in Json Graph 
+                                        format
   -c [ --cycles ]                       Print include graph cycles, if any
   -g [ --graphviz ]                     Print include graph in GraphViz format
   -p [ --plantuml ]                     Print include graph in PlantUML format
+
 
 ```
 
