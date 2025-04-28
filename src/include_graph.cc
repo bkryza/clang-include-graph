@@ -63,6 +63,7 @@ void include_graph_t::init(const config_t &config)
     printer_ = config.printer();
     cli_arguments_ = config.cli_arguments();
     numeric_ids_ = config.json_printer_opts().numeric_ids;
+    title_ = config.title();
 }
 
 void include_graph_t::build_dag()
@@ -123,4 +124,8 @@ const std::string &include_graph_t::cli_arguments() const noexcept
 
 bool include_graph_t::numeric_ids() const noexcept { return numeric_ids_; }
 
+const boost::optional<std::string> &include_graph_t::title() const noexcept
+{
+    return title_;
+}
 } // namespace clang_include_graph

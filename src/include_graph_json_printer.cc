@@ -48,6 +48,9 @@ void include_graph_json_printer_t::operator()(std::ostream &os) const
     g["directed"] = true;
     g["type"] = "include_graph";
 
+    if (include_graph().title())
+        g["label"] = *include_graph().title();
+
     object meta;
     meta["cli_arguments"] = include_graph().cli_arguments();
     g["metadata"] = std::move(meta);

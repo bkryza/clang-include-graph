@@ -215,7 +215,9 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         ("translation-units-only", "Print only translation units")
         ("cycles,c", "Print include graph cycles, if any")
         ("graphviz,g", "Print include graph in GraphViz format")
-        ("plantuml,p", "Print include graph in PlantUML format");
+        ("plantuml,p", "Print include graph in PlantUML format")
+        ("title", po::value<std::string>(),
+            "Graph title that can be added ");
     // clang-format on
 
     try {

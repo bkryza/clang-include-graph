@@ -123,6 +123,10 @@ void config_t::init(
         translation_units_only_ = true;
     }
 
+    if (vm.count("title") == 1) {
+        title_ = vm["title"].as<std::string>();
+    }
+
     if (vm.count("json-numeric-ids") == 1) {
         json_printer_opts_.numeric_ids = true;
     }
@@ -209,6 +213,11 @@ bool config_t::translation_units_only() const noexcept
 void config_t::translation_units_only(bool tuo) noexcept
 {
     translation_units_only_ = tuo;
+}
+
+const boost::optional<std::string> &config_t::title() const noexcept
+{
+    return title_;
 }
 
 printer_t config_t::printer() const noexcept { return printer_; }

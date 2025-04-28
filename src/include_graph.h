@@ -73,6 +73,8 @@ public:
 
     bool numeric_ids() const noexcept;
 
+    const boost::optional<std::string> &title() const noexcept;
+
 private:
     graph_t graph_;
     boost::optional<graph_t> dag_;
@@ -82,6 +84,7 @@ private:
     bool translation_units_only_{false};
     std::string cli_arguments_;
     bool numeric_ids_{false};
+    boost::optional<std::string> title_;
 
     printer_t printer_{printer_t::unknown};
 

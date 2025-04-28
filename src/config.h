@@ -79,6 +79,8 @@ public:
     bool translation_units_only() const noexcept;
     void translation_units_only(bool tuo) noexcept;
 
+    const boost::optional<std::string> &title() const noexcept;
+
     printer_t printer() const noexcept;
     void printer(printer_t printer) noexcept;
 
@@ -115,6 +117,7 @@ private:
     std::vector<std::string> add_compile_flag_;
     std::vector<std::string> remove_compile_flag_;
     std::string cli_arguments_;
+    boost::optional<std::string> title_;
 };
 
 } // namespace clang_include_graph
