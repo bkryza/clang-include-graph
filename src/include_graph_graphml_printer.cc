@@ -21,6 +21,7 @@
 #include "path_printer.h"
 
 #include <boost/graph/graphml.hpp>
+#include <boost/property_map/transform_value_property_map.hpp>
 
 #include <ostream>
 
