@@ -28,7 +28,7 @@ namespace clang_include_graph {
 
 void include_graph_graphml_printer_t::operator()(std::ostream &os) const
 {
-    auto &printer = path_printer();
+    const auto &printer = path_printer();
 
     boost::dynamic_properties dp;
 

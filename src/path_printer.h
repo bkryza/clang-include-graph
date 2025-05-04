@@ -32,7 +32,7 @@ public:
     path_printer_t() = default;
 
     explicit path_printer_t(config_t config)
-        : config_{config}
+        : config_{std::move(config)}
     {
     }
 
@@ -49,15 +49,17 @@ public:
 
     static std::unique_ptr<path_printer_t> from_config(const config_t &config);
 
-protected:
+    const config_t &config() { return config_; }
+
+private:
     config_t config_;
 };
 
 class path_relative_printer_t final : public path_printer_t {
 public:
     explicit path_relative_printer_t(config_t config)
-        : path_printer_t(config)
-        , relative_to_{std::move(*config.relative_to())}
+        : path_printer_t{std::move(config)}
+        , relative_to_{*this->config().relative_to()}
     {
     }
 

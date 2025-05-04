@@ -129,9 +129,9 @@ void process_translation_unit(const config_t &config,
 
 bool is_system_header(CXCursor cursor)
 {
-    auto tu = clang_Cursor_getTranslationUnit(cursor);
+    auto *tu = clang_Cursor_getTranslationUnit(cursor);
 
-    CXSourceRange include_range = clang_getCursorExtent(cursor);
+    const CXSourceRange include_range = clang_getCursorExtent(cursor);
 
     CXToken *tokens = nullptr;
     unsigned num_tokens = 0;
@@ -139,8 +139,8 @@ bool is_system_header(CXCursor cursor)
 
     bool is_system = false;
     for (unsigned i = 0; i < num_tokens; ++i) {
-        CXString spelling = clang_getTokenSpelling(tu, tokens[i]);
-        std::string tok = clang_getCString(spelling);
+        const CXString spelling = clang_getTokenSpelling(tu, tokens[i]);
+        const std::string tok = clang_getCString(spelling);
         clang_disposeString(spelling);
 
         if (tok == "<") {
@@ -155,14 +155,14 @@ bool is_system_header(CXCursor cursor)
 
 std::string get_raw_include_text(CXCursor cursor)
 {
-    CXString cx_spelling = clang_getCursorSpelling(cursor);
+    const CXString cx_spelling = clang_getCursorSpelling(cursor);
     const char *cstr = clang_getCString(cx_spelling);
-    std::string spelling = cstr ? cstr : "";
+    std::string spelling = (cstr != nullptr) ? cstr : "";
     clang_disposeString(cx_spelling);
 
     if (spelling.size() >= 2) {
-        char first = spelling.front();
-        char last = spelling.back();
+        const char first = spelling.front();
+        const char last = spelling.back();
         if ((first == '<' && last == '>') || (first == '"' && last == '"')) {
             return spelling.substr(1, spelling.size() - 2);
         }
@@ -400,10 +400,11 @@ enum CXChildVisitResult inclusion_cursor_visitor(
 
         const auto include_spelling = get_raw_include_text(cursor);
 
-        boost::filesystem::path included_path = boost::filesystem::canonical(
-            boost::filesystem::path(included_file_str));
+        const boost::filesystem::path included_path =
+            boost::filesystem::canonical(
+                boost::filesystem::path(included_file_str));
 
-        boost::filesystem::path from_path = boost::filesystem::canonical(
+        const boost::filesystem::path from_path = boost::filesystem::canonical(
             boost::filesystem::path(source_file_str));
 
         if (!relative_only ||
