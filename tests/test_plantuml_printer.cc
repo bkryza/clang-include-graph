@@ -31,6 +31,7 @@ BOOST_AUTO_TEST_CASE(test_simple_plantuml)
     include_graph_t graph;
     graph.add_edge("include1.h", "main.cc", true);
     graph.add_edge("include2.h", "main.cc", true);
+    graph.add_edge("string", "main.cc", true, true);
     graph.add_edge("include3.h", "include1.h");
 
     path_printer_t pp;
@@ -44,10 +45,12 @@ BOOST_AUTO_TEST_CASE(test_simple_plantuml)
 file "include1.h" as F_0
 file "main.cc" as F_1
 file "include2.h" as F_2
-file "include3.h" as F_3
-F_1 -->  F_0
-F_1 -->  F_2
-F_0 -->  F_3
+file "string" as F_3
+file "include3.h" as F_4
+F_0 <--  F_1
+F_2 <--  F_1
+F_3 <..  F_1
+F_4 <--  F_0
 @enduml
 )";
 

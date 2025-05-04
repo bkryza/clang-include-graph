@@ -31,6 +31,7 @@ BOOST_AUTO_TEST_CASE(test_simple_graphviz)
     include_graph_t graph;
     graph.add_edge("include1.h", "main.cc", true);
     graph.add_edge("include2.h", "main.cc", true);
+    graph.add_edge("string", "main.cc", true, true);
     graph.add_edge("include3.h", "include1.h");
 
     path_printer_t pp;
@@ -43,6 +44,7 @@ BOOST_AUTO_TEST_CASE(test_simple_graphviz)
     std::string expected = R"(<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
   <key id="key0" for="node" attr.name="file" attr.type="string" />
+  <key id="key1" for="edge" attr.name="is_system" attr.type="boolean" />
   <graph id="G" edgedefault="directed" parse.nodeids="canonical" parse.edgeids="canonical" parse.order="nodesfirst">
     <node id="n0">
       <data key="key0">include1.h</data>
@@ -54,13 +56,22 @@ BOOST_AUTO_TEST_CASE(test_simple_graphviz)
       <data key="key0">include2.h</data>
     </node>
     <node id="n3">
+      <data key="key0">string</data>
+    </node>
+    <node id="n4">
       <data key="key0">include3.h</data>
     </node>
     <edge id="e0" source="n1" target="n0">
+      <data key="key1">0</data>
     </edge>
     <edge id="e1" source="n1" target="n2">
+      <data key="key1">0</data>
     </edge>
-    <edge id="e2" source="n0" target="n3">
+    <edge id="e2" source="n1" target="n3">
+      <data key="key1">1</data>
+    </edge>
+    <edge id="e3" source="n0" target="n4">
+      <data key="key1">0</data>
     </edge>
   </graph>
 </graphml>

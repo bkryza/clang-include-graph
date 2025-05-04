@@ -35,15 +35,14 @@ std::unique_ptr<path_printer_t> path_printer_t::from_config(
     const config_t &config)
 {
     if (config.relative_to()) {
-        return detail::make_unique<path_relative_printer_t>(
-            config.relative_to().value());
+        return detail::make_unique<path_relative_printer_t>(config);
     }
 
     if (config.filenames_only()) {
-        return detail::make_unique<path_name_printer_t>();
+        return detail::make_unique<path_name_printer_t>(config);
     }
 
-    return detail::make_unique<path_printer_t>();
+    return detail::make_unique<path_printer_t>(config);
 }
 
 } // namespace clang_include_graph

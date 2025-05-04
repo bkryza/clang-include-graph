@@ -40,12 +40,17 @@ void include_graph_graphml_printer_t::operator()(std::ostream &os) const
     }
 
     auto file_map = boost::make_transform_value_property_map(
-        [&printer](const std::string &s) {
-            return printer.print(boost::filesystem::path(s));
-        },
-        get(&include_graph_t::vertex_t::file, include_graph().graph()));
+        [&printer](
+            const include_graph_t::vertex_t &v) { return printer.print(v); },
+        get(boost::vertex_bundle, include_graph().graph()));
 
     dp.property("file", file_map);
+
+    auto is_system_map = boost::make_transform_value_property_map(
+        [](const bool is_system) { return is_system; },
+        get(&include_graph_t::edge_t::is_system, include_graph().graph()));
+
+    dp.property("is_system", is_system_map);
 
     boost::write_graphml(os, include_graph().graph(), dp, true);
 }

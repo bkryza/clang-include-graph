@@ -80,6 +80,9 @@ public:
     bool translation_units_only() const noexcept;
     void translation_units_only(bool tuo) noexcept;
 
+    bool exclude_system_headers() const noexcept;
+    void exclude_system_headers(bool esh) noexcept;
+
     const boost::optional<std::string> &title() const noexcept;
 
     printer_t printer() const noexcept;
@@ -112,6 +115,7 @@ private:
     bool filenames_only_{false};
     bool relative_only_{false};
     bool translation_units_only_{false};
+    bool exclude_system_headers_{false};
     json_printer_opts_t json_printer_opts_;
     printer_t printer_{printer_t::topological_sort};
     unsigned jobs_{std::thread::hardware_concurrency()};

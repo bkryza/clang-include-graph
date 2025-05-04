@@ -47,7 +47,7 @@ void cycle_printer_t::cycle(const Path &p, const Graph & /*g*/)
 {
     os << "[\n";
     for (auto it = p.begin(); it != p.end(); ++it) {
-        os << "  " << path_printer_.print(graph_.graph()[*it].file) << "\n";
+        os << "  " << path_printer_.print(graph_.graph()[*it]) << "\n";
     }
     os << "]\n";
 }

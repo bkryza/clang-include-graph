@@ -127,6 +127,50 @@ void process_translation_unit(const config_t &config,
     clang_disposeTranslationUnit(unit);
 }
 
+bool is_system_header(CXCursor cursor)
+{
+    auto tu = clang_Cursor_getTranslationUnit(cursor);
+
+    CXSourceRange include_range = clang_getCursorExtent(cursor);
+
+    CXToken *tokens = nullptr;
+    unsigned num_tokens = 0;
+    clang_tokenize(tu, include_range, &tokens, &num_tokens);
+
+    bool is_system = false;
+    for (unsigned i = 0; i < num_tokens; ++i) {
+        CXString spelling = clang_getTokenSpelling(tu, tokens[i]);
+        std::string tok = clang_getCString(spelling);
+        clang_disposeString(spelling);
+
+        if (tok == "<") {
+            is_system = true;
+            break;
+        }
+    }
+
+    clang_disposeTokens(tu, tokens, num_tokens);
+    return is_system;
+}
+
+std::string get_raw_include_text(CXCursor cursor)
+{
+    CXString cx_spelling = clang_getCursorSpelling(cursor);
+    const char *cstr = clang_getCString(cx_spelling);
+    std::string spelling = cstr ? cstr : "";
+    clang_disposeString(cx_spelling);
+
+    if (spelling.size() >= 2) {
+        char first = spelling.front();
+        char last = spelling.back();
+        if ((first == '<' && last == '>') || (first == '"' && last == '"')) {
+            return spelling.substr(1, spelling.size() - 2);
+        }
+    }
+
+    return spelling;
+}
+
 include_graph_parser_t::include_graph_parser_t(const config_t &config)
     : index_{clang_createIndex(0, 0)}
     , config_{config}
@@ -346,22 +390,30 @@ enum CXChildVisitResult inclusion_cursor_visitor(
             return CXChildVisit_Continue;
         }
 
+        const auto is_system = is_system_header(cursor);
+
+        if (include_graph.exclude_system_headers() && is_system)
+            return CXChildVisit_Continue;
+
         const std::string included_file_str{
             clang_getCString(clang_getFileName(included_file))};
 
-        auto included_path = boost::filesystem::canonical(
+        const auto include_spelling = get_raw_include_text(cursor);
+
+        boost::filesystem::path included_path = boost::filesystem::canonical(
             boost::filesystem::path(included_file_str));
 
-        auto from_path = boost::filesystem::canonical(
+        boost::filesystem::path from_path = boost::filesystem::canonical(
             boost::filesystem::path(source_file_str));
 
         if (!relative_only ||
             (is_relative(from_path, relative_to.value()) &&
                 is_relative(included_path, relative_to.value()))) {
             include_graph.add_edge(included_path.string(), from_path.string(),
-                tu_path == from_path);
+                include_spelling, tu_path == from_path, is_system);
         }
     }
+
     return CXChildVisit_Continue;
 }
 

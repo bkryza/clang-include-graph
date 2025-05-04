@@ -21,8 +21,6 @@
 
 #include "include_graph_printer.h"
 
-#include <boost/graph/graphviz.hpp>
-
 #include <iostream>
 
 namespace clang_include_graph {

@@ -60,10 +60,13 @@ void include_graph_json_printer_t::operator()(std::ostream &os) const
             const auto &graph = include_graph().graph().graph();
             const auto &vertex = graph[v];
 
-            const auto file_path = path_printer().print(vertex.file);
+            const auto file_path = path_printer().print(vertex);
             boost::json::object node;
             node["label"] = file_path;
-            node["metadata"] = boost::json::object{};
+            boost::json::object metadata;
+            metadata["is_system_header"] = vertex.is_system_header;
+            metadata["is_translation_unit"] = vertex.is_translation_unit;
+            node["metadata"] = std::move(metadata);
 
             if (include_graph().numeric_ids())
                 nodes[std::to_string(v)] = std::move(node);
@@ -94,16 +97,16 @@ void include_graph_json_printer_t::operator()(std::ostream &os) const
             }
             else {
                 const auto &from_vertex = graph[from];
-                const auto from_file_path =
-                    path_printer().print(from_vertex.file);
+                const auto from_file_path = path_printer().print(from_vertex);
 
                 const auto &to_vertex = graph[to];
-                const auto to_file_path = path_printer().print(to_vertex.file);
+                const auto to_file_path = path_printer().print(to_vertex);
 
                 edge["target"] = to_file_path;
                 edge["source"] = from_file_path;
             }
-            edge["relation"] = "system";
+
+            edge["is_system"] = include_graph().graph()[e].is_system;
 
             edges.emplace_back(std::move(edge));
         });
