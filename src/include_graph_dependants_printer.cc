@@ -88,7 +88,7 @@ void include_graph_dependants_printer_t::operator()(std::ostream &os) const
 
         if (!include_graph().translation_units_only() ||
             graph[v].is_translation_unit) {
-            auto dependant_path = path_printer().print(graph[v].file);
+            auto dependant_path = path_printer().print(graph[v]);
             os << dependant_path << '\n';
         }
     }

@@ -38,6 +38,8 @@ void process_translation_unit(include_graph_t &include_graph,
     const boost::filesystem::path &tu_path, std::string &include_path_str,
     CXIndex &index);
 
+bool is_system_header(CXTranslationUnit tu, CXCursor cursor);
+
 class include_graph_parser_t {
 public:
     explicit include_graph_parser_t(const config_t &config);

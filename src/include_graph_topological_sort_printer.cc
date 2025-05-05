@@ -37,8 +37,7 @@ void include_graph_topological_sort_printer_t::operator()(
         include_graph().dag().value(), std::back_inserter(include_order));
 
     for (const auto id : include_order) {
-        os << path_printer().print(include_graph().graph().graph()[id].file)
-           << '\n';
+        os << path_printer().print(include_graph().graph().graph()[id]) << '\n';
     }
 }
 

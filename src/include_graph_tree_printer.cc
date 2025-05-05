@@ -60,7 +60,7 @@ void include_graph_tree_printer_t::operator()(std::ostream &os) const
             }
 
             if (is_tree_root) {
-                os << path_printer().print(vertex.file) << '\n';
+                os << path_printer().print(vertex) << '\n';
                 print_tu_subtree(os, v, 0, include_graph(), {});
             }
         });
@@ -101,8 +101,7 @@ void include_graph_tree_printer_t::print_tu_subtree(std::ostream &os,
             continuation_line_tmp.push_back(true);
         }
 
-        os << path_printer().print(include_graph.graph().graph()[*it].file)
-           << '\n';
+        os << path_printer().print(include_graph.graph().graph()[*it]) << '\n';
         print_tu_subtree(os, *it, level + kIndentWidth, include_graph,
             continuation_line_tmp);
     }

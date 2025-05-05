@@ -41,8 +41,8 @@ void include_graph_plantuml_printer_t::operator()(std::ostream &os) const
     std::for_each(vertex_begin, vertex_end,
         [&](const include_graph_t::graph_t::vertex_descriptor &v) {
             const auto &vertex = include_graph().graph().graph()[v];
-            os << "file \"" << path_printer().print(vertex.file) << "\" as F_"
-               << v << '\n';
+            os << "file \"" << path_printer().print(vertex) << "\" as F_" << v
+               << '\n';
         });
 
     // Now generate include relationships based on edge list
@@ -56,7 +56,14 @@ void include_graph_plantuml_printer_t::operator()(std::ostream &os) const
             const include_graph_t::graph_t::vertex_descriptor &to =
                 boost::target(e, include_graph().graph());
 
-            os << "F_" << from << " --> " << " F_" << to << '\n';
+            os << "F_" << to;
+
+            if (include_graph().graph()[e].is_system)
+                os << " <.. ";
+            else
+                os << " <-- ";
+
+            os << " F_" << from << '\n';
         });
 
     os << "@enduml" << '\n';

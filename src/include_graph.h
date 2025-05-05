@@ -36,16 +36,26 @@ class include_graph_t {
 public:
     struct vertex_t {
         std::string file;
+        std::string include_spelling;
+        bool is_system_header{false};
         bool is_translation_unit{false};
     };
 
+    struct edge_t {
+        bool is_system{false};
+    };
+
     using graph_adjlist_t = boost::adjacency_list<boost::setS, boost::vecS,
-        boost::bidirectionalS, vertex_t>;
+        boost::bidirectionalS, vertex_t, edge_t>;
     using graph_t =
         boost::labeled_graph<graph_adjlist_t, std::string, boost::hash_mapS>;
 
     void add_edge(const std::string &to, const std::string &from,
-        bool from_translation_unit = false);
+        bool from_translation_unit = false, bool is_system = false);
+
+    void add_edge(const std::string &to, const std::string &from,
+        const std::string &include_spelling, bool from_translation_unit = false,
+        bool is_system = false);
 
     void init(const config_t &config);
 
@@ -60,6 +70,8 @@ public:
     bool relative_only() const noexcept;
 
     bool translation_units_only() const noexcept;
+
+    bool exclude_system_headers() const noexcept;
 
     printer_t printer() const noexcept;
 
@@ -82,6 +94,7 @@ private:
     bool relative_only_{false};
     boost::optional<boost::filesystem::path> dependants_of_;
     bool translation_units_only_{false};
+    bool exclude_system_headers_{false};
     std::string cli_arguments_;
     bool numeric_ids_{false};
     boost::optional<std::string> title_;

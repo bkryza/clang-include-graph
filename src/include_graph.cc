@@ -29,28 +29,50 @@
 
 namespace clang_include_graph {
 
-void include_graph_t::add_edge(
-    const std::string &to, const std::string &from, bool from_translation_unit)
+void include_graph_t::add_edge(const std::string &to, const std::string &from,
+    bool from_translation_unit, bool is_system)
+{
+    add_edge(to, from, to, from_translation_unit, is_system);
+}
+
+void include_graph_t::add_edge(const std::string &to, const std::string &from,
+    const std::string &include_spelling, bool from_translation_unit,
+    bool is_system)
 {
     const std::lock_guard<std::mutex> guard{mutex_};
 
     if (graph_.vertex(to) == graph_t::null_vertex()) {
+        LOG(trace) << "Adding target vertex " << to
+                   << " [is_system_header=" << is_system
+                   << ", include_spelling=" << include_spelling << "]";
+
         const auto &to_v = boost::add_vertex(to, graph_);
         graph_.graph()[to_v].file = to;
+        graph_.graph()[to_v].is_system_header = is_system;
+        graph_.graph()[to_v].include_spelling = include_spelling;
     }
 
     if (graph_.vertex(from) == graph_t::null_vertex()) {
+        LOG(trace) << "Adding source vertex " << from
+                   << " [is_system_header=" << is_system
+                   << ", include_spelling=" << include_spelling << "]";
+
         const auto &from_v = boost::add_vertex(from, graph_);
         graph_.graph()[from_v].file = from;
         graph_.graph()[from_v].is_translation_unit = from_translation_unit;
     }
 
+    std::pair<graph_t::edge_descriptor, bool> edge_pair;
     if (printer_ == printer_t::reverse_tree ||
         printer_ == printer_t::dependants) {
-        boost::add_edge_by_label(to, from, graph_);
+        edge_pair = boost::add_edge_by_label(to, from, graph_);
     }
     else {
-        boost::add_edge_by_label(from, to, graph_);
+        edge_pair = boost::add_edge_by_label(from, to, graph_);
+    }
+
+    if (edge_pair.second) {
+        graph_.graph()[edge_pair.first].is_system = is_system;
     }
 }
 
@@ -64,6 +86,7 @@ void include_graph_t::init(const config_t &config)
     cli_arguments_ = config.cli_arguments();
     numeric_ids_ = config.json_printer_opts().numeric_ids;
     title_ = config.title();
+    exclude_system_headers_ = config.exclude_system_headers();
 }
 
 void include_graph_t::build_dag()
@@ -101,6 +124,11 @@ bool include_graph_t::relative_only() const noexcept { return relative_only_; }
 bool include_graph_t::translation_units_only() const noexcept
 {
     return translation_units_only_;
+}
+
+bool include_graph_t::exclude_system_headers() const noexcept
+{
+    return exclude_system_headers_;
 }
 
 printer_t include_graph_t::printer() const noexcept { return printer_; }

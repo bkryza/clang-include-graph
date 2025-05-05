@@ -123,6 +123,10 @@ void config_t::init(
         translation_units_only_ = true;
     }
 
+    if (vm.count("exclude-system-headers") == 1) {
+        exclude_system_headers_ = true;
+    }
+
     if (vm.count("title") == 1) {
         title_ = vm["title"].as<std::string>();
     }
@@ -139,6 +143,9 @@ void config_t::init(
     }
     else if (vm.count("graphviz") > 0U) {
         printer_ = printer_t::graphviz;
+    }
+    else if (vm.count("graphml") > 0U) {
+        printer_ = printer_t::graphml;
     }
     else if (vm.count("topological-sort") > 0U) {
         printer_ = printer_t::topological_sort;
@@ -213,6 +220,16 @@ bool config_t::translation_units_only() const noexcept
 void config_t::translation_units_only(bool tuo) noexcept
 {
     translation_units_only_ = tuo;
+}
+
+bool config_t::exclude_system_headers() const noexcept
+{
+    return exclude_system_headers_;
+}
+
+void config_t::exclude_system_headers(bool esh) noexcept
+{
+    exclude_system_headers_ = esh;
 }
 
 const boost::optional<std::string> &config_t::title() const noexcept

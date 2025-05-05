@@ -37,7 +37,7 @@ label_writer::label_writer(
 template <typename Vertex>
 void label_writer::operator()(std::ostream &out, const Vertex &v) const
 {
-    out << "[label=\"" << path_printer_.print(graph_.graph()[v].file) << "\"]";
+    out << "[label=\"" << path_printer_.print(graph_.graph()[v]) << "\"]";
 }
 
 } // namespace detail

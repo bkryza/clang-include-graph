@@ -36,6 +36,7 @@ BOOST_AUTO_TEST_CASE(test_json_printer)
     graph.add_edge("include2.h", "main.cc", true);
     graph.add_edge("include3.h", "util.cc", true);
     graph.add_edge("include4.h", "util.cc", true);
+    graph.add_edge("string", "main.cc", true, true);
     graph.add_edge("include5.h", "include4.h");
 
     graph.build_dag();
@@ -69,7 +70,12 @@ BOOST_AUTO_TEST_CASE(test_json_printer)
 
         auto &edges = obj["edges"].as_array();
 
-        BOOST_CHECK(edges.size() == 5);
+        BOOST_CHECK(edges.size() == 6);
+
+        std::string expected =
+            R"({"directed":true,"type":"include_graph","metadata":{"cli_arguments":""},"nodes":{"include1.h":{"label":"include1.h","metadata":{"is_system_header":false,"is_translation_unit":false}},"main.cc":{"label":"main.cc","metadata":{"is_system_header":false,"is_translation_unit":true}},"include2.h":{"label":"include2.h","metadata":{"is_system_header":false,"is_translation_unit":false}},"include3.h":{"label":"include3.h","metadata":{"is_system_header":false,"is_translation_unit":false}},"util.cc":{"label":"util.cc","metadata":{"is_system_header":false,"is_translation_unit":true}},"include4.h":{"label":"include4.h","metadata":{"is_system_header":false,"is_translation_unit":false}},"string":{"label":"string","metadata":{"is_system_header":true,"is_translation_unit":false}},"include5.h":{"label":"include5.h","metadata":{"is_system_header":false,"is_translation_unit":false}}},"edges":[{"target":"include1.h","source":"main.cc","is_system":false},{"target":"include2.h","source":"main.cc","is_system":false},{"target":"include3.h","source":"util.cc","is_system":false},{"target":"include4.h","source":"util.cc","is_system":false},{"target":"string","source":"main.cc","is_system":true},{"target":"include5.h","source":"include4.h","is_system":false}]})";
+
+        BOOST_TEST(ss.str() == expected);
     });
 }
 
