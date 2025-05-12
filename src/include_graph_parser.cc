@@ -51,7 +51,6 @@ void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
 
 void process_translation_unit(const config_t &config,
     include_graph_t &include_graph, CXCompileCommand command,
-    const boost::filesystem::path &current_file,
     const boost::filesystem::path &tu_path, std::string &include_path_str,
     CXIndex &index)
 {
@@ -107,8 +106,8 @@ void process_translation_unit(const config_t &config,
     if (unit == nullptr) {
         print_diagnostics(unit);
 
-        LOG(error) << "ERROR: Unable to parse translation unit '"
-                   << current_file << "' - aborting..." << '\n';
+        LOG(error) << "ERROR: Unable to parse translation unit '" << tu_path
+                   << "' - aborting..." << '\n';
         exit(-1);
     }
 
@@ -293,22 +292,21 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
             CXCompileCommand command =
                 clang_CompileCommands_getCommand(compile_commands, command_it);
 
-            const boost::filesystem::path current_file{
-                clang_getCString(clang_CompileCommand_getFilename(command))};
+            const boost::filesystem::path tu_path = get_canonical_file(command);
+
+            assert(tu_path.is_absolute());
 
             // Skip compile commands for headers (e.g. precompiled headers)
-            if (!current_file.has_extension() ||
-                current_file.extension().string().find(".h") == 0) {
+            if (!tu_path.has_extension() ||
+                tu_path.extension().string().find(".h") == 0) {
                 continue;
             }
 
-            if (!boost::filesystem::exists(current_file)) {
+            if (!boost::filesystem::exists(tu_path)) {
                 LOG(error) << "ERROR: Cannot find translation unit at "
-                           << current_file << '\n';
+                           << tu_path << '\n';
                 exit(-1);
             }
-
-            auto tu_path = boost::filesystem::canonical(current_file);
 
             auto include_path_str = tu_path.string();
             translation_units_.emplace(include_path_str);
@@ -317,9 +315,9 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
             boost::asio::post(thread_pool,
                 [&config = config_, &include_graph, &index, tu_path,
-                    include_path_str, command, current_file]() mutable {
+                    include_path_str, command]() mutable {
                     process_translation_unit(config, include_graph, command,
-                        current_file, tu_path, include_path_str, index);
+                        tu_path, include_path_str, index);
                 });
         }
     }
@@ -401,11 +399,12 @@ enum CXChildVisitResult inclusion_cursor_visitor(
         const auto include_spelling = get_raw_include_text(cursor);
 
         const boost::filesystem::path included_path =
-            boost::filesystem::canonical(
+            boost::filesystem::weakly_canonical(
                 boost::filesystem::path(included_file_str));
 
-        const boost::filesystem::path from_path = boost::filesystem::canonical(
-            boost::filesystem::path(source_file_str));
+        const boost::filesystem::path from_path =
+            boost::filesystem::weakly_canonical(
+                boost::filesystem::path(source_file_str));
 
         if (!relative_only ||
             (is_relative(from_path, relative_to.value()) &&

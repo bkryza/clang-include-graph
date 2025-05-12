@@ -47,7 +47,7 @@ boost::filesystem::path to_absolute_path(
     const boost::filesystem::path &relative_path)
 {
     try {
-        return boost::filesystem::canonical(relative_path).string();
+        return boost::filesystem::weakly_canonical(relative_path).string();
     }
     catch (const boost::filesystem::filesystem_error &e) {
         LOG(error) << "ERROR: Failed to resolve absolute path from '"

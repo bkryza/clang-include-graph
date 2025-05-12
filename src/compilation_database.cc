@@ -38,18 +38,13 @@ std::set<boost::filesystem::path> get_all_files(CXCompilationDatabase database)
 
     for (auto i = 0U; i < compile_commands_size; i++) {
         auto *command = clang_CompileCommands_getCommand(compile_commands, i);
-        const boost::filesystem::path directory =
-            clang_getCString(clang_CompileCommand_getDirectory(command));
-        const boost::filesystem::path file =
-            clang_getCString(clang_CompileCommand_getFilename(command));
 
-        LOG(trace) << "Found file " << file.string()
+        auto canonical_file = get_canonical_file(command);
+
+        LOG(trace) << "Found file " << canonical_file.string()
                    << " in compilation database\n";
 
-        if (!file.is_absolute())
-            result.emplace(directory / file);
-        else
-            result.emplace(file);
+        result.emplace(std::move(canonical_file));
     }
 
     return result;
@@ -65,6 +60,8 @@ void intersect_glob_matches_with_compilation_database(void *database,
     std::vector<std::string> matching_files;
 
     for (const auto &gm : glob_files_absolute) {
+        assert(gm.is_absolute());
+
         auto preferred_path = gm;
         preferred_path.make_preferred();
 
@@ -144,4 +141,17 @@ void resolve_whitelist_glob_patterns(
     }
 }
 
+boost::filesystem::path get_canonical_file(CXCompileCommand command)
+{
+    boost::filesystem::path file{
+        clang_getCString(clang_CompileCommand_getFilename(command))};
+
+    if (file.is_absolute())
+        return file;
+
+    const boost::filesystem::path directory{
+        clang_getCString(clang_CompileCommand_getDirectory(command))};
+
+    return weakly_canonical(directory / file);
+}
 } // namespace clang_include_graph

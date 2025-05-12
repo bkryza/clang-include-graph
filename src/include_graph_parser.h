@@ -34,9 +34,8 @@
 namespace clang_include_graph {
 
 void process_translation_unit(include_graph_t &include_graph,
-    CXCompileCommand command, const boost::filesystem::path &current_file,
-    const boost::filesystem::path &tu_path, std::string &include_path_str,
-    CXIndex &index);
+    CXCompileCommand command, const boost::filesystem::path &tu_path,
+    std::string &include_path_str, CXIndex &index);
 
 bool is_system_header(CXTranslationUnit tu, CXCursor cursor);
 
