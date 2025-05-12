@@ -74,9 +74,6 @@ void process_translation_unit(const config_t &config,
         args.emplace_back(std::move(arg));
     }
 
-    // Remove the file name from the arguments list
-    args.pop_back();
-
     if (!config.add_compile_flag().empty()) {
         args.insert(
             // Add flags after argv[0]
@@ -92,22 +89,49 @@ void process_translation_unit(const config_t &config,
             args.end());
     }
 
+    for (auto i = 0U; i < args.size(); i++) {
+        if (args.at(i) == "-c") {
+            // Remove the source file name from the arguments list
+            i++;
+            continue;
+        }
+
+        args_cstr.emplace_back(args[i].c_str());
+    }
+
     LOG(trace) << "Parsing " << tu_path << " with the following compile flags: "
                << boost::algorithm::join(args, " ");
 
-    for (const auto &arg : args) {
-        args_cstr.emplace_back(arg.c_str());
-    }
+    CXTranslationUnit unit{nullptr};
 
-    CXTranslationUnit unit = clang_parseTranslationUnit(index,
+    const CXErrorCode err = clang_parseTranslationUnit2(index,
         include_path_str.c_str(), args_cstr.data(),
-        static_cast<int>(args_cstr.size()), nullptr, 0, flags);
+        static_cast<int>(args_cstr.size()), nullptr, 0, flags, &unit);
 
-    if (unit == nullptr) {
-        print_diagnostics(unit);
+    if (err != CXError_Success) {
+        std::string error_str;
+
+        switch (err) {
+        case CXError_Success:
+            break;
+
+        case CXError_Failure:
+            error_str = "clang_parseTranslationUnit2: unknown error";
+        case CXError_Crashed:
+            error_str = "clang_parseTranslationUnit2: libclang crash";
+        case CXError_InvalidArguments:
+            error_str =
+                "clang_parseTranslationUnit2: invalid compilation arguments";
+        case CXError_ASTReadError:
+            error_str =
+                "clang_parseTranslationUnit2: AST deserialization failed";
+        }
+
+        if (unit != nullptr)
+            print_diagnostics(unit);
 
         LOG(error) << "ERROR: Unable to parse translation unit '" << tu_path
-                   << "' - aborting..." << '\n';
+                   << "' due to " << error_str << " - aborting..." << '\n';
         exit(-1);
     }
 
