@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTOR
 
 option(LLVM_CONFIG_PATH "Path to custom llvm-config executable")
 
-option(GIT_VERSION "clang-include-graph version" "0.1.0")
+option(GIT_VERSION "clang-include-graph version" "0.2.0")
 
 option(BOOST_STATIC "Enable linking static Boost libraries" OFF)
 

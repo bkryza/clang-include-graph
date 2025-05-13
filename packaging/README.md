@@ -7,14 +7,14 @@
 
 ```bash
 cd packaging
-make DIST=bionic deb
+make DIST=plucky deb
 make DIST=focal deb
 make DIST=jammy deb
+make DIST=noble deb
+make DIST=oracular deb
 
+# Repeat for each distro
 cd _BUILD/ubuntu/focal
-dput ppa:bkryza/clang-include-graph *.changes
-
-cd _BUILD/ubuntu/jammy
 dput ppa:bkryza/clang-include-graph *.changes
 
 ```
