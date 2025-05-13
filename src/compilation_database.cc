@@ -124,7 +124,7 @@ void resolve_whitelist_glob_patterns(
                 boost::filesystem::current_path() / absolute_glob_path;
 
         LOG(debug) << "Searching glob path " << absolute_glob_path.string()
-                   << '\n';
+                   << " [" << glob.string() << "]";
 
         auto matches = glob::glob(absolute_glob_path.string(), true, false);
 

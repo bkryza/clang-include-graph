@@ -29,6 +29,7 @@
 #include <boost/optional.hpp>
 
 #include <regex>
+#include <unordered_set>
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(global_logger,
     boost::log::sources::severity_logger_mt<
@@ -60,7 +61,6 @@ void setup_logging(
 std::regex glob_to_regex(const std::string &glob_pattern);
 
 bool match_flag_glob(const std::string &flag, const std::string &glob);
-
 } // namespace util
 } // namespace clang_include_graph
 

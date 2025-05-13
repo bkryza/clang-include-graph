@@ -96,7 +96,7 @@ void process_translation_unit(const config_t &config,
             continue;
         }
 
-        args_cstr.emplace_back(args[i].c_str());
+        args_cstr.emplace_back(args.at(i).c_str());
     }
 
     LOG(trace) << "Parsing " << tu_path << " with the following compile flags: "
@@ -265,14 +265,17 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
     if (!translation_unit_patterns.empty()) {
         std::set<boost::filesystem::path> glob_files_absolute;
 
+        LOG(info) << "Resolving whitelist patterns";
         // First find all files matching whitelisted glob patterns
         // i.e. not starting with an `!`
         resolve_whitelist_glob_patterns(
             translation_unit_patterns, glob_files_absolute);
 
-        LOG(debug)
+        LOG(info)
             << "Found " << glob_files_absolute.size()
             << " compilation database files matching positive glob patterns";
+
+        LOG(info) << "Resolving blacklist patterns";
 
         // Now remove all paths which match the blacklisted glob patterns
         // i.e. start with `!`
@@ -294,6 +297,9 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
                    << "in compilation database - aborting...";
         exit(-1);
     }
+
+    LOG(info) << "Found " << matching_compile_commands.size()
+              << " matching translation units";
 
     boost::asio::thread_pool thread_pool{config_.jobs()};
 
@@ -319,6 +325,13 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
             const boost::filesystem::path tu_path = get_canonical_file(command);
 
             assert(tu_path.is_absolute());
+
+            // Skip translation units which don't actually exist
+            if (!exists(tu_path)) {
+                LOG(info) << "Skipping translation unit: " << tu_path
+                          << " - file not found.";
+                continue;
+            }
 
             // Skip compile commands for headers (e.g. precompiled headers)
             if (!tu_path.has_extension() ||
@@ -406,7 +419,7 @@ enum CXChildVisitResult inclusion_cursor_visitor(
         CXFile included_file = clang_getIncludedFile(cursor);
 
         if (included_file == nullptr) {
-            std::cerr
+            LOG(debug)
                 << "WARNING: Cannot find header from include directive at "
                 << source_file_str << ":" << line << '\n';
             return CXChildVisit_Continue;
