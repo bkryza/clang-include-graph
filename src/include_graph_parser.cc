@@ -51,7 +51,6 @@ void inclusion_visitor(CXFile cx_file, CXSourceLocation *inclusion_stack,
 
 void process_translation_unit(const config_t &config,
     include_graph_t &include_graph, CXCompileCommand command,
-    const boost::filesystem::path &current_file,
     const boost::filesystem::path &tu_path, std::string &include_path_str,
     CXIndex &index)
 {
@@ -75,9 +74,6 @@ void process_translation_unit(const config_t &config,
         args.emplace_back(std::move(arg));
     }
 
-    // Remove the file name from the arguments list
-    args.pop_back();
-
     if (!config.add_compile_flag().empty()) {
         args.insert(
             // Add flags after argv[0]
@@ -93,22 +89,49 @@ void process_translation_unit(const config_t &config,
             args.end());
     }
 
+    for (auto i = 0U; i < args.size(); i++) {
+        if (args.at(i) == "-c") {
+            // Remove the source file name from the arguments list
+            i++;
+            continue;
+        }
+
+        args_cstr.emplace_back(args.at(i).c_str());
+    }
+
     LOG(trace) << "Parsing " << tu_path << " with the following compile flags: "
                << boost::algorithm::join(args, " ");
 
-    for (const auto &arg : args) {
-        args_cstr.emplace_back(arg.c_str());
-    }
+    CXTranslationUnit unit{nullptr};
 
-    CXTranslationUnit unit = clang_parseTranslationUnit(index,
+    const CXErrorCode err = clang_parseTranslationUnit2(index,
         include_path_str.c_str(), args_cstr.data(),
-        static_cast<int>(args_cstr.size()), nullptr, 0, flags);
+        static_cast<int>(args_cstr.size()), nullptr, 0, flags, &unit);
 
-    if (unit == nullptr) {
-        print_diagnostics(unit);
+    if (err != CXError_Success) {
+        std::string error_str;
 
-        LOG(error) << "ERROR: Unable to parse translation unit '"
-                   << current_file << "' - aborting..." << '\n';
+        switch (err) {
+        case CXError_Success:
+            break;
+
+        case CXError_Failure:
+            error_str = "clang_parseTranslationUnit2: unknown error";
+        case CXError_Crashed:
+            error_str = "clang_parseTranslationUnit2: libclang crash";
+        case CXError_InvalidArguments:
+            error_str =
+                "clang_parseTranslationUnit2: invalid compilation arguments";
+        case CXError_ASTReadError:
+            error_str =
+                "clang_parseTranslationUnit2: AST deserialization failed";
+        }
+
+        if (unit != nullptr)
+            print_diagnostics(unit);
+
+        LOG(error) << "ERROR: Unable to parse translation unit '" << tu_path
+                   << "' due to " << error_str << " - aborting..." << '\n';
         exit(-1);
     }
 
@@ -242,14 +265,17 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
     if (!translation_unit_patterns.empty()) {
         std::set<boost::filesystem::path> glob_files_absolute;
 
+        LOG(info) << "Resolving whitelist patterns";
         // First find all files matching whitelisted glob patterns
         // i.e. not starting with an `!`
         resolve_whitelist_glob_patterns(
             translation_unit_patterns, glob_files_absolute);
 
-        LOG(debug)
+        LOG(info)
             << "Found " << glob_files_absolute.size()
             << " compilation database files matching positive glob patterns";
+
+        LOG(info) << "Resolving blacklist patterns";
 
         // Now remove all paths which match the blacklisted glob patterns
         // i.e. start with `!`
@@ -272,6 +298,9 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
         exit(-1);
     }
 
+    LOG(info) << "Found " << matching_compile_commands.size()
+              << " matching translation units";
+
     boost::asio::thread_pool thread_pool{config_.jobs()};
 
     LOG(info) << "Starting thread pool with " << config_.jobs() << " threads\n";
@@ -293,22 +322,28 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
             CXCompileCommand command =
                 clang_CompileCommands_getCommand(compile_commands, command_it);
 
-            const boost::filesystem::path current_file{
-                clang_getCString(clang_CompileCommand_getFilename(command))};
+            const boost::filesystem::path tu_path = get_canonical_file(command);
 
-            // Skip compile commands for headers (e.g. precompiled headers)
-            if (!current_file.has_extension() ||
-                current_file.extension().string().find(".h") == 0) {
+            assert(tu_path.is_absolute());
+
+            // Skip translation units which don't actually exist
+            if (!exists(tu_path)) {
+                LOG(info) << "Skipping translation unit: " << tu_path
+                          << " - file not found.";
                 continue;
             }
 
-            if (!boost::filesystem::exists(current_file)) {
-                LOG(error) << "ERROR: Cannot find translation unit at "
-                           << current_file << '\n';
-                exit(-1);
+            // Skip compile commands for headers (e.g. precompiled headers)
+            if (!tu_path.has_extension() ||
+                tu_path.extension().string().find(".h") == 0) {
+                continue;
             }
 
-            auto tu_path = boost::filesystem::canonical(current_file);
+            if (!boost::filesystem::exists(tu_path)) {
+                LOG(error) << "ERROR: Cannot find translation unit at "
+                           << tu_path << '\n';
+                exit(-1);
+            }
 
             auto include_path_str = tu_path.string();
             translation_units_.emplace(include_path_str);
@@ -317,9 +352,9 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
 
             boost::asio::post(thread_pool,
                 [&config = config_, &include_graph, &index, tu_path,
-                    include_path_str, command, current_file]() mutable {
+                    include_path_str, command]() mutable {
                     process_translation_unit(config, include_graph, command,
-                        current_file, tu_path, include_path_str, index);
+                        tu_path, include_path_str, index);
                 });
         }
     }
@@ -384,7 +419,7 @@ enum CXChildVisitResult inclusion_cursor_visitor(
         CXFile included_file = clang_getIncludedFile(cursor);
 
         if (included_file == nullptr) {
-            std::cerr
+            LOG(debug)
                 << "WARNING: Cannot find header from include directive at "
                 << source_file_str << ":" << line << '\n';
             return CXChildVisit_Continue;
@@ -401,11 +436,12 @@ enum CXChildVisitResult inclusion_cursor_visitor(
         const auto include_spelling = get_raw_include_text(cursor);
 
         const boost::filesystem::path included_path =
-            boost::filesystem::canonical(
+            boost::filesystem::weakly_canonical(
                 boost::filesystem::path(included_file_str));
 
-        const boost::filesystem::path from_path = boost::filesystem::canonical(
-            boost::filesystem::path(source_file_str));
+        const boost::filesystem::path from_path =
+            boost::filesystem::weakly_canonical(
+                boost::filesystem::path(source_file_str));
 
         if (!relative_only ||
             (is_relative(from_path, relative_to.value()) &&

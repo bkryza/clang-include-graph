@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(clang_include_graph)
+project(clang-include-graph)
 
 set(CMAKE_CXX_STANDARD 14)
 

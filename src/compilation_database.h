@@ -47,6 +47,8 @@ void filter_blacklist_glob_patterns(
     const std::vector<boost::filesystem::path> &translation_unit_patterns,
     std::set<boost::filesystem::path> &glob_files_absolute);
 
+boost::filesystem::path get_canonical_file(CXCompileCommand command);
+
 } // namespace clang_include_graph
 
 #endif // CLANG_INCLUDE_GRAPH_COMPILATION_DATABASE_H
