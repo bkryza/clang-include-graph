@@ -22,14 +22,15 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - conda-forge::pkg-config
-    - conda-forge::boost 1.78.0
-    - conda-forge::clangdev 14.0.4
-    - conda-forge::libclang 14.0.4
+    - conda-forge::boost 1.85.0
+    - conda-forge::clangdev 20.1.4
+    - conda-forge::libclang 20.1.4
     - conda-forge::cmake
     - conda-forge::git
     - conda-forge::make # [unix]
   run:
-    - conda-forge::libclang 14.0.4
+    - conda-forge::libclang 20.1.4
+    - conda-forge::boost 1.85.0
 
 test:
   commands:
