@@ -8,15 +8,15 @@
 `clang-include-graph` provides several simple commands for analyzing and visualizing C++ project include graphs.
 
 Main features include:
-* Generates correct (topological) inclusion order of all includes of the project or a single translation unit
-* Prints include graph in several formats into stdout:
-  * Topologically ordered include list
-  * Include tree and reverse include tree
-  * Include graph cycles list
-  * Listing all dependants of specified header file
-  * Graphviz diagram
-  * PlantUML diagram
-* Handles cyclic include graphs
+* Generating include graph in several formats:
+  * Graphviz
+  * PlantUML
+  * GraphML
+  * JSON
+* Topologically ordered include list
+* Printing include tree and reverse include tree
+* Printing include graph cycles list
+* Listing of all dependants of specified header file
 
 ## Installation
 ### Distribution packages
