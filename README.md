@@ -57,7 +57,7 @@ export PATH=$PATH:$PWD/release
 file, containing the list of commands used for compiling the source code
 or alternatively a list of compilation flags in a file called
 `compile_flags.txt`
-(see [here](https://clang.llvm.org/docs/JSONCompilationDatabase.html#alternatives).
+(see [here](https://clang.llvm.org/docs/JSONCompilationDatabase.html#alternatives)).
 
 See also [here](https://blog.bkryza.com/posts/compile-commands-json-gallery/)
 for instructions on how to generate `compile_commands.json` using some of the
