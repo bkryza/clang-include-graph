@@ -213,7 +213,7 @@ std::vector<fs::path> iter_directory(const fs::path &dirname, bool dironly) {
       for (auto &entry : fs::directory_iterator(
               current_directory, fs::directory_options::follow_directory_symlink |
                                       fs::directory_options::skip_permission_denied)) {
-        if (!dironly || entry.is_directory()) {
+        if (!dironly || fs::is_directory(entry)) {
           if (dirname.is_absolute()) {
             result.push_back(entry.path());
           } else {

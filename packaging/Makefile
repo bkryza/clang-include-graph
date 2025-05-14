@@ -17,7 +17,7 @@
 SHELL := /bin/bash
 .ONESHELL:
 
-.PHONY: download deb clean conda
+.PHONY: download deb debian clean conda
 
 NAME ?= clang-include-graph
 REBUILD ?= 1
@@ -34,6 +34,7 @@ VERSION	?= $(shell git describe --tags --always --abbrev=7)
 COMMIT ?= $(shell git rev-parse HEAD)
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 SOURCE_ARCHIVE ?= $(NAME)-$(VERSION).tar.$(TAR_EXT)
+SOURCE_ARCHIVE_DEB ?= $(NAME)-$(VERSION)-$(REBUILD).tar.$(TAR_EXT)
 CONDA_TOKEN ?=
 
 #
@@ -58,6 +59,47 @@ _BUILD/$(SOURCE_ARCHIVE):
 		mkdir -p $(build_dir)
 		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(VERSION) > _BUILD/$(NAME)-$(VERSION).tar.gz
 
+_BUILD/$(SOURCE_ARCHIVE_DEB):
+		echo "############################"
+		echo "Creating source archive for DEB from latest commit $(COMMIT) - $(SOURCE_ARCHIVE)"
+		echo "############################"
+		mkdir -p $(build_dir)
+		git-archive-all --prefix=$(NAME)-$(VERSION)-$(REBUILD)/ _BUILD/$(SOURCE_ARCHIVE_DEB)
+
+#
+# Debian
+#
+debian: _BUILD/$(SOURCE_ARCHIVE_DEB)
+		echo "############################"
+		echo "Creating debian source package for $(OS) $(DIST)"
+		echo "Creating directory: ", $(build_dir)/$(NAME)-$(VERSION)-$(REBUILD)
+		echo "Extracting source archive..."
+		echo "############################"
+		rm -rf $(build_dir)
+		mkdir -p $(build_dir)
+		cp _BUILD/$(SOURCE_ARCHIVE_DEB) $(build_dir)
+		cd $(build_dir)
+		mkdir -p $(NAME)-$(VERSION)-$(REBUILD)
+		tar xf $(SOURCE_ARCHIVE_DEB) -C $(NAME)-$(VERSION)-$(REBUILD) --strip-components 1
+		cp -R ../../../debian $(NAME)-$(VERSION)-$(REBUILD)/debian
+		cd $(NAME)-$(VERSION)-$(REBUILD)
+		$(call subst_template_dir,DATETIME,$(shell date -R),debian)
+		$(call subst_template_dir,OS,${OS},debian)
+		$(call subst_template_dir,NAME,${NAME},debian)
+		$(call subst_template_dir,VERSION,${VERSION},debian)
+		$(call subst_template_dir,REBUILD,${REBUILD},debian)
+		$(call subst_template_dir,DISTRIBUTION,${DIST},debian)
+		$(call subst_template_dir,MAINTAINER_NAME,${MAINTAINER_NAME},debian)
+		$(call subst_template_dir,MAINTAINER_EMAIL,${MAINTAINER_EMAIL},debian)
+		$(call subst_template_dir,GIT_COMMIT,${COMMIT},debian)
+		$(call subst_template_dir,GIT_BRANCH,${BRANCH},debian)
+		cp debian/control.$(DIST) debian/control
+		cp debian/changelog.$(DIST) debian/changelog
+		DEB_BUILD_OPTIONS='parallel=16' dpkg-buildpackage -b -us -uc
+
+#
+# Ubuntu
+#
 deb: _BUILD/$(SOURCE_ARCHIVE)
 		echo "############################"
 		echo "Creating deb source package for $(OS) $(DIST)"

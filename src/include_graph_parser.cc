@@ -114,17 +114,20 @@ void process_translation_unit(const config_t &config,
         switch (err) {
         case CXError_Success:
             break;
-
         case CXError_Failure:
             error_str = "clang_parseTranslationUnit2: unknown error";
+            break;
         case CXError_Crashed:
             error_str = "clang_parseTranslationUnit2: libclang crash";
+            break;
         case CXError_InvalidArguments:
             error_str =
                 "clang_parseTranslationUnit2: invalid compilation arguments";
+            break;
         case CXError_ASTReadError:
             error_str =
                 "clang_parseTranslationUnit2: AST deserialization failed";
+            break;
         }
 
         if (unit != nullptr)
