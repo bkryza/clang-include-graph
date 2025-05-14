@@ -85,6 +85,33 @@ install(TARGETS clang-include-graph DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES LICENSE.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
 install(FILES README.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
+#
+# Setup installer
+#
+set(CPACK_PACKAGE_NAME "clang-include-graph")
+set(CPACK_PACKAGE_VENDOR "Bartek Kryza <bkryza@gmail.com>")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+    "clang-include-graph - Simple tool for analyzing C++ project include graph")
+set(CPACK_PACKAGE_VERSION "${GIT_VERSION}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${GIT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${GIT_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${GIT_VERSION_PATCH}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "clang-include-graph")
+set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/LICENSE.md)
+
+if(MSVC)
+    set(CPACK_GENERATOR "NSIS")
+    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+    set(CPACK_NSIS_DISPLAY_NAME "clang-include-graph")
+    set(CPACK_NSIS_HELP_LINK "https://github.com/bkryza/clang-include-graph")
+    set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/bkryza/clang-include-graph")
+    set(CPACK_NSIS_CONTACT "Bartek Kryza <bkryza@gmail.com>")
+    set(CPACK_NSIS_MODIFY_PATH ON)
+    set(CPACK_SOURCE_GENERATOR "ZIP")
+endif(MSVC)
+
+include(CPack)
+
 # Enable testing via CTest
 enable_testing()
 add_subdirectory(tests)
