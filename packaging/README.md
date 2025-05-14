@@ -31,6 +31,16 @@ cd packaging
 make OS=debian DIST=bookworm debian
 ```
 
+## Fedora
+
+```bash
+cd clang-include-graph
+make fedora/39
+make fedora/40
+make fedora/41
+find packaging/_BUILD/fedora
+```
+
 ## Anaconda
 
 ```bash

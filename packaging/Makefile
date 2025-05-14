@@ -35,6 +35,7 @@ COMMIT ?= $(shell git rev-parse HEAD)
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 SOURCE_ARCHIVE ?= $(NAME)-$(VERSION).tar.$(TAR_EXT)
 SOURCE_ARCHIVE_DEB ?= $(NAME)-$(VERSION)-$(REBUILD).tar.$(TAR_EXT)
+SOURCE_ARCHIVE_RPM ?= $(NAME)-$(VERSION).tar.$(TAR_EXT)
 CONDA_TOKEN ?=
 
 #
@@ -65,6 +66,29 @@ _BUILD/$(SOURCE_ARCHIVE_DEB):
 		echo "############################"
 		mkdir -p $(build_dir)
 		git-archive-all --prefix=$(NAME)-$(VERSION)-$(REBUILD)/ _BUILD/$(SOURCE_ARCHIVE_DEB)
+
+_BUILD/$(SOURCE_ARCHIVE_RPM):
+		echo "############################"
+		echo "Creating source archive for RPM from latest commit $(COMMIT) - $(SOURCE_ARCHIVE)"
+		echo "############################"
+		mkdir -p $(build_dir)
+		git archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ v$(VERSION) >_BUILD/$(NAME)-$(VERSION).tar.gz
+
+rpm:
+		echo "############################"
+		echo "Creating rpm package for $(OS) $(DIST)"
+		echo "Creating directory: ", $(build_dir)/$(NAME)-$(VERSION)
+		echo "Extracting source archive..."
+		echo "############################"
+		#rm -rf $(build_dir)
+		mkdir -p $(build_dir)
+		dnf install -y fedora-packager rpmdevtools gcc gdb cmake git boost-devel clang-devel clang-tools-extra llvm-devel ccache wget
+		rpmdev-setuptree
+		cp $(build_dir)/$(SOURCE_ARCHIVE_RPM) /root/rpmbuild/SOURCES/
+		cp fedora/clang-include-graph.spec /root/rpmbuild/SPECS/
+		rpmbuild -ba --define 'git_version ${VERSION}' /root/rpmbuild/SPECS/clang-include-graph.spec
+		cp /root/rpmbuild/RPMS/x86_64/* $(build_dir)
+		cp /root/rpmbuild/SRPMS/* $(build_dir)
 
 #
 # Debian
