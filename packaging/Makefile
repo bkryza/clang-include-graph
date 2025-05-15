@@ -68,14 +68,7 @@ _BUILD/$(SOURCE_ARCHIVE_DEB):
 		mkdir -p $(build_dir)
 		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(VERSION) > _BUILD/$(SOURCE_ARCHIVE_DEB)
 
-#_BUILD/$(SOURCE_ARCHIVE_RPM):
-#		echo "############################"
-#		echo "Creating source archive for RPM from latest commit $(COMMIT) - $(SOURCE_ARCHIVE)"
-#		echo "############################"
-#		mkdir -p $(build_dir)
-#		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ v$(VERSION) >_BUILD/$(SOURCE_ARCHIVE_RPM)
-
-rpm: _BUILD/$(SOURCE_ARCHIVE)
+rpm:
 		echo "############################"
 		echo "Creating rpm package for $(OS) $(DIST)"
 		echo "Creating directory: ", $(build_dir)/$(NAME)-$(VERSION)
