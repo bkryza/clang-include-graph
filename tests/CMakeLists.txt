@@ -6,8 +6,11 @@ list(APPEND TESTCASES
         test_graphviz_printer
         test_graphml_printer
         test_plantuml_printer
-        test_json_printer
         test_util)
+
+if(WITH_JSON)
+    list(APPEND TESTCASES test_json_printer)
+endif(WITH_JSON)
 
 foreach(TESTCASE IN LISTS TESTCASES)
     add_executable(
@@ -39,8 +42,11 @@ foreach(TESTCASE IN LISTS TESTCASES)
             Boost::graph
             Boost::program_options
             Boost::unit_test_framework
-            Boost::json
             Boost::log)
+
+    if(WITH_JSON)
+        target_link_libraries(${TESTCASE} Boost::json)
+    endif(WITH_JSON)
 
     add_test(${TESTCASE} ${TESTCASE})
 endforeach()

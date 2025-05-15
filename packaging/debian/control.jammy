@@ -17,7 +17,6 @@ Build-Depends:
     libboost-filesystem1.74-dev,
     libboost-test1.74-dev,
     libboost-program-options1.74-dev,
-    libboost-json1.74-dev,
     libboost-log1.74-dev
 Standards-Version: 4.3.0
 Vcs-Browser: https://github.com/bkryza/clang-include-graph

@@ -16,6 +16,8 @@ option(LLVM_CONFIG_PATH "Path to custom llvm-config executable")
 
 option(BOOST_STATIC "Enable linking static Boost libraries" OFF)
 
+option(WITH_JSON "Add JSON output support" ON)
+
 #
 # Setup version string
 #
@@ -45,8 +47,13 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_DEBUG_RUNTIME OFF)
 set(Boost_USE_STATIC_RUNTIME OFF)
 set(BOOST_LOG_NO_LIB ON)
-set(BOOST_LOG_NO_LIB ON)
-find_package(Boost REQUIRED COMPONENTS graph program_options filesystem log_setup log json unit_test_framework)
+
+set(BOOST_COMPONENTS graph program_options filesystem log_setup log unit_test_framework)
+if(WITH_JSON)
+    list(APPEND BOOST_COMPONENTS json)
+    add_compile_definitions(-DWITH_JSON_OUTPUT=1)
+endif(WITH_JSON)
+find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(THIRDPARTY_HEADERS_DIR ${PROJECT_SOURCE_DIR}/thirdparty/)
@@ -59,6 +66,10 @@ else(MSVC)
 endif(MSVC)
 
 file(GLOB_RECURSE SOURCES src/*.cc src/*.h)
+if(NOT WITH_JSON)
+    list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/include_graph_json_printer.cc)
+    list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/include_graph_json_printer.h)
+endif(NOT WITH_JSON)
 set(MAIN_SOURCE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cc)
 list(REMOVE_ITEM SOURCES ${MAIN_SOURCE_FILE})
 
@@ -67,8 +78,10 @@ add_library(lib-clang-include-graph OBJECT ${SOURCES})
 add_executable(clang-include-graph $<TARGET_OBJECTS:lib-clang-include-graph> src/main.cc)
 
 target_link_libraries(clang-include-graph ${LIBCLANG_LIBRARIES}
-        Boost::filesystem Boost::graph Boost::program_options Boost::json
-        Boost::log)
+        Boost::filesystem Boost::graph Boost::program_options Boost::log)
+if(WITH_JSON)
+    target_link_libraries(clang-include-graph Boost::json)
+endif(WITH_JSON)
 
 find_program(
         CLANG_TIDY

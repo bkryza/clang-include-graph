@@ -32,6 +32,8 @@ PKG_VERSION	?= $(shell git describe --tags --always --abbrev=7 | tr - .)
 GIT_COMMIT ?= $(shell git rev-parse HEAD)
 GIT_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
+WITH_JSON ?= ON
+
 .PHONY: clean
 clean:
 	rm -rf debug release
@@ -42,7 +44,8 @@ debug/CMakeLists.txt:
 		-DCMAKE_BUILD_TYPE=Debug \
 		-DCMAKE_CXX_FLAGS="$(CMAKE_CXX_FLAGS)" \
 		-DCMAKE_EXE_LINKER_FLAGS="$(CMAKE_EXE_LINKER_FLAGS)" \
-		-DLLVM_CONFIG_PATH=$(LLVM_CONFIG_PATH)
+		-DLLVM_CONFIG_PATH=$(LLVM_CONFIG_PATH) \
+		-DWITH_JSON=$(WITH_JSON)
 
 release/CMakeLists.txt:
 	cmake -S . -B release \
@@ -50,7 +53,8 @@ release/CMakeLists.txt:
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_CXX_FLAGS="$(CMAKE_CXX_FLAGS)" \
 		-DCMAKE_EXE_LINKER_FLAGS="$(CMAKE_EXE_LINKER_FLAGS)" \
-		-DLLVM_CONFIG_PATH=$(LLVM_CONFIG_PATH)
+		-DLLVM_CONFIG_PATH=$(LLVM_CONFIG_PATH) \
+		-DWITH_JSON=$(WITH_JSON)
 
 debug: debug/CMakeLists.txt
 	echo "Using ${NUMPROC} cores"

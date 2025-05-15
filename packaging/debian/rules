@@ -7,8 +7,14 @@ export CLANGINCLUDEGRAPH_GIT_BRANCH={{GIT_BRANCH}}
 export CLANGINCLUDEGRAPH_GIT_COMMIT={{GIT_COMMIT}}
 
 override_dh_auto_configure:
-	dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DGIT_VERSION={{VERSION}}
+	DISTRO_NAME=$(shell lsb_release -c | awk '{print $$2}')
+	if [ "$(DISTRO_NAME)" = "focal" ] || [ "$(DISTRO_NAME)" = "jammy" ]; then \
+		WITH_JSON=OFF; \
+	else \
+		WITH_JSON=ON; \
+	fi
 
+	dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DWITH_JSON=$(WITH_JSON) -DGIT_VERSION={{VERSION}}
 
 %:
 	dh $@

@@ -22,7 +22,9 @@
 #include "include_graph_dependants_printer.h"
 #include "include_graph_graphml_printer.h"
 #include "include_graph_graphviz_printer.h"
+#if defined(WITH_JSON_OUTPUT)
 #include "include_graph_json_printer.h"
+#endif
 #include "include_graph_parser.h"
 #include "include_graph_plantuml_printer.h"
 #include "include_graph_topological_sort_printer.h"
@@ -64,7 +66,9 @@ int main(int argc, char **argv)
     using clang_include_graph::include_graph_dependants_printer_t;
     using clang_include_graph::include_graph_graphml_printer_t;
     using clang_include_graph::include_graph_graphviz_printer_t;
+#if defined(WITH_JSON_OUTPUT)
     using clang_include_graph::include_graph_json_printer_t;
+#endif
     using clang_include_graph::include_graph_parser_t;
     using clang_include_graph::include_graph_plantuml_printer_t;
     using clang_include_graph::include_graph_t;
@@ -111,6 +115,7 @@ int main(int argc, char **argv)
 
         output << printer;
     }
+#if defined(WITH_JSON_OUTPUT)
     else if (config.printer() == printer_t::json) {
         LOG(info) << "Printing include graph in JSON Graph Format\n";
 
@@ -120,6 +125,7 @@ int main(int argc, char **argv)
 
         output << printer;
     }
+#endif
     else if (config.printer() == printer_t::dependants) {
         LOG(info) << "Printing dependants of " << *config.dependants_of()
                   << '\n';
@@ -212,7 +218,9 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "Include only files relative to 'relative-to' directory")
         ("output,o", po::value<std::string>(),
             "Write the output to a specified file instead of stdout")
+#if defined(WITH_JSON_OUTPUT)
         ("json-numeric-ids", "Use numeric ids for nodes instead of paths")
+#endif
         ("dependants-of,e", po::value<std::string>(),
             "Print all files that depend on a specific header")
         ("translation-units-only", "Print only translation units")
@@ -224,7 +232,9 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
             "sort order (default)")
         ("tree,t", "Print include graph in tree form")
         ("reverse-tree,T", "Print reverse include graph in tree form")
+#if defined(WITH_JSON_OUTPUT)
         ("json,j", "Print include graph in Json Graph format")
+#endif
         ("cycles,c", "Print include graph cycles, if any")
         ("graphviz,g", "Print include graph in GraphViz format")
         ("graphml,G", "Print include graph in GraphML format")
