@@ -17,6 +17,22 @@ foreach(TESTCASE IN LISTS TESTCASES)
 
     target_include_directories(${TESTCASE} PUBLIC ${Boost_INCLUDE_DIRS})
 
+    target_compile_options(
+            ${TESTCASE}
+            PRIVATE $<$<COMPILE_LANGUAGE:CXX>:
+            $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+            -Wno-unused-parameter
+            -Wno-unused-variable
+            -Wno-attributes
+            -Wno-nonnull
+            -Wno-deprecated-enum-enum-conversion
+            ${CUSTOM_COMPILE_OPTIONS}>
+            $<$<CXX_COMPILER_ID:MSVC>:/MP
+            /MD
+            /W1
+            /bigobj
+            /wd4624>>)
+
     target_link_libraries(${TESTCASE}
             ${LIBCLANG_LIBRARIES}
             Boost::filesystem

@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 project(clang-include-graph)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
@@ -11,9 +14,19 @@ set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTOR
 
 option(LLVM_CONFIG_PATH "Path to custom llvm-config executable")
 
-option(GIT_VERSION "clang-include-graph version" "0.2.0")
-
 option(BOOST_STATIC "Enable linking static Boost libraries" OFF)
+
+#
+# Setup version string
+#
+include(GitVersion)
+setup_git_version()
+message(STATUS "clang-include-graph version: "
+        "${GIT_VERSION_MAJOR}.${GIT_VERSION_MINOR}.${GIT_VERSION_PATCH}")
+if("${GIT_VERSION}" STREQUAL "")
+    set(GIT_VERSION "${GIT_VERSION_MAJOR}.${GIT_VERSION_MINOR}.${GIT_VERSION_PATCH}")
+endif()
+message(STATUS "Effective clang-include-version is: ${GIT_VERSION}")
 
 if (LLVM_CONFIG_PATH)
     message(STATUS "Using llvm-config from ${LLVM_CONFIG_PATH}")
@@ -24,27 +37,26 @@ endif (LLVM_CONFIG_PATH)
 message(STATUS "Checking for libclang...")
 set(LLVM_PREFERRED_VERSION 16.0.0)
 
-# Add
-#   -DLLVM_CONFIG_PATH=/path/to/llvm-config
-# to use custom LLVM version
 find_package(LibClang REQUIRED)
-#
-## Configure executable version
-#file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/src/version)
-#configure_file(src/version.h.in ${PROJECT_BINARY_DIR}/src/version/version.h)
-
-include_directories()
+message(STATUS "Linking libClang from ${LIBCLANG_LIBRARIES}")
 
 set(Boost_USE_STATIC_LIBS ${BOOST_STATIC})
 set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_DEBUG_RUNTIME OFF)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost REQUIRED COMPONENTS graph program_options filesystem log json unit_test_framework)
+set(BOOST_LOG_NO_LIB ON)
+set(BOOST_LOG_NO_LIB ON)
+find_package(Boost REQUIRED COMPONENTS graph program_options filesystem log_setup log json unit_test_framework)
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(THIRDPARTY_HEADERS_DIR ${PROJECT_SOURCE_DIR}/thirdparty/)
 include_directories(${THIRDPARTY_HEADERS_DIR})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-deprecated-copy-with-user-provided-copy -std=c++11 -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" -DGIT_VERSION=\\\"${GIT_VERSION}\\\" -DBOOST_LOG_DYN_LINK ${LIBCLANG_CXXFLAGS}")
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -DCINDEX_NO_EXPORTS -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" -DGIT_VERSION=\\\"${GIT_VERSION}\\\" ${LIBCLANG_CXXFLAGS}")
+else(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-deprecated-copy-with-user-provided-copy -DLIBCLANG_VERSION_STRING=\\\"${LIBCLANG_VERSION_STRING}\\\" -DGIT_VERSION=\\\"${GIT_VERSION}\\\" -DBOOST_LOG_DYN_LINK ${LIBCLANG_CXXFLAGS}")
+endif(MSVC)
 
 file(GLOB_RECURSE SOURCES src/*.cc src/*.h)
 set(MAIN_SOURCE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cc)
@@ -84,6 +96,7 @@ include(GNUInstallDirs)
 install(TARGETS clang-include-graph DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES LICENSE.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
 install(FILES README.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES AUTHORS.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
 #
 # Setup installer

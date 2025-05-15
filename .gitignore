@@ -27,6 +27,9 @@ packaging/conda/meta.yaml
 
 compile_flags.txt
 
+util/msbuild_compile_commands_logger/CompileCommandsLogger.dll
+util/msbuild_compile_commands_logger/obj/
+
 # CLion
 
 .idea/

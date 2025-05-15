@@ -33,12 +33,15 @@ void include_graph_graphml_printer_t::operator()(std::ostream &os) const
 
     boost::dynamic_properties dp;
 
+#if !defined(_MSC_VER)
+    // TODO: figure out how to compile this on MSVC
     if (include_graph().title()) {
         auto title_map =
             boost::make_constant_property<include_graph_t::graph_t *,
                 std::string>(*include_graph().title());
         dp.property("title", title_map);
     }
+#endif
 
     auto file_map = boost::make_transform_value_property_map(
         [&printer](

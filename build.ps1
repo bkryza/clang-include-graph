@@ -1,5 +1,5 @@
 param (
-  $Prefix="C:\clang-uml-llvm19",
+  $Prefix="C:\llvm20",
   $BuildType="Release"
 )
 
@@ -15,7 +15,7 @@ try {
   Copy-Item bin/Debug/netstandard2.0/CompileCommandsLogger.dll CompileCommandsLogger.dll
   Set-Location $originalDirectory
 
-  cmake -G "Visual Studio 17 2022" -S . -B $BuildType -DCMAKE_PREFIX_PATH="$Prefix" -Thost=x64
+  cmake -G "Visual Studio 17 2022" -S . -B $BuildType -DBOOST_STATIC=ON -DCMAKE_PREFIX_PATH="$Prefix" -Thost=x64
 
   cmake --build $BuildType --config $BuildType -- "-logger:$PWD/util/msbuild_compile_commands_logger/CompileCommandsLogger.dll"
 

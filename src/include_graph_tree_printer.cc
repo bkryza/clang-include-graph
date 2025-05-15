@@ -84,7 +84,11 @@ void include_graph_tree_printer_t::print_tu_subtree(std::ostream &os,
             for (auto i = 0U; i < level; i++) {
                 if (i % kIndentWidth == 0 &&
                     continuation_line[i / kIndentWidth]) {
-                    os << "│";
+#ifdef _MSC_VER
+                    os << "I";
+#else
+                    os << "|";
+#endif
                 }
                 else {
                     os << " ";
@@ -93,11 +97,19 @@ void include_graph_tree_printer_t::print_tu_subtree(std::ostream &os,
         }
 
         if (std::next(it) == it_end) {
-            os << "└── ";
+#ifdef _MSC_VER
+            os << "\\-- ";
+#else
+            os << "└──  ";
+#endif
             continuation_line_tmp.push_back(false);
         }
         else {
+#ifdef _MSC_VER
+            os << "+-- ";
+#else
             os << "├── ";
+#endif
             continuation_line_tmp.push_back(true);
         }
 
