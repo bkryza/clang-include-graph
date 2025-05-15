@@ -117,6 +117,7 @@ debian: _BUILD/$(SOURCE_ARCHIVE_DEB)
 		$(call subst_template_dir,MAINTAINER_EMAIL,${MAINTAINER_EMAIL},debian)
 		$(call subst_template_dir,GIT_COMMIT,${COMMIT},debian)
 		$(call subst_template_dir,GIT_BRANCH,${BRANCH},debian)
+		$(call subst_template_dir,DIST,${DIST},debian)
 		cp debian/control.$(DIST) debian/control
 		cp debian/changelog.$(DIST) debian/changelog
 		DEB_BUILD_OPTIONS='parallel=16' dpkg-buildpackage -b -us -uc
@@ -148,6 +149,7 @@ deb: _BUILD/$(SOURCE_ARCHIVE)
 		$(call subst_template_dir,MAINTAINER_EMAIL,${MAINTAINER_EMAIL},debian)
 		$(call subst_template_dir,GIT_COMMIT,${COMMIT},debian)
 		$(call subst_template_dir,GIT_BRANCH,${BRANCH},debian)
+		$(call subst_template_dir,DIST,${DIST},debian)
 		mk-origtargz ../$(NAME)-$(VERSION).tar.$(TAR_EXT)
 		cp debian/control.$(DIST) debian/control
 		# BUILD SOURCE PACKAGE FOR LAUNCHPAD

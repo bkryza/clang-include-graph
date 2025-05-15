@@ -1,14 +1,14 @@
 #!/usr/bin/make -f
 
 export DH_VERBOSE=1
+export VERSION_CODENAME={{DIST}}
 export CLANGINCLUDEGRAPH_GIT_TOPLEVEL_DIR=$(CURDIR)
 export CLANGINCLUDEGRAPH_GIT_REVISION={{VERSION}}
 export CLANGINCLUDEGRAPH_GIT_BRANCH={{GIT_BRANCH}}
 export CLANGINCLUDEGRAPH_GIT_COMMIT={{GIT_COMMIT}}
 
 override_dh_auto_configure:
-	DISTRO_NAME=$(shell grep '^VERSION_CODENAME' /etc/os-release | cut -d'=' -f2')
-	if [ "x$(DISTRO_NAME)" = "xfocal" ] || [ "x$(DISTRO_NAME)" = "xjammy" ]; then \
+	if [ "x$(VERSION_CODENAME)" = "xfocal" ] || [ "x$(VERSION_CODENAME)" = "xjammy" ]; then \
 		dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DWITH_JSON=OFF -DGIT_VERSION={{VERSION}}; \
 	else \
 		dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DWITH_JSON=ON -DGIT_VERSION={{VERSION}}; \
