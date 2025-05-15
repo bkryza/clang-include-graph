@@ -8,7 +8,7 @@ export CLANGINCLUDEGRAPH_GIT_COMMIT={{GIT_COMMIT}}
 
 override_dh_auto_configure:
 	DISTRO_NAME=$(shell grep '^VERSION_CODENAME' /etc/os-release | cut -d'=' -f2')
-	if [ "$(DISTRO_NAME)" = "focal" ] || [ "$(DISTRO_NAME)" = "jammy" ]; then \
+	if [ "x$(DISTRO_NAME)" = "xfocal" ] || [ "x$(DISTRO_NAME)" = "xjammy" ]; then \
 		dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DWITH_JSON=OFF -DGIT_VERSION={{VERSION}}; \
 	else \
 		dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DWITH_JSON=ON -DGIT_VERSION={{VERSION}}; \
