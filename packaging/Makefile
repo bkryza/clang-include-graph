@@ -56,26 +56,26 @@ endef
 
 _BUILD/$(SOURCE_ARCHIVE):
 		echo "############################"
-		echo "Creating source archive from latest commit $(COMMIT) - $(SOURCE_ARCHIVE)"
+		echo "Creating source archive from latest commit $(COMMIT) - $(SOURCE_ARCHIVE) - $(VERSION)"
 		echo "############################"
 		mkdir -p $(build_dir)
-		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(VERSION) > _BUILD/$(NAME)-$(VERSION).tar.gz
+		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(VERSION) > _BUILD/$(SOURCE_ARCHIVE)
 
 _BUILD/$(SOURCE_ARCHIVE_DEB):
 		echo "############################"
-		echo "Creating source archive for DEB from latest commit $(COMMIT) - $(SOURCE_ARCHIVE)"
+		echo "Creating source archive for DEB from latest commit $(COMMIT) - $(SOURCE_ARCHIVE) - $(VERSION)"
 		echo "############################"
 		mkdir -p $(build_dir)
-		git-archive-all --prefix=$(NAME)-$(VERSION)-$(REBUILD)/ _BUILD/$(SOURCE_ARCHIVE_DEB)
+		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(VERSION) > _BUILD/$(SOURCE_ARCHIVE_DEB)
 
-_BUILD/$(SOURCE_ARCHIVE_RPM):
-		echo "############################"
-		echo "Creating source archive for RPM from latest commit $(COMMIT) - $(SOURCE_ARCHIVE)"
-		echo "############################"
-		mkdir -p $(build_dir)
-		git archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ v$(VERSION) >_BUILD/$(NAME)-$(VERSION).tar.gz
+#_BUILD/$(SOURCE_ARCHIVE_RPM):
+#		echo "############################"
+#		echo "Creating source archive for RPM from latest commit $(COMMIT) - $(SOURCE_ARCHIVE)"
+#		echo "############################"
+#		mkdir -p $(build_dir)
+#		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ v$(VERSION) >_BUILD/$(SOURCE_ARCHIVE_RPM)
 
-rpm:
+rpm: _BUILD/$(SOURCE_ARCHIVE)
 		echo "############################"
 		echo "Creating rpm package for $(OS) $(DIST)"
 		echo "Creating directory: ", $(build_dir)/$(NAME)-$(VERSION)
@@ -85,7 +85,7 @@ rpm:
 		mkdir -p $(build_dir)
 		dnf install -y fedora-packager rpmdevtools gcc gdb cmake git boost-devel clang-devel clang-tools-extra llvm-devel ccache wget
 		rpmdev-setuptree
-		cp $(build_dir)/$(SOURCE_ARCHIVE_RPM) /root/rpmbuild/SOURCES/
+		cp $(build_dir)/$(SOURCE_ARCHIVE) /root/rpmbuild/SOURCES/
 		cp fedora/clang-include-graph.spec /root/rpmbuild/SPECS/
 		rpmbuild -ba --define 'git_version ${VERSION}' /root/rpmbuild/SPECS/clang-include-graph.spec
 		cp /root/rpmbuild/RPMS/x86_64/* $(build_dir)

@@ -52,7 +52,7 @@ First make sure that you have the following dependencies installed:
 
 ```bash
 # Ubuntu (clang version will vary depending on Ubuntu version)
-apt install git make gcc g++ cmake clang-19 libclang-19-dev libclang-cpp19-dev libboost-graph1.83-dev libboost-filesystem1.83-dev libboost-test1.83-dev libboost-json1.83-dev libboost-program-options1.83-dev
+apt install git make gcc g++ cmake clang-19 libclang-19-dev libclang-cpp19-dev libboost-log1.83-dev libboost-graph1.83-dev libboost-filesystem1.83-dev libboost-test1.83-dev libboost-json1.83-dev libboost-program-options1.83-dev
 ```
 
 Then proceed with building the sources:
