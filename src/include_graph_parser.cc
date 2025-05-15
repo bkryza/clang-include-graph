@@ -219,7 +219,8 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
     include_graph.init(config_);
 
     auto error = CXCompilationDatabase_NoError;
-    const auto compilation_database_directory_str = config_.compilation_database_directory().value().string();
+    const auto compilation_database_directory_str =
+        config_.compilation_database_directory().value().string();
     auto *database = clang_CompilationDatabase_fromDirectory(
         compilation_database_directory_str.c_str(), &error);
 

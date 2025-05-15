@@ -87,7 +87,7 @@ void include_graph_tree_printer_t::print_tu_subtree(std::ostream &os,
 #ifdef _MSC_VER
                     os << "I";
 #else
-                    os << "|";
+                    os << "│";
 #endif
                 }
                 else {
@@ -100,7 +100,7 @@ void include_graph_tree_printer_t::print_tu_subtree(std::ostream &os,
 #ifdef _MSC_VER
             os << "\\-- ";
 #else
-            os << "└──  ";
+            os << "└── ";
 #endif
             continuation_line_tmp.push_back(false);
         }
