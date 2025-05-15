@@ -119,12 +119,168 @@ if (NOT LIBCLANG_LIBRARIES)
 endif ()
 set(LIBCLANG_LIBRARY ${LIBCLANG_LIBRARIES} CACHE FILEPATH "Path to the libclang library")
 
+if(NOT MSVC)
 if (NOT LIBCLANG_SYSTEM_LIBS)
     execute_process(COMMAND ${LIBCLANG_LLVM_CONFIG_EXECUTABLE} --system-libs OUTPUT_VARIABLE LIBCLANG_SYSTEM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
     if (LIBCLANG_SYSTEM_LIBS)
         set (LIBCLANG_LIBRARIES ${LIBCLANG_LIBRARIES} ${LIBCLANG_SYSTEM_LIBS})
     endif ()
 endif ()
+endif(NOT MSVC)
+
+# Currently only static clang linking is supported on Windows
+if(MSVC)
+    # Add clang static libs
+    set(CLANG_STATIC_LIBS
+            clangAnalysis
+            clangAnalysisFlowSensitive
+            clangAnalysisFlowSensitiveModels
+            clangAPINotes
+            clangARCMigrate
+            clangAST
+            clangASTMatchers
+            clangBasic
+            clangCodeGen
+            clangCrossTU
+            clangDependencyScanning
+            clangDirectoryWatcher
+            clangDriver
+            clangDynamicASTMatchers
+            clangEdit
+            clangExtractAPI
+            clangFormat
+            clangFrontend
+            clangFrontendTool
+            clangHandleCXX
+            clangHandleLLVM
+            clangIndex
+            clangIndexSerialization
+            clangInstallAPI
+            clangInterpreter
+            clangLex
+            clangParse
+            clangRewrite
+            clangRewriteFrontend
+            clangSema
+            clangSerialization
+            clangStaticAnalyzerCheckers
+            clangStaticAnalyzerCore
+            clangStaticAnalyzerFrontend
+            clangSupport
+            clangTooling
+            clangToolingASTDiff
+            clangToolingCore
+            clangToolingInclusions
+            clangToolingInclusionsStdlib
+            clangToolingRefactoring
+            clangToolingSyntax
+            clangTransformer
+            LLVMAggressiveInstCombine
+            LLVMAnalysis
+            LLVMAsmParser
+            LLVMAsmPrinter
+            LLVMBinaryFormat
+            LLVMBitReader
+            LLVMBitstreamReader
+            LLVMBitWriter
+            LLVMCFGuard
+            LLVMCFIVerify
+            LLVMCGData
+            LLVMCodeGen
+            LLVMCodeGenTypes
+            LLVMCore
+            LLVMCoroutines
+            LLVMCoverage
+            LLVMDebugInfoBTF
+            LLVMDebugInfoCodeView
+            LLVMDebuginfod
+            LLVMDebugInfoDWARF
+            LLVMDebugInfoGSYM
+            LLVMDebugInfoLogicalView
+            LLVMDebugInfoMSF
+            LLVMDebugInfoPDB
+            LLVMDemangle
+            LLVMDiff
+            LLVMDlltoolDriver
+            LLVMDWARFLinker
+            LLVMDWARFLinkerClassic
+            LLVMDWARFLinkerParallel
+            LLVMDWP
+            LLVMExecutionEngine
+            LLVMExegesis
+            LLVMExegesisX86
+            LLVMExtensions
+            LLVMFileCheck
+            LLVMFrontendAtomic
+            LLVMFrontendDriver
+            LLVMFrontendHLSL
+            LLVMFrontendOffloading
+            LLVMFrontendOpenACC
+            LLVMFrontendOpenMP
+            LLVMFuzzerCLI
+            LLVMFuzzMutate
+            LLVMGlobalISel
+            LLVMHipStdPar
+            LLVMInstCombine
+            LLVMInstrumentation
+            LLVMInterfaceStub
+            LLVMInterpreter
+            LLVMipo
+            LLVMIRPrinter
+            LLVMIRReader
+            LLVMJITLink
+            LLVMLibDriver
+            LLVMLineEditor
+            LLVMLinker
+            LLVMLTO
+            LLVMMC
+            LLVMMCA
+            LLVMMCDisassembler
+            LLVMMCJIT
+            LLVMMCParser
+            LLVMMIRParser
+            LLVMObjCARCOpts
+            LLVMObjCopy
+            LLVMObject
+            LLVMObjectYAML
+            LLVMOptDriver
+            LLVMOption
+            LLVMOrcDebugging
+            LLVMOrcJIT
+            LLVMOrcShared
+            LLVMOrcTargetProcess
+            LLVMPasses
+            LLVMProfileData
+            LLVMRemarks
+            LLVMRuntimeDyld
+            LLVMSandboxIR
+            LLVMScalarOpts
+            LLVMSelectionDAG
+            LLVMSupport
+            LLVMSymbolize
+            LLVMTableGen
+            LLVMTableGenBasic
+            LLVMTableGenCommon
+            LLVMTarget
+            LLVMTargetParser
+            LLVMTelemetry
+            LLVMTextAPI
+            LLVMTextAPIBinaryReader
+            LLVMTransformUtils
+            LLVMVectorize
+            LLVMWindowsDriver
+            LLVMWindowsManifest
+            LLVMX86AsmParser
+            LLVMX86CodeGen
+            LLVMX86Desc
+            LLVMX86Disassembler
+            LLVMX86Info
+            LLVMX86TargetMCA
+            LLVMXRay)
+    list(TRANSFORM CLANG_STATIC_LIBS PREPEND ${LIBCLANG_LIBDIR}\\ OUTPUT_VARIABLE CLANG_STATIC_LIBS_RES)
+    list(TRANSFORM CLANG_STATIC_LIBS_RES APPEND .lib OUTPUT_VARIABLE CLANG_STATIC_LIBS_RES)
+    set (LIBCLANG_LIBRARIES ${CLANG_STATIC_LIBS_RES} ${LIBCLANG_LIBRARIES} version ntdll)
+endif(MSVC)
 
 if (LIBCLANG_LLVM_CONFIG_EXECUTABLE)
     execute_process(COMMAND ${LIBCLANG_LLVM_CONFIG_EXECUTABLE} --version OUTPUT_VARIABLE LIBCLANG_VERSION_STRING OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -133,7 +289,7 @@ else ()
 endif ()
 message("-- Using Clang version ${LIBCLANG_VERSION_STRING} from ${LIBCLANG_LIBDIR} with CXXFLAGS ${LIBCLANG_CXXFLAGS}")
 
-# Handly the QUIETLY and REQUIRED arguments and set LIBCLANG_FOUND to TRUE if all listed variables are TRUE
+# Handle the QUIETLY and REQUIRED arguments and set LIBCLANG_FOUND to TRUE if all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LibClang DEFAULT_MSG LIBCLANG_LIBRARY LIBCLANG_CXXFLAGS LIBCLANG_LIBDIR)
 mark_as_advanced(LIBCLANG_CXXFLAGS LIBCLANG_LIBRARY LIBCLANG_LLVM_CONFIG_EXECUTABLE LIBCLANG_LIBDIR)

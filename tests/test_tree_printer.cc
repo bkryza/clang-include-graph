@@ -49,6 +49,8 @@ BOOST_AUTO_TEST_CASE(test_dag_prints_no_cycles)
     read_lines(ss, includes);
 
     BOOST_TEST(includes.size() == 7);
+
+#if !defined(_MSC_VER)
     BOOST_TEST(includes[0] == "main.cc");
     BOOST_TEST(includes[1] == "├── include1.h");
     BOOST_TEST(includes[2] == "└── include2.h");
@@ -56,6 +58,15 @@ BOOST_AUTO_TEST_CASE(test_dag_prints_no_cycles)
     BOOST_TEST(includes[4] == "├── include3.h");
     BOOST_TEST(includes[5] == "└── include4.h");
     BOOST_TEST(includes[6] == "    └── include5.h");
+#else
+    BOOST_TEST(includes[0] == "main.cc");
+    BOOST_TEST(includes[1] == "+-- include1.h");
+    BOOST_TEST(includes[2] == "\\-- include2.h");
+    BOOST_TEST(includes[3] == "util.cc");
+    BOOST_TEST(includes[4] == "+-- include3.h");
+    BOOST_TEST(includes[5] == "\\-- include4.h");
+    BOOST_TEST(includes[6] == "    \\-- include5.h");
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(test_dag_prints_with_cycles)
@@ -81,6 +92,7 @@ BOOST_AUTO_TEST_CASE(test_dag_prints_with_cycles)
     read_lines(ss, includes);
 
     BOOST_TEST(includes.size() == 7);
+#if !defined(_MSC_VER)
     BOOST_TEST(includes[0] == "main.cc");
     BOOST_TEST(includes[1] == "├── include1.h");
     BOOST_TEST(includes[2] == "│   └── include2.h");
@@ -88,6 +100,15 @@ BOOST_AUTO_TEST_CASE(test_dag_prints_with_cycles)
     BOOST_TEST(includes[4] == "util.cc");
     BOOST_TEST(includes[5] == "├── include3.h");
     BOOST_TEST(includes[6] == "└── include4.h");
+#else
+    BOOST_TEST(includes[0] == "main.cc");
+    BOOST_TEST(includes[1] == "+-- include1.h");
+    BOOST_TEST(includes[2] == "I   \\-- include2.h");
+    BOOST_TEST(includes[3] == "\\-- include2.h");
+    BOOST_TEST(includes[4] == "util.cc");
+    BOOST_TEST(includes[5] == "+-- include3.h");
+    BOOST_TEST(includes[6] == "\\-- include4.h");
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(test_dag_prints_reverse_tree)
@@ -116,6 +137,7 @@ BOOST_AUTO_TEST_CASE(test_dag_prints_reverse_tree)
     read_lines(ss, includes);
 
     BOOST_TEST(includes.size() == 9);
+#if !defined(_MSC_VER)
     BOOST_TEST(includes[0] == "include1.h");
     BOOST_TEST(includes[1] == "└── main.cc");
     BOOST_TEST(includes[2] == "include2.h");
@@ -125,4 +147,15 @@ BOOST_AUTO_TEST_CASE(test_dag_prints_reverse_tree)
     BOOST_TEST(includes[6] == "include4.h");
     BOOST_TEST(includes[7] == "└── include5.h");
     BOOST_TEST(includes[8] == "    └── main.cc");
+#else
+    BOOST_TEST(includes[0] == "include1.h");
+    BOOST_TEST(includes[1] == "\\-- main.cc");
+    BOOST_TEST(includes[2] == "include2.h");
+    BOOST_TEST(includes[3] == "\\-- main.cc");
+    BOOST_TEST(includes[4] == "include3.h");
+    BOOST_TEST(includes[5] == "\\-- main.cc");
+    BOOST_TEST(includes[6] == "include4.h");
+    BOOST_TEST(includes[7] == "\\-- include5.h");
+    BOOST_TEST(includes[8] == "    \\-- main.cc");
+#endif
 }

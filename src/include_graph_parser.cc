@@ -89,6 +89,11 @@ void process_translation_unit(const config_t &config,
             args.end());
     }
 
+#ifdef _MSC_VER
+    // This assumes that Windows source file is always the last argument
+    // of a compile command
+    args.pop_back();
+#else
     for (auto i = 0U; i < args.size(); i++) {
         if (args.at(i) == "-c") {
             // Remove the source file name from the arguments list
@@ -98,6 +103,7 @@ void process_translation_unit(const config_t &config,
 
         args_cstr.emplace_back(args.at(i).c_str());
     }
+#endif
 
     LOG(trace) << "Parsing " << tu_path << " with the following compile flags: "
                << boost::algorithm::join(args, " ");
@@ -114,17 +120,20 @@ void process_translation_unit(const config_t &config,
         switch (err) {
         case CXError_Success:
             break;
-
         case CXError_Failure:
             error_str = "clang_parseTranslationUnit2: unknown error";
+            break;
         case CXError_Crashed:
             error_str = "clang_parseTranslationUnit2: libclang crash";
+            break;
         case CXError_InvalidArguments:
             error_str =
                 "clang_parseTranslationUnit2: invalid compilation arguments";
+            break;
         case CXError_ASTReadError:
             error_str =
                 "clang_parseTranslationUnit2: AST deserialization failed";
+            break;
         }
 
         if (unit != nullptr)
@@ -210,8 +219,10 @@ void include_graph_parser_t::parse(include_graph_t &include_graph)
     include_graph.init(config_);
 
     auto error = CXCompilationDatabase_NoError;
+    const auto compilation_database_directory_str =
+        config_.compilation_database_directory().value().string();
     auto *database = clang_CompilationDatabase_fromDirectory(
-        config_.compilation_database_directory().value().c_str(), &error);
+        compilation_database_directory_str.c_str(), &error);
 
     if (error != CXCompilationDatabase_NoError) {
         LOG(error) << "Failed to load compilation database from "

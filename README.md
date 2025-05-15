@@ -2,7 +2,7 @@
 
 [![Build status](https://github.com/bkryza/clang-include-graph/actions/workflows/build.yml/badge.svg)](https://github.com/bkryza/clang-include-graph/actions)
 [![Build status](https://github.com/bkryza/clang-include-graph/actions/workflows/macos.yml/badge.svg)](https://github.com/bkryza/clang-include-graph/actions)
-[![Version](https://img.shields.io/badge/version-0.1.1-blue)](https://github.com/bkryza/clang-include-graph/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/bkryza/clang-include-graph/releases)
 [![Version](https://img.shields.io/badge/LLVM-12..20-orange)](https://github.com/bkryza/clang-include-graph/releases)
 
 `clang-include-graph` provides several simple commands for analyzing and visualizing C++ project include graphs.
@@ -19,36 +19,8 @@ Main features include:
 * Listing of all dependants of specified header file
 
 ## Installation
-### Distribution packages
-#### Ubuntu
-```bash
-sudo add-apt-repository ppa:bkryza/clang-include-graph
-sudo apt update
-sudo apt install clang-include-graph
-```
 
-### Building from source
-First make sure that you have the following dependencies installed:
-
-```bash
-# Ubuntu (clang version will vary depending on Ubuntu version)
-apt install git make gcc g++ cmake clang-18 libclang-18-dev libclang-cpp18-dev libboost-graph1.83-dev libboost-filesystem1.83-dev libboost-test1.83-dev libboost-program-options1.83-dev
-```
-
-Then proceed with building the sources:
-
-```bash
-git clone https://github.com/bkryza/clang-include-graph
-cd clang-include-graph
-# Please note that top level Makefile is just a convenience wrapper for CMake
-make release
-release/clang-include-graph --help
-
-# To build using a specific installed version of LLVM use:
-LLVM_CONFIG_PATH=/usr/bin/llvm-config-18 make release
-
-export PATH=$PATH:$PWD/release
-```
+See [INSTALLATION](./INSTALLATION.md).
 
 ## Usage
 ### Generating compile commands database

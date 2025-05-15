@@ -12,6 +12,7 @@ Checks: >-
   -cppcoreguidelines-avoid-const-or-ref-data-members,
   -google-runtime-int,
   -google-readability-braces-around-statements,
+  -google-readability-todo,
   -hicpp-no-array-decay,
   -hicpp-braces-around-statements,
   -fuchsia-*,
