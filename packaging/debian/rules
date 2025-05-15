@@ -8,11 +8,7 @@ export CLANGINCLUDEGRAPH_GIT_BRANCH={{GIT_BRANCH}}
 export CLANGINCLUDEGRAPH_GIT_COMMIT={{GIT_COMMIT}}
 
 override_dh_auto_configure:
-	if [ "x$(VERSION_CODENAME)" = "xfocal" ] || [ "x$(VERSION_CODENAME)" = "xjammy" ]; then \
-		dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DWITH_JSON=OFF -DGIT_VERSION={{VERSION}}; \
-	else \
-		dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DWITH_JSON=ON -DGIT_VERSION={{VERSION}}; \
-	fi
+	dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DWITH_JSON={{WITH_JSON}} -DGIT_VERSION={{VERSION}}
 
 %:
 	dh $@

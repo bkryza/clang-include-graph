@@ -37,6 +37,7 @@ SOURCE_ARCHIVE ?= $(NAME)-$(VERSION).tar.$(TAR_EXT)
 SOURCE_ARCHIVE_DEB ?= $(NAME)-$(VERSION)-$(REBUILD).tar.$(TAR_EXT)
 SOURCE_ARCHIVE_RPM ?= $(NAME)-$(VERSION).tar.$(TAR_EXT)
 CONDA_TOKEN ?=
+WITH_JSON ?= ON
 
 #
 # Replace mustache template variable in all files in directory recursively,
@@ -118,6 +119,7 @@ debian: _BUILD/$(SOURCE_ARCHIVE_DEB)
 		$(call subst_template_dir,GIT_COMMIT,${COMMIT},debian)
 		$(call subst_template_dir,GIT_BRANCH,${BRANCH},debian)
 		$(call subst_template_dir,DIST,${DIST},debian)
+		$(call subst_template_dir,WITH_JSON,${WITH_JSON},debian)
 		cp debian/control.$(DIST) debian/control
 		cp debian/changelog.$(DIST) debian/changelog
 		DEB_BUILD_OPTIONS='parallel=16' dpkg-buildpackage -b -us -uc
@@ -150,6 +152,7 @@ deb: _BUILD/$(SOURCE_ARCHIVE)
 		$(call subst_template_dir,GIT_COMMIT,${COMMIT},debian)
 		$(call subst_template_dir,GIT_BRANCH,${BRANCH},debian)
 		$(call subst_template_dir,DIST,${DIST},debian)
+		$(call subst_template_dir,WITH_JSON,${WITH_JSON},debian)
 		mk-origtargz ../$(NAME)-$(VERSION).tar.$(TAR_EXT)
 		cp debian/control.$(DIST) debian/control
 		# BUILD SOURCE PACKAGE FOR LAUNCHPAD
