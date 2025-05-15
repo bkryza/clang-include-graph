@@ -210,6 +210,7 @@ std::vector<fs::path> iter_directory(const fs::path &dirname, bool dironly) {
 
   if (fs::exists(current_directory)) {
     try {
+#if 107200 <= BOOST_VERSION
       for (auto &entry : fs::directory_iterator(
               current_directory, fs::directory_options::follow_directory_symlink |
                                       fs::directory_options::skip_permission_denied)) {
@@ -221,6 +222,20 @@ std::vector<fs::path> iter_directory(const fs::path &dirname, bool dironly) {
           }
         }
       }
+#else
+      for (fs::recursive_directory_iterator entry(current_directory,
+                 fs::symlink_option::recurse), eit;
+         entry != eit;
+         ++entry) {
+        if (!dironly || fs::is_directory(entry->path())) {
+          if (dirname.is_absolute()) {
+            result.push_back(entry->path());
+          } else {
+            result.push_back(fs::relative(entry->path()));
+          }
+        }
+      }
+#endif
     } catch (std::exception&) {
       // not a directory
       // do nothing
