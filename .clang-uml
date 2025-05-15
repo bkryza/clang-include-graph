@@ -1,0 +1,25 @@
+compilation_database_dir: debug
+output_directory: docs/diagrams
+diagrams:
+  printer_class_diagram:
+    type: class
+    glob:
+      - src/*.cc
+    using_namespace:
+      - clang_include_graph
+    include:
+      namespaces:
+        - clang_include_graph
+      paths:
+        - src
+      context:
+        - clang_include_graph::include_graph_printer
+    exclude:
+      relationships:
+        - dependency
+      method_types:
+        - constructor
+        - operator
+    plantuml:
+      before:
+        - left to right direction
