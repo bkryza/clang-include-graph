@@ -8,7 +8,7 @@ export CLANGINCLUDEGRAPH_GIT_BRANCH={{GIT_BRANCH}}
 export CLANGINCLUDEGRAPH_GIT_COMMIT={{GIT_COMMIT}}
 
 override_dh_auto_configure:
-	dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DWITH_JSON={{WITH_JSON}} -DGIT_VERSION="{{VERSION}}"
+	dh_auto_configure --buildsystem=cmake -- -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr -DWITH_JSON={{WITH_JSON}} -DGIT_VERSION="\"{{VERSION}}\""
 
 %:
 	dh $@
