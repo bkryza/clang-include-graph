@@ -39,6 +39,14 @@ conda config --set channel_priority strict
 conda install -c bkryza/label/clang-include-graph clang-include-graph
 ```
 
+#### macOS
+
+Using Homebrew:
+
+```console
+brew install clang-include-graph
+```
+
 #### Windows
 
 Download and run the latest Windows installer from
