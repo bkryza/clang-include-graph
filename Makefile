@@ -57,18 +57,18 @@ release/CMakeLists.txt:
 		-DWITH_JSON=$(WITH_JSON)
 
 debug: debug/CMakeLists.txt
-	echo "Using ${NUMPROC} cores"
-	make -C debug -j$(NUMPROC)
+	@echo "Using ${NUMPROC} cores"
+	CMAKE_BUILD_PARALLEL_LEVEL=$(NUMPROC) cmake --build debug
 
 release: release/CMakeLists.txt
-	echo "Using ${NUMPROC} cores"
-	make -C release -j$(NUMPROC)
+	@echo "Using ${NUMPROC} cores"
+	CMAKE_BUILD_PARALLEL_LEVEL=$(NUMPROC) cmake --build release
 
 test: debug
-	CTEST_OUTPUT_ON_FAILURE=1 make -C debug test
+	CTEST_OUTPUT_ON_FAILURE=1 cmake --build debug --target test
 
 test_release: release
-	CTEST_OUTPUT_ON_FAILURE=1 make -C release test
+	CTEST_OUTPUT_ON_FAILURE=1 cmake --build release --target test
 
 .PHONY: check-formatting
 check-formatting:
