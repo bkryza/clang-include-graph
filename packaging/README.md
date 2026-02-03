@@ -12,6 +12,7 @@ make DIST=focal deb
 make DIST=jammy deb
 make DIST=noble deb
 make DIST=oracular deb
+make DIST=questing deb
 
 # Repeat for each distro
 cd _BUILD/ubuntu/focal
