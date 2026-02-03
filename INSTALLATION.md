@@ -13,6 +13,10 @@ sudo apt install clang-include-graph
 # Bookworm
 wget https://github.com/bkryza/clang-include-graph/releases/download/0.2.0/clang-include-graph_0.2.0-1_amd64.deb
 sudo apt install ./clang-include-graph_0.2.0-1_amd64.deb
+
+# Trixie
+wget https://github.com/bkryza/clang-include-graph/releases/download/0.2.0/clang-include-graph_0.2.0-0debian1ppa1.trixie_amd64.deb
+sudo apt install ./clang-include-graph_0.2.0-0debian1ppa1.trixie_amd64.deb
 ```
 
 #### Fedora
