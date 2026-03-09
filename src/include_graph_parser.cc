@@ -424,6 +424,12 @@ enum CXChildVisitResult inclusion_cursor_visitor(
         clang_getFileLocation(clang_getCursorLocation(cursor), &source_file,
             &line, &column, &offset);
 
+        if(source_file == nullptr) {
+            LOG(debug) << "WARNING: Cannot find source file for include text: "
+                       << get_raw_include_text(cursor);
+            return CXChildVisit_Continue;
+        }
+
         const std::string source_file_str{
             clang_getCString(clang_getFileName(source_file))};
 
