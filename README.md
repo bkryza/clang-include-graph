@@ -73,6 +73,8 @@ clang-include-graph options:
   --translation-units-only              Print only translation units
   --exclude-system-headers              Exclude system headers from include 
                                         graph
+  --exclude-nested-system-headers       Exclude headers included by other
+                                        system headers from include graph
   --system-headers-with-full-path       Print systems headers with their full 
                                         path
   --title arg                           Graph title that can be added 

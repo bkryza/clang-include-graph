@@ -87,6 +87,7 @@ void include_graph_t::init(const config_t &config)
     numeric_ids_ = config.json_printer_opts().numeric_ids;
     title_ = config.title();
     exclude_system_headers_ = config.exclude_system_headers();
+    exclude_nested_system_headers_ = config.exclude_nested_system_headers();
 }
 
 void include_graph_t::build_dag()
@@ -129,6 +130,11 @@ bool include_graph_t::translation_units_only() const noexcept
 bool include_graph_t::exclude_system_headers() const noexcept
 {
     return exclude_system_headers_;
+}
+
+bool include_graph_t::exclude_nested_system_headers() const noexcept
+{
+    return exclude_nested_system_headers_;
 }
 
 printer_t include_graph_t::printer() const noexcept { return printer_; }
