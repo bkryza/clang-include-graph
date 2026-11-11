@@ -52,21 +52,24 @@ define subst_conda_meta_yaml
         find $(3) -name meta.yaml -exec sed -i "s/{{$(1)}}/$(2)/g" {} \;
 endef
 
+_BUILD/GIT_COMMIT_$(COMMIT):
+	rm -rf _BUILD/GIT_COMMIT_*
+	mkdir --parents _BUILD
+	touch _BUILD/GIT_COMMIT_$(COMMIT)
 
-
-_BUILD/$(SOURCE_ARCHIVE):
+_BUILD/$(SOURCE_ARCHIVE): _BUILD/GIT_COMMIT_$(COMMIT)
 		echo "############################"
 		echo "Creating source archive from latest commit $(COMMIT) - $(SOURCE_ARCHIVE) - $(VERSION)"
 		echo "############################"
 		mkdir -p $(build_dir)
-		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(VERSION) > _BUILD/$(SOURCE_ARCHIVE)
+		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(COMMIT) > _BUILD/$(SOURCE_ARCHIVE)
 
-_BUILD/$(SOURCE_ARCHIVE_DEB):
+_BUILD/$(SOURCE_ARCHIVE_DEB): _BUILD/GIT_COMMIT_$(COMMIT)
 		echo "############################"
 		echo "Creating source archive for DEB from latest commit $(COMMIT) - $(SOURCE_ARCHIVE) - $(VERSION)"
 		echo "############################"
 		mkdir -p $(build_dir)
-		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(VERSION) > _BUILD/$(SOURCE_ARCHIVE_DEB)
+		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(COMMIT) > _BUILD/$(SOURCE_ARCHIVE_DEB)
 
 rpm:
 		echo "############################"
