@@ -22,6 +22,17 @@ dput ppa:bkryza/clang-include-graph *.changes
 
 ## Debian
 
+Automated via script:
+
+```bash
+./packaging/build.debian.sh
+
+# You can also pass parameters to the Makefile
+./packaging/build.debian.sh VERSION=0.99.99 PARALLEL=4
+```
+
+Manual approach:
+
 ```bash
 docker run --rm -v $PWD:$PWD -it debian:trixie bash
 apt update

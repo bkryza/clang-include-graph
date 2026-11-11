@@ -30,6 +30,7 @@ TAR_EXT ?= gz
 
 build_dir = _BUILD/$(OS)/$(DIST)
 
+PARALLEL ?= 16
 VERSION	?= $(shell git describe --tags --always --abbrev=7)
 COMMIT ?= $(shell git rev-parse HEAD)
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
@@ -118,7 +119,7 @@ debian: _BUILD/$(SOURCE_ARCHIVE_DEB)
 		$(call subst_template_dir,WITH_JSON,${WITH_JSON},debian)
 		cp debian/control.$(DIST) debian/control
 		cp debian/changelog.$(DIST) debian/changelog
-		DEB_BUILD_OPTIONS='parallel=16' dpkg-buildpackage -b -us -uc
+		DEB_BUILD_OPTIONS='parallel=$(PARALLEL)' dpkg-buildpackage -b -us -uc
 
 #
 # Ubuntu
