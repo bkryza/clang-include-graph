@@ -68,6 +68,9 @@ public:
     relative_to() const noexcept;
     void relative_to(std::string rt);
 
+    bool relative_system_headers() const noexcept;
+    void relative_system_headers(bool rsh) noexcept;
+
     const boost::optional<boost::filesystem::path> &
     dependants_of() const noexcept;
     void dependants_of(std::string file);
@@ -115,6 +118,7 @@ private:
     std::vector<boost::filesystem::path> translation_unit_;
     boost::optional<boost::filesystem::path> relative_to_;
     boost::optional<boost::filesystem::path> dependants_of_;
+    bool relative_system_headers_{false};
     bool filenames_only_{false};
     bool relative_only_{false};
     bool translation_units_only_{false};
