@@ -68,6 +68,9 @@ public:
     relative_to() const noexcept;
     void relative_to(std::string rt);
 
+    bool relative_system_headers() const noexcept;
+    void relative_system_headers(bool rsh) noexcept;
+
     const boost::optional<boost::filesystem::path> &
     dependants_of() const noexcept;
     void dependants_of(std::string file);
@@ -82,6 +85,9 @@ public:
 
     bool exclude_system_headers() const noexcept;
     void exclude_system_headers(bool esh) noexcept;
+
+    bool exclude_nested_system_headers() const noexcept;
+    void exclude_nested_system_headers(bool esh) noexcept;
 
     const boost::optional<std::string> &title() const noexcept;
 
@@ -112,10 +118,12 @@ private:
     std::vector<boost::filesystem::path> translation_unit_;
     boost::optional<boost::filesystem::path> relative_to_;
     boost::optional<boost::filesystem::path> dependants_of_;
+    bool relative_system_headers_{false};
     bool filenames_only_{false};
     bool relative_only_{false};
     bool translation_units_only_{false};
     bool exclude_system_headers_{false};
+    bool exclude_nested_system_headers_{false};
     json_printer_opts_t json_printer_opts_;
     printer_t printer_{printer_t::topological_sort};
     unsigned jobs_{std::thread::hardware_concurrency()};

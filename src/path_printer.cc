@@ -34,15 +34,27 @@ std::unique_ptr<T> make_unique(Args &&...args)
 std::unique_ptr<path_printer_t> path_printer_t::from_config(
     const config_t &config)
 {
-    if (config.relative_to()) {
-        return detail::make_unique<path_relative_printer_t>(config);
-    }
-
+    std::unique_ptr<path_printer_t> printer;
     if (config.filenames_only()) {
-        return detail::make_unique<path_name_printer_t>(config);
+        printer = detail::make_unique<path_name_printer_t>(config);
+    }
+    else {
+        printer = detail::make_unique<path_printer_t>(config);
     }
 
-    return detail::make_unique<path_printer_t>(config);
+    if (config.relative_to()) {
+        printer = detail::make_unique<path_relative_printer_t>(
+            config, std::move(printer));
+    }
+
+    if (config.relative_system_headers()) {
+        printer = detail::make_unique<system_header_relative_printer_t>(
+            config, std::move(printer));
+        printer = detail::make_unique<system_header_brackets_printer_t>(
+            config, std::move(printer));
+    }
+
+    return printer;
 }
 
 } // namespace clang_include_graph
