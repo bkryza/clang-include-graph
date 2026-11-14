@@ -226,6 +226,7 @@ void process_command_line_options(int argc, char **argv, po::variables_map &vm,
         ("translation-units-only", "Print only translation units")
         ("exclude-system-headers", "Exclude system headers from include graph")
         ("exclude-nested-system-headers", "Exclude headers included by other system headers from include graph")
+        ("relative-system-headers", "Print relative paths for system headers in angle brackets")
         ("title", po::value<std::string>(),
             "Graph title that can be added ")
         ("topological-sort,s",

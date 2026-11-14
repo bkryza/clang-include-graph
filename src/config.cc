@@ -71,6 +71,10 @@ void config_t::init(
             util::to_absolute_path(vm["relative-to"].as<std::string>());
     }
 
+    if (vm.count("relative-system-headers") == 1) {
+        relative_system_headers_ = true;
+    }
+
     if (vm.count("names-only") == 1) {
         filenames_only_ = true;
     }
@@ -198,6 +202,16 @@ config_t::relative_to() const noexcept
 }
 
 void config_t::relative_to(std::string rt) { relative_to_ = std::move(rt); };
+
+bool config_t::relative_system_headers() const noexcept
+{
+    return relative_system_headers_;
+}
+
+void config_t::relative_system_headers(bool rsh) noexcept
+{
+    relative_system_headers_ = rsh;
+}
 
 const boost::optional<boost::filesystem::path> &
 config_t::dependants_of() const noexcept

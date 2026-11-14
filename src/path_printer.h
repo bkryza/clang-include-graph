@@ -57,9 +57,11 @@ private:
 
 class path_relative_printer_t final : public path_printer_t {
 public:
-    explicit path_relative_printer_t(config_t config)
+    explicit path_relative_printer_t(
+        config_t config, std::unique_ptr<path_printer_t> chained)
         : path_printer_t{std::move(config)}
         , relative_to_{*this->config().relative_to()}
+        , chained_{std::move(chained)}
     {
     }
 
@@ -70,11 +72,12 @@ public:
             return boost::filesystem::relative(v.file, relative_to_).string();
         }
 
-        return v.file;
+        return chained_->print(v);
     }
 
 private:
     boost::filesystem::path relative_to_;
+    std::unique_ptr<path_printer_t> chained_;
 };
 
 class path_name_printer_t final : public path_printer_t {
@@ -85,6 +88,50 @@ public:
     {
         return boost::filesystem::path(v.file).filename().string();
     }
+};
+
+class system_header_brackets_printer_t final : public path_printer_t {
+public:
+    explicit system_header_brackets_printer_t(
+        config_t config, std::unique_ptr<path_printer_t> chained)
+        : path_printer_t{std::move(config)}
+        , chained_{std::move(chained)}
+    {
+    }
+
+    std::string print(const include_graph_t::vertex_t &v) const override
+    {
+        auto result = chained_->print(v);
+        if (!result.empty() && v.is_system_header) {
+            return "<" + result + ">";
+        }
+        return result;
+    }
+
+private:
+    std::unique_ptr<path_printer_t> chained_;
+};
+
+class system_header_relative_printer_t final : public path_printer_t {
+public:
+    explicit system_header_relative_printer_t(
+        config_t config, std::unique_ptr<path_printer_t> chained)
+        : path_printer_t{std::move(config)}
+        , chained_{std::move(chained)}
+    {
+    }
+
+    std::string print(const include_graph_t::vertex_t &v) const override
+    {
+        if (v.is_system_header && !v.include_spelling.empty()) {
+            return v.include_spelling;
+        }
+
+        return chained_->print(v);
+    }
+
+private:
+    std::unique_ptr<path_printer_t> chained_;
 };
 
 } // namespace clang_include_graph

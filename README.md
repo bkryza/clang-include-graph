@@ -75,8 +75,8 @@ clang-include-graph options:
                                         graph
   --exclude-nested-system-headers       Exclude headers included by other
                                         system headers from include graph
-  --system-headers-with-full-path       Print systems headers with their full 
-                                        path
+  --relative-system-headers             Print relative paths for system headers
+                                        in angle brackets
   --title arg                           Graph title that can be added 
   -s [ --topological-sort ]             Print output includes and translation 
                                         units in topologicalsort order
