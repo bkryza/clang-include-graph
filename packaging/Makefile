@@ -30,6 +30,7 @@ TAR_EXT ?= gz
 
 build_dir = _BUILD/$(OS)/$(DIST)
 
+PARALLEL ?= 16
 VERSION	?= $(shell git describe --tags --always --abbrev=7)
 COMMIT ?= $(shell git rev-parse HEAD)
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
@@ -52,21 +53,24 @@ define subst_conda_meta_yaml
         find $(3) -name meta.yaml -exec sed -i "s/{{$(1)}}/$(2)/g" {} \;
 endef
 
+_BUILD/GIT_COMMIT_$(COMMIT):
+	rm -rf _BUILD/GIT_COMMIT_*
+	mkdir --parents _BUILD
+	touch _BUILD/GIT_COMMIT_$(COMMIT)
 
-
-_BUILD/$(SOURCE_ARCHIVE):
+_BUILD/$(SOURCE_ARCHIVE): _BUILD/GIT_COMMIT_$(COMMIT)
 		echo "############################"
 		echo "Creating source archive from latest commit $(COMMIT) - $(SOURCE_ARCHIVE) - $(VERSION)"
 		echo "############################"
 		mkdir -p $(build_dir)
-		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(VERSION) > _BUILD/$(SOURCE_ARCHIVE)
+		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(COMMIT) > _BUILD/$(SOURCE_ARCHIVE)
 
-_BUILD/$(SOURCE_ARCHIVE_DEB):
+_BUILD/$(SOURCE_ARCHIVE_DEB): _BUILD/GIT_COMMIT_$(COMMIT)
 		echo "############################"
 		echo "Creating source archive for DEB from latest commit $(COMMIT) - $(SOURCE_ARCHIVE) - $(VERSION)"
 		echo "############################"
 		mkdir -p $(build_dir)
-		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(VERSION) > _BUILD/$(SOURCE_ARCHIVE_DEB)
+		git -C .. archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ $(COMMIT) > _BUILD/$(SOURCE_ARCHIVE_DEB)
 
 rpm:
 		echo "############################"
@@ -115,7 +119,7 @@ debian: _BUILD/$(SOURCE_ARCHIVE_DEB)
 		$(call subst_template_dir,WITH_JSON,${WITH_JSON},debian)
 		cp debian/control.$(DIST) debian/control
 		cp debian/changelog.$(DIST) debian/changelog
-		DEB_BUILD_OPTIONS='parallel=16' dpkg-buildpackage -b -us -uc
+		DEB_BUILD_OPTIONS='parallel=$(PARALLEL)' dpkg-buildpackage -b -us -uc
 
 #
 # Ubuntu
