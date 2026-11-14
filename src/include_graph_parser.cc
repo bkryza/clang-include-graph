@@ -34,12 +34,14 @@
 #include <ostream>
 #include <set>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 namespace clang_include_graph {
 
-using visitor_context_t = std::pair<include_graph_t &, std::string>;
+using visitor_context_t = std::tuple<include_graph_t &, std::string,
+    std::set<boost::filesystem::path> &>;
 
 void print_diagnostics(const CXTranslationUnit &tu);
 
@@ -150,7 +152,10 @@ void process_translation_unit(const config_t &config,
         print_diagnostics(unit);
     }
 
-    visitor_context_t visitor_context{include_graph, tu_path.string()};
+    std::set<boost::filesystem::path> system_headers;
+
+    visitor_context_t visitor_context{
+        include_graph, tu_path.string(), system_headers};
 
     const CXCursor start_cursor = clang_getTranslationUnitCursor(unit);
     clang_visitChildren(
@@ -413,6 +418,9 @@ enum CXChildVisitResult inclusion_cursor_visitor(
     auto tu_path =
         std::get<1>(*static_cast<visitor_context_t *>(include_graph_ptr));
 
+    auto &system_headers =
+        std::get<2>(*static_cast<visitor_context_t *>(include_graph_ptr));
+
     auto relative_only = include_graph.relative_only();
     auto relative_to = include_graph.relative_to();
 
@@ -460,12 +468,21 @@ enum CXChildVisitResult inclusion_cursor_visitor(
             boost::filesystem::weakly_canonical(
                 boost::filesystem::path(source_file_str));
 
-        if (!relative_only ||
-            (is_relative(from_path, relative_to.value()) &&
-                is_relative(included_path, relative_to.value()))) {
-            include_graph.add_edge(included_path.string(), from_path.string(),
-                include_spelling, tu_path == from_path, is_system);
-        }
+        const auto from_is_system = system_headers.count(from_path) > 0;
+
+        if (is_system || from_is_system)
+            system_headers.insert(included_path);
+
+        if (relative_only &&
+            (!is_relative(from_path, relative_to.value()) ||
+                !is_relative(included_path, relative_to.value())))
+            return CXChildVisit_Continue;
+
+        if (include_graph.exclude_nested_system_headers() && from_is_system)
+            return CXChildVisit_Continue;
+
+        include_graph.add_edge(included_path.string(), from_path.string(),
+            include_spelling, tu_path == from_path, is_system);
     }
 
     return CXChildVisit_Continue;

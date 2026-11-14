@@ -73,6 +73,8 @@ public:
 
     bool exclude_system_headers() const noexcept;
 
+    bool exclude_nested_system_headers() const noexcept;
+
     printer_t printer() const noexcept;
 
     const boost::optional<boost::filesystem::path> &
@@ -95,6 +97,7 @@ private:
     boost::optional<boost::filesystem::path> dependants_of_;
     bool translation_units_only_{false};
     bool exclude_system_headers_{false};
+    bool exclude_nested_system_headers_{false};
     std::string cli_arguments_;
     bool numeric_ids_{false};
     boost::optional<std::string> title_;

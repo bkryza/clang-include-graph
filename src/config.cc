@@ -127,6 +127,10 @@ void config_t::init(
         exclude_system_headers_ = true;
     }
 
+    if (vm.count("exclude-nested-system-headers") == 1) {
+        exclude_nested_system_headers_ = true;
+    }
+
     if (vm.count("title") == 1) {
         title_ = vm["title"].as<std::string>();
     }
@@ -230,6 +234,16 @@ bool config_t::exclude_system_headers() const noexcept
 void config_t::exclude_system_headers(bool esh) noexcept
 {
     exclude_system_headers_ = esh;
+}
+
+bool config_t::exclude_nested_system_headers() const noexcept
+{
+    return exclude_nested_system_headers_;
+}
+
+void config_t::exclude_nested_system_headers(bool ensh) noexcept
+{
+    exclude_nested_system_headers_ = ensh;
 }
 
 const boost::optional<std::string> &config_t::title() const noexcept
